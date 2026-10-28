@@ -6,6 +6,8 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut as fbSignOut,
   sendPasswordResetEmail,
   updateProfile as fbUpdateProfile,
@@ -22,6 +24,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isConfigured: boolean;
   signIn: (email: string, pass: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signUp: (email: string, pass: string, displayName?: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -83,6 +86,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signInWithEmailAndPassword(auth, email, pass);
   };
 
+  const signInWithGoogle = async () => {
+    if (!isConfigured || !auth) {
+      throw new Error('Firebase Authentication is not yet configured.');
+    }
+    const provider = new GoogleAuthProvider();
+    const cred = await signInWithPopup(auth, provider);
+    if (cred.user) {
+      await ensureUserProfile(
+        cred.user.uid,
+        cred.user.email || '',
+        cred.user.displayName,
+        cred.user.photoURL
+      );
+    }
+  };
+
   const signUp = async (email: string, pass: string, displayName?: string) => {
     if (!isConfigured || !auth) {
       throw new Error(
@@ -130,6 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAdmin,
         isConfigured,
         signIn,
+        signInWithGoogle,
         signUp,
         signOut,
         resetPassword,
