@@ -112,6 +112,16 @@ export function Navbar() {
               </div>
             </button>
 
+            {user && (
+              <Link
+                href="/dashboard"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-100/90 dark:bg-neutral-900/90 hover:bg-neutral-200/80 dark:hover:bg-neutral-800/80 text-xs font-medium text-neutral-800 dark:text-neutral-200 transition-all shadow-sm active:scale-[0.98]"
+              >
+                <LayoutDashboard className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400" />
+                <span>Dashboard</span>
+              </Link>
+            )}
+
             {user ? (
               <div className="relative">
                 <button
