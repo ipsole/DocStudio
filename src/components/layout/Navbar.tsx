@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { renderUserIcon } from '@/components/ui/AvatarIconPicker';
@@ -15,7 +16,15 @@ import {
   Moon,
 } from 'lucide-react';
 
+const NAV_TABS = [
+  { name: 'Home', href: '/' },
+  { name: 'Softwares', href: '/apps' },
+  { name: 'Pricings', href: '/pricing' },
+  { name: 'Tutorials', href: '/tutorials' },
+];
+
 export function Navbar() {
+  const pathname = usePathname();
   const { user, profile, isAdmin, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -23,9 +32,32 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 w-full bg-white/80 dark:bg-black/80 backdrop-blur-md text-neutral-900 dark:text-white select-none transition-colors duration-200">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8">
-        <div className="flex h-14 sm:h-16 items-center justify-end">
+        <div className="flex h-14 sm:h-16 items-center justify-between gap-4">
+          {/* Left: Small Text Tabs (Home, Softwares, Pricings, Tutorials) */}
+          <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-1">
+            {NAV_TABS.map((tab) => {
+              const isActive =
+                tab.href === '/'
+                  ? pathname === '/'
+                  : pathname?.startsWith(tab.href);
+              return (
+                <Link
+                  key={tab.name}
+                  href={tab.href}
+                  className={`px-3 py-1.5 rounded-full text-xs sm:text-sm transition-all whitespace-nowrap ${
+                    isActive
+                      ? 'font-medium text-neutral-950 dark:text-white bg-neutral-100 dark:bg-neutral-900 shadow-sm'
+                      : 'text-neutral-500 hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100/60 dark:hover:bg-neutral-900/60'
+                  }`}
+                >
+                  {tab.name}
+                </Link>
+              );
+            })}
+          </div>
+
           {/* Right: Theme Mode Toggle & Account Icon */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             {/* Pill Switch Mode Toggle Button matching design */}
             <button
               type="button"
