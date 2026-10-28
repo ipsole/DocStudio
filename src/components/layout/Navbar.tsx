@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
@@ -31,15 +31,7 @@ export function Navbar() {
           {/* Logo & Brand Identity */}
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-3 group select-none">
-              <div className="w-8 h-8 relative shrink-0">
-                <Image
-                  src="/docdril.svg"
-                  alt="Docdril"
-                  fill
-                  className="object-contain"
-                  priority
-                />
-              </div>
+              <DocdrilLogo size={30} />
               <div className="flex flex-col">
                 <div className="flex items-baseline gap-1">
                   <span className="text-xl sm:text-2xl font-light tracking-[-0.03em] font-sans uppercase leading-none text-neutral-950">

@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
 
 export function Footer() {
   return (
@@ -9,9 +9,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="md:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 relative">
-                <Image src="/docdril.svg" alt="Docdril" fill className="object-contain" />
-              </div>
+              <DocdrilLogo size={26} />
               <span className="font-light text-xl tracking-[-0.03em] uppercase text-neutral-950 font-sans">
                 DocStore
               </span>

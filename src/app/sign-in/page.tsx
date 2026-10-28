@@ -2,7 +2,7 @@
 
 import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
@@ -183,9 +183,7 @@ export default function SignInPage() {
     <div className="min-h-[80vh] flex flex-col justify-center py-16 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3">
         <Link href="/" className="inline-flex items-center gap-3 group">
-          <div className="w-8 h-8 relative shrink-0">
-            <Image src="/docdril.svg" alt="Docdril" fill className="object-contain" />
-          </div>
+          <DocdrilLogo size={32} />
           <span className="font-light text-2xl tracking-[-0.03em] uppercase text-neutral-950 font-sans">
             DocStore
           </span>
