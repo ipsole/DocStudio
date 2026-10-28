@@ -15,6 +15,9 @@ import {
   sendPasswordResetEmail,
   updateProfile as fbUpdateProfile,
   deleteUser as fbDeleteUser,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword as fbUpdatePassword,
   IdTokenResult,
 } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '@/lib/firebase/client';
@@ -37,6 +40,7 @@ interface AuthContextType {
   signUp: (email: string, pass: string, displayName?: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  changePassword: (currentPass: string, newPass: string) => Promise<void>;
   updateName: (newName: string) => Promise<void>;
   updateProfileDetails: (updates: {
     displayName?: string;
@@ -190,6 +194,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await sendPasswordResetEmail(auth, email);
   };
 
+  const changePassword = async (currentPass: string, newPass: string) => {
+    if (!isConfigured || !auth || !auth.currentUser) {
+      throw new Error('You must be signed in to change your password.');
+    }
+    if (!auth.currentUser.email) {
+      throw new Error('No email found for this user account.');
+    }
+
+    const hasPasswordProvider = auth.currentUser.providerData?.some(
+      (p) => p.providerId === 'password'
+    );
+    if (!hasPasswordProvider) {
+      throw new Error(
+        'Your account is registered via Google Single Sign-On (SSO). Password changes are managed via your Google account.'
+      );
+    }
+
+    const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPass);
+    try {
+      await reauthenticateWithCredential(auth.currentUser, credential);
+      await fbUpdatePassword(auth.currentUser, newPass);
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code;
+      if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+        throw new Error('Current password is incorrect. Please double check and try again.');
+      } else if (code === 'auth/weak-password') {
+        throw new Error('The new password is too weak. Please use at least 6 characters.');
+      } else if (code === 'auth/too-many-requests') {
+        throw new Error('Too many failed attempts. Please try again later or use the password reset link.');
+      }
+      throw err;
+    }
+  };
+
   const updateName = async (newName: string) => {
     if (!user) throw new Error('Not authenticated');
     if (auth?.currentUser) {
@@ -248,6 +286,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUp,
         signOut,
         resetPassword,
+        changePassword,
         updateName,
         updateProfileDetails,
         deleteAccount,
