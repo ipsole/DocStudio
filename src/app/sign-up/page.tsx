@@ -97,24 +97,46 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex flex-col justify-center py-16 sm:px-6 lg:px-8 text-neutral-900 dark:text-white transition-colors duration-200">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3">
-        <Link href="/" className="inline-flex items-center gap-3 group">
-          <DocdrilLogo size={32} className="text-neutral-950 dark:text-white" />
-          <span className="font-bold text-2xl tracking-tight text-neutral-950 dark:text-white font-sans">
-            DocStudio
-          </span>
-        </Link>
-        <h2 className="text-3xl font-light tracking-[-0.03em] uppercase text-neutral-950 dark:text-white font-sans">
-          Create Account
-        </h2>
-        <p className="font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-          One central identity for the entire Docdril software suite
-        </p>
-      </div>
+    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center py-10 sm:py-16 px-4 sm:px-6 md:px-8 text-neutral-900 dark:text-white transition-colors duration-200">
+      <div className="w-full max-w-[1360px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
+        {/* Left Column: Brand Hero with Logo above, big DocStudio in luxury serif */}
+        <div className="lg:col-span-7 flex flex-col justify-center space-y-6 select-none">
+          <Link href="/" className="inline-flex items-center gap-3 w-fit group">
+            <DocdrilLogo size={48} className="text-neutral-950 dark:text-white transition-transform group-hover:scale-105" />
+          </Link>
+          <div className="space-y-4">
+            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-[6.5rem] font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-[1.05]">
+              DocStudio
+            </h1>
+            <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-xl font-sans leading-relaxed">
+              Create your unified account to unlock the entire suite of Docdril creative applications, motion sequencers, and document pipelines with zero setup.
+            </p>
+          </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white dark:bg-neutral-950/90 border border-neutral-200 dark:border-neutral-800 p-8 sm:p-10 space-y-6 rounded-xl shadow-xl dark:shadow-2xl backdrop-blur-xl text-neutral-900 dark:text-white">
+          <div className="flex flex-wrap gap-2 pt-2 text-xs font-mono text-neutral-600 dark:text-neutral-400">
+            <span className="px-3.5 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900/70">
+              Single Sign-On
+            </span>
+            <span className="px-3.5 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900/70">
+              Shared Credits
+            </span>
+            <span className="px-3.5 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900/70">
+              All Subdomains
+            </span>
+          </div>
+        </div>
+
+        {/* Right Column: Sign Up Card */}
+        <div className="lg:col-span-5 flex justify-center lg:justify-end">
+          <div className="w-full max-w-md bg-white dark:bg-neutral-950/90 border border-neutral-200 dark:border-neutral-800 p-8 sm:p-10 space-y-6 rounded-2xl shadow-xl dark:shadow-2xl backdrop-blur-xl text-neutral-900 dark:text-white">
+            <div className="space-y-1">
+              <h2 className="text-2xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+                Create Account
+              </h2>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+                One central identity for the entire Docdril software suite
+              </p>
+            </div>
           {!isConfigured && (
             <div className="p-3.5 border border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/60 dark:text-amber-300 font-mono text-xs leading-relaxed rounded">
               <strong>NOTICE:</strong> Firebase configuration is pending in <code className="font-mono text-neutral-950 dark:text-white">.env.local</code>.
@@ -238,6 +260,7 @@ export default function SignUpPage() {
             <Link href="/sign-in" className="font-bold text-neutral-950 hover:text-neutral-700 dark:text-white underline ml-1 dark:hover:text-neutral-200">
               Sign In
             </Link>
+          </div>
           </div>
         </div>
       </div>
