@@ -159,11 +159,6 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
             </div>
 
             <div className="space-y-1.5">
-              <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full text-[10px] sm:text-[11px] font-mono uppercase tracking-wider bg-neutral-100/90 dark:bg-neutral-900/90 border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-dot" />
-                <span>Unified Studio Active • All Subdomains Synced</span>
-              </div>
-
               <h1 className="text-3xl sm:text-5xl font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-tight">
                 Welcome, <span className="italic">{userName}</span>
               </h1>
