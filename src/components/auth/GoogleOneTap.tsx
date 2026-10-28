@@ -92,6 +92,13 @@ export function GoogleOneTap({
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (!clientId) return;
 
+    // Reset suppression cookie so Google One Tap isn't silently hidden after dismissal
+    try {
+      document.cookie = 'g_state=;path=/;expires=Thu, 01 Jan 1970 00:00:01 GMT';
+    } catch {
+      // ignore
+    }
+
     loadGsiScript(() => {
       if (!window.google?.accounts?.id || initializedRef.current) return;
       initializedRef.current = true;
