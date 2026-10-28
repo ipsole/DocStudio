@@ -160,7 +160,7 @@ export function AvatarIconPicker({
 
         {/* Tab 1: Studio Personas */}
         {activeTab === 'personas' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {STUDIO_PERSONAS.map((persona) => {
               const isSelected = selectedIcon === persona.id;
               const IconComponent = persona.icon;
@@ -168,16 +168,17 @@ export function AvatarIconPicker({
                 <div
                   key={persona.id}
                   onClick={() => onSelectIcon(persona.id)}
-                  className={`group relative flex items-center gap-2.5 p-3 rounded-xl border transition-all cursor-pointer select-none ${
+                  className={`group relative flex items-center gap-3 p-3.5 rounded-2xl border transition-all cursor-pointer select-none ${
                     isSelected
                       ? 'bg-neutral-50 dark:bg-neutral-900/90 border-neutral-950 dark:border-white shadow-sm ring-1 ring-neutral-950 dark:ring-white'
                       : 'bg-white dark:bg-neutral-950/70 border-neutral-200 dark:border-neutral-800/90 hover:border-neutral-400 dark:hover:border-neutral-600'
                   }`}
                 >
                   <div
-                    className={`w-9 h-9 rounded-lg bg-gradient-to-tr ${persona.gradient} flex items-center justify-center text-white shrink-0 shadow-sm transition-transform group-hover:scale-105`}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 shadow-md transition-transform group-hover:scale-105 ring-1 ring-black/10 dark:ring-white/15"
+                    style={{ background: persona.gradientCss }}
                   >
-                    <IconComponent className="w-4 h-4 drop-shadow-sm" />
+                    <IconComponent className="w-5 h-5 text-white drop-shadow-sm" />
                   </div>
 
                   <div className="space-y-0.5 min-w-0 flex-1">
@@ -186,10 +187,10 @@ export function AvatarIconPicker({
                         {persona.name}
                       </span>
                       {isSelected && (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-neutral-950 dark:text-white shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-neutral-950 dark:text-white shrink-0" />
                       )}
                     </div>
-                    <p className="text-[10px] text-neutral-500 dark:text-neutral-400 truncate font-sans">
+                    <p className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate font-sans">
                       {persona.role}
                     </p>
                   </div>
@@ -261,14 +262,20 @@ export function AvatarIconPicker({
                     type="button"
                     onClick={() => onSelectIcon(emblem.id)}
                     title={emblem.label}
-                    className={`flex flex-col items-center justify-center p-2 rounded-lg transition-all cursor-pointer space-y-1 ${
+                    className={`flex flex-col items-center justify-center p-2.5 rounded-xl transition-all cursor-pointer space-y-1.5 ${
                       isSelected
-                        ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-sm ring-1 ring-neutral-950 dark:ring-white scale-105'
-                        : 'bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-200 dark:border-neutral-800'
+                        ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-md ring-1 ring-neutral-950 dark:ring-white scale-105'
+                        : 'bg-white dark:bg-neutral-900 text-neutral-800 dark:text-neutral-200 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-200/90 dark:border-neutral-800 shadow-sm'
                     }`}
                   >
-                    <IconComponent className="w-4 h-4" />
-                    <span className="text-[9px] font-sans truncate w-full text-center">
+                    <IconComponent
+                      className={`w-5 h-5 ${
+                        isSelected
+                          ? 'text-white dark:text-neutral-950'
+                          : 'text-neutral-900 dark:text-neutral-100'
+                      }`}
+                    />
+                    <span className="text-[10px] font-sans font-medium truncate w-full text-center">
                       {emblem.label}
                     </span>
                   </button>

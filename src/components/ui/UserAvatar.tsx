@@ -155,9 +155,10 @@ export function UserAvatar({
           className={`relative inline-flex items-center justify-center shrink-0 select-none ${conf.container} ${className}`}
         >
           <div
-            className={`w-full h-full overflow-hidden ${radiusClass} bg-gradient-to-tr ${persona.gradient} flex items-center justify-center text-white shadow-sm ring-1 ring-black/10 dark:ring-white/15`}
+            className={`w-full h-full overflow-hidden ${radiusClass} flex items-center justify-center text-white shadow-sm ring-1 ring-black/10 dark:ring-white/15`}
+            style={{ background: persona.gradientCss }}
           >
-            <IconComponent className={`${conf.icon} drop-shadow-sm`} />
+            <IconComponent className={`${conf.icon} text-white drop-shadow-sm`} />
           </div>
         </div>
       );
@@ -173,7 +174,8 @@ export function UserAvatar({
           className={`relative inline-flex items-center justify-center shrink-0 select-none ${conf.container} ${className}`}
         >
           <div
-            className={`w-full h-full overflow-hidden ${radiusClass} bg-gradient-to-tr ${grad.gradient} border ${grad.border} flex items-center justify-center text-white font-serif font-semibold tracking-wider shadow-sm ring-1 ring-black/10 dark:ring-white/15`}
+            className={`w-full h-full overflow-hidden ${radiusClass} border ${grad.border} flex items-center justify-center text-white font-serif font-semibold tracking-wider shadow-sm ring-1 ring-black/10 dark:ring-white/15`}
+            style={{ background: grad.gradientCss }}
           >
             <span className="drop-shadow-sm">{initials}</span>
           </div>
