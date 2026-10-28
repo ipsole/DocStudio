@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Boxes, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
+import { AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
   const { resetPassword, isConfigured } = useAuth();
@@ -36,46 +37,48 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <Link href="/" className="inline-flex items-center gap-2 group">
-          <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center">
-            <Boxes className="w-5 h-5" />
-          </div>
-          <span className="font-bold text-slate-900 text-xl tracking-tight">DocStore</span>
+    <div className="min-h-[80vh] flex flex-col justify-center py-16 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3">
+        <Link href="/" className="inline-flex items-center gap-3 group">
+          <DocdrilLogo size={32} />
+          <span className="font-bold text-2xl tracking-tight text-neutral-950 font-sans">
+            DocStudio
+          </span>
         </Link>
-        <h2 className="mt-6 text-2xl font-bold tracking-tight text-slate-900">
-          Reset your password
+        <h2 className="text-3xl font-light tracking-[-0.03em] uppercase text-neutral-950 font-sans">
+          Reset Password
         </h2>
-        <p className="mt-1 text-xs text-slate-500">
-          Enter your registered email and we&apos;ll send you a password reset link
+        <p className="font-mono text-xs uppercase tracking-wider text-neutral-400">
+          Enter your registered email to receive recovery instructions
         </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 shadow-sm border border-slate-200 rounded-2xl sm:px-10 space-y-6">
+        <div className="bg-white border border-neutral-950 p-8 sm:p-10 space-y-6 rounded-none">
           {success ? (
             <div className="text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 mx-auto flex items-center justify-center">
+              <div className="w-12 h-12 bg-neutral-950 text-white mx-auto flex items-center justify-center">
                 <CheckCircle className="w-6 h-6" />
               </div>
-              <h3 className="text-base font-bold text-slate-900">Reset Link Sent</h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                If an account exists for <span className="font-medium text-slate-900">{email}</span>,
+              <h3 className="text-base font-bold text-neutral-950 font-sans uppercase tracking-tight">
+                Reset Link Sent
+              </h3>
+              <p className="text-xs text-neutral-600 font-sans leading-relaxed">
+                If an account exists for <span className="font-semibold text-neutral-950">{email}</span>,
                 you will receive password reset instructions shortly.
               </p>
-              <div className="pt-2">
+              <div className="pt-4">
                 <Link href="/sign-in">
-                  <Button variant="outline" className="w-full">
+                  <Button variant="primary" className="w-full">
                     Return to Sign In
                   </Button>
                 </Link>
               </div>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               {error && (
-                <div className="p-3.5 rounded-xl border border-red-200 bg-red-50 text-red-700 text-xs flex items-center gap-2">
+                <div className="p-3.5 border border-red-500 bg-red-50 text-red-700 font-mono text-xs flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{error}</span>
                 </div>
@@ -89,7 +92,7 @@ export default function ForgotPasswordPage() {
                   autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
+                  placeholder="name@docdril.com"
                 />
               </div>
 
@@ -106,7 +109,7 @@ export default function ForgotPasswordPage() {
               <div className="pt-2 text-center">
                 <Link
                   href="/sign-in"
-                  className="text-xs font-semibold text-slate-600 hover:text-slate-900 inline-flex items-center gap-1.5"
+                  className="font-mono text-xs uppercase tracking-wider text-neutral-500 hover:text-neutral-950 inline-flex items-center gap-1.5"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   Back to Sign In
