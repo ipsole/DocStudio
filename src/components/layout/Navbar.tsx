@@ -2,18 +2,18 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import {
-  Boxes,
   Menu,
   X,
-  User as UserIcon,
   LogOut,
   LayoutDashboard,
   Settings,
   Shield,
+  ArrowRight,
 } from 'lucide-react';
 
 export function Navbar() {
@@ -25,36 +25,44 @@ export function Navbar() {
   const isActive = (path: string) => pathname === path;
 
   return (
-    <nav className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+    <nav className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8">
+        <div className="flex h-18 items-center justify-between gap-4">
           {/* Logo & Brand Identity */}
           <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-xs transition-transform group-hover:scale-105">
-                <Boxes className="w-5 h-5" />
+            <Link href="/" className="flex items-center gap-3 group select-none">
+              <div className="w-8 h-8 relative shrink-0">
+                <Image
+                  src="/docdril.svg"
+                  alt="Docdril"
+                  fill
+                  className="object-contain"
+                  priority
+                />
               </div>
               <div className="flex flex-col">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-slate-900 text-lg leading-tight tracking-tight">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-xl sm:text-2xl font-light tracking-[-0.03em] font-sans uppercase leading-none text-neutral-950">
                     DocStore
                   </span>
-                  <span className="text-[10px] uppercase tracking-wider font-semibold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-                    Beta
+                  <span className="text-[10px] font-mono font-bold tracking-wider text-neutral-500 uppercase border border-neutral-300 px-1 py-0.2 leading-none">
+                    BETA
                   </span>
                 </div>
-                <span className="text-[11px] text-slate-400 font-medium">by Docdril</span>
+                <span className="text-[10px] font-mono tracking-widest uppercase text-neutral-400 mt-0.5">
+                  BY DOCDRIL
+                </span>
               </div>
             </Link>
 
             {/* Desktop Navigation Links */}
-            <div className="hidden md:flex items-center gap-1">
+            <div className="hidden md:flex items-center gap-2">
               <Link
                 href="/apps"
-                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                className={`px-3 py-1.5 text-xs sm:text-sm font-medium uppercase tracking-[-0.02em] font-sans transition-colors ${
                   isActive('/apps')
-                    ? 'text-slate-900 bg-slate-100'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                    ? 'text-neutral-950 font-bold border-b-2 border-neutral-950'
+                    : 'text-neutral-600 hover:text-neutral-950'
                 }`}
               >
                 Explore Apps
@@ -62,10 +70,10 @@ export function Navbar() {
               {user && (
                 <Link
                   href="/dashboard"
-                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  className={`px-3 py-1.5 text-xs sm:text-sm font-medium uppercase tracking-[-0.02em] font-sans transition-colors ${
                     isActive('/dashboard')
-                      ? 'text-slate-900 bg-slate-100'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'text-neutral-950 font-bold border-b-2 border-neutral-950'
+                      : 'text-neutral-600 hover:text-neutral-950'
                   }`}
                 >
                   Dashboard
@@ -74,13 +82,13 @@ export function Navbar() {
               {isAdmin && (
                 <Link
                   href="/admin"
-                  className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 text-xs sm:text-sm font-medium uppercase tracking-[-0.02em] font-sans transition-colors flex items-center gap-1.5 ${
                     isActive('/admin')
-                      ? 'text-blue-700 bg-blue-50'
-                      : 'text-slate-600 hover:text-blue-700 hover:bg-blue-50/50'
+                      ? 'text-neutral-950 font-bold border-b-2 border-neutral-950'
+                      : 'text-neutral-600 hover:text-neutral-950'
                   }`}
                 >
-                  <Shield className="w-3.5 h-3.5 text-blue-600" />
+                  <Shield className="w-3.5 h-3.5" />
                   Admin
                 </Link>
               )}
@@ -94,24 +102,28 @@ export function Navbar() {
                 <button
                   type="button"
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2.5 p-1.5 rounded-lg border border-slate-200 hover:border-slate-300 bg-slate-50/50 transition-colors"
+                  className="flex items-center gap-2.5 p-1.5 border border-neutral-950 bg-white hover:bg-neutral-50 transition-colors cursor-pointer rounded-none"
                 >
-                  <div className="w-7 h-7 rounded-md bg-slate-900 text-white flex items-center justify-center text-xs font-semibold">
-                    {profile?.displayName ? profile.displayName.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase()}
+                  <div className="w-7 h-7 bg-neutral-950 text-white flex items-center justify-center text-xs font-mono font-bold">
+                    {profile?.displayName
+                      ? profile.displayName.charAt(0).toUpperCase()
+                      : user.email?.charAt(0).toUpperCase()}
                   </div>
-                  <span className="text-xs font-medium text-slate-700 max-w-[120px] truncate">
+                  <span className="text-xs font-mono uppercase font-semibold text-neutral-950 max-w-[140px] truncate">
                     {profile?.displayName || user.email?.split('@')[0]}
                   </span>
                 </button>
 
                 {userDropdownOpen && (
                   <div
-                    className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 bg-white py-1.5 shadow-lg shadow-slate-200/50 z-50"
+                    className="absolute right-0 mt-2 w-64 border border-neutral-950 bg-white py-1 shadow-2xl z-50 rounded-none"
                     onMouseLeave={() => setUserDropdownOpen(false)}
                   >
-                    <div className="px-3.5 py-2 border-b border-slate-100">
-                      <p className="text-xs text-slate-500">Signed in as</p>
-                      <p className="text-sm font-semibold text-slate-900 truncate">
+                    <div className="px-4 py-2.5 border-b border-neutral-200">
+                      <p className="font-mono text-[10px] uppercase tracking-wider text-neutral-400">
+                        Signed in as
+                      </p>
+                      <p className="text-xs font-semibold text-neutral-950 truncate font-mono mt-0.5">
                         {user.email}
                       </p>
                     </div>
@@ -119,18 +131,18 @@ export function Navbar() {
                     <Link
                       href="/dashboard"
                       onClick={() => setUserDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs uppercase tracking-wider font-semibold text-neutral-800 hover:bg-neutral-100 transition-colors"
                     >
-                      <LayoutDashboard className="w-4 h-4 text-slate-400" />
+                      <LayoutDashboard className="w-3.5 h-3.5" />
                       Dashboard
                     </Link>
 
                     <Link
                       href="/account"
                       onClick={() => setUserDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-3.5 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs uppercase tracking-wider font-semibold text-neutral-800 hover:bg-neutral-100 transition-colors"
                     >
-                      <Settings className="w-4 h-4 text-slate-400" />
+                      <Settings className="w-3.5 h-3.5" />
                       Account Settings
                     </Link>
 
@@ -138,14 +150,14 @@ export function Navbar() {
                       <Link
                         href="/admin"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3.5 py-2 text-sm text-blue-700 hover:bg-blue-50"
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-xs uppercase tracking-wider font-semibold text-neutral-950 bg-neutral-50 hover:bg-neutral-100"
                       >
-                        <Shield className="w-4 h-4 text-blue-600" />
+                        <Shield className="w-3.5 h-3.5" />
                         Admin Portal
                       </Link>
                     )}
 
-                    <div className="border-t border-slate-100 my-1" />
+                    <div className="border-t border-neutral-200 my-1" />
 
                     <button
                       type="button"
@@ -153,9 +165,9 @@ export function Navbar() {
                         setUserDropdownOpen(false);
                         await signOut();
                       }}
-                      className="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-red-600 hover:bg-red-50 text-left"
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs uppercase tracking-wider font-semibold text-red-600 hover:bg-red-50 text-left transition-colors cursor-pointer"
                     >
-                      <LogOut className="w-4 h-4" />
+                      <LogOut className="w-3.5 h-3.5" />
                       Sign Out
                     </button>
                   </div>
@@ -164,7 +176,7 @@ export function Navbar() {
             ) : (
               <div className="flex items-center gap-2">
                 <Link href="/sign-in">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="secondary" size="sm">
                     Sign In
                   </Button>
                 </Link>
@@ -182,10 +194,10 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+              className="p-2 border border-neutral-950 text-neutral-950 hover:bg-neutral-100 cursor-pointer"
               aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
@@ -193,11 +205,11 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-slate-200 bg-white px-4 pt-2 pb-4 space-y-2">
+        <div className="md:hidden border-b border-neutral-950 bg-white px-4 pt-3 pb-6 space-y-3">
           <Link
             href="/apps"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100"
+            className="block py-2 text-sm font-semibold uppercase tracking-wider text-neutral-900 border-b border-neutral-100"
           >
             Explore Apps
           </Link>
@@ -206,14 +218,14 @@ export function Navbar() {
               <Link
                 href="/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100"
+                className="block py-2 text-sm font-semibold uppercase tracking-wider text-neutral-900 border-b border-neutral-100"
               >
                 Dashboard
               </Link>
               <Link
                 href="/account"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-100"
+                className="block py-2 text-sm font-semibold uppercase tracking-wider text-neutral-900 border-b border-neutral-100"
               >
                 Account Settings
               </Link>
@@ -221,28 +233,28 @@ export function Navbar() {
                 <Link
                   href="/admin"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block px-3 py-2 rounded-md text-base font-medium text-blue-700 hover:bg-blue-50"
+                  className="block py-2 text-sm font-semibold uppercase tracking-wider text-neutral-950 border-b border-neutral-100"
                 >
                   Admin Portal
                 </Link>
               )}
-              <div className="pt-2 border-t border-slate-200">
+              <div className="pt-2">
                 <button
                   type="button"
                   onClick={async () => {
                     setMobileMenuOpen(false);
                     await signOut();
                   }}
-                  className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50"
+                  className="w-full text-left py-2 text-sm font-semibold uppercase tracking-wider text-red-600"
                 >
                   Sign Out ({user.email})
                 </button>
               </div>
             </>
           ) : (
-            <div className="pt-2 border-t border-slate-200 flex flex-col gap-2">
+            <div className="pt-2 flex flex-col gap-2">
               <Link href="/sign-in" onClick={() => setMobileMenuOpen(false)}>
-                <Button variant="outline" className="w-full">
+                <Button variant="secondary" className="w-full">
                   Sign In
                 </Button>
               </Link>

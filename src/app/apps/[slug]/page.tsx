@@ -10,15 +10,13 @@ import { Button } from '@/components/ui/Button';
 import {
   ExternalLink,
   ArrowLeft,
-  Calendar,
-  Layers,
   ShieldCheck,
   Palette,
   Clapperboard,
   Wrench,
   Boxes,
   Lock,
-  Sparkles,
+  Layers,
   Info,
 } from 'lucide-react';
 
@@ -44,7 +42,7 @@ export default function AppDetailPage() {
   }, [slug]);
 
   const renderIcon = (iconName?: string) => {
-    const iconClass = 'w-8 h-8 text-slate-800';
+    const iconClass = 'w-8 h-8 text-white';
     switch (iconName) {
       case 'Palette':
         return <Palette className={iconClass} />;
@@ -61,28 +59,30 @@ export default function AppDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 animate-pulse space-y-6">
-        <div className="h-6 bg-slate-200 rounded w-24" />
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 animate-pulse space-y-6">
+        <div className="h-4 bg-neutral-200 w-24" />
         <div className="flex gap-4">
-          <div className="w-16 h-16 rounded-2xl bg-slate-200" />
+          <div className="w-16 h-16 bg-neutral-200" />
           <div className="space-y-2 flex-1">
-            <div className="h-6 bg-slate-200 rounded w-1/3" />
-            <div className="h-4 bg-slate-100 rounded w-1/2" />
+            <div className="h-6 bg-neutral-200 w-1/3" />
+            <div className="h-4 bg-neutral-100 w-1/2" />
           </div>
         </div>
-        <div className="h-32 bg-slate-100 rounded-2xl" />
+        <div className="h-32 bg-neutral-100" />
       </div>
     );
   }
 
   if (!app) {
     return (
-      <div className="max-w-md mx-auto my-20 p-8 text-center bg-white rounded-2xl border border-slate-200 shadow-xs">
-        <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-3">
+      <div className="max-w-md mx-auto my-20 p-8 text-center bg-white border border-neutral-950">
+        <div className="w-12 h-12 border border-neutral-950 text-neutral-950 mx-auto flex items-center justify-center mb-3">
           <Info className="w-6 h-6" />
         </div>
-        <h2 className="text-xl font-bold text-slate-900">Application Not Found</h2>
-        <p className="text-sm text-slate-500 mt-2">
+        <h2 className="font-mono text-sm uppercase tracking-wider font-bold text-neutral-950">
+          Application Not Found
+        </h2>
+        <p className="text-xs text-neutral-500 mt-2 font-sans">
           The requested application &ldquo;{slug}&rdquo; is not currently registered or is not publicly available.
         </p>
         <div className="mt-6">
@@ -105,36 +105,38 @@ export default function AppDetailPage() {
       <div>
         <Link
           href="/apps"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+          className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-neutral-500 hover:text-black transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Catalog
+          Back to Directory
         </Link>
       </div>
 
       {/* Hero Header */}
-      <div className="p-8 rounded-3xl border border-slate-200 bg-white shadow-xs">
+      <div className="p-8 border border-neutral-950 bg-white">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center">
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 bg-neutral-950 flex items-center justify-center shrink-0">
               {renderIcon(app.icon)}
             </div>
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">{app.name}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-[-0.02em] uppercase text-neutral-950 font-sans">
+                  {app.name}
+                </h1>
                 <StatusBadge status={app.status} />
                 {app.isDemo && (
                   <Badge variant="neutral" size="sm">
-                    Demo Record
+                    DEMO RECORD
                   </Badge>
                 )}
               </div>
-              <p className="text-sm text-slate-500 mt-1 capitalize">
-                Category: <span className="font-medium text-slate-700">{app.category}</span>
+              <p className="font-mono text-xs uppercase tracking-wider text-neutral-500 mt-1">
+                CATEGORY: <span className="font-bold text-neutral-950">{app.category}</span>
                 {app.version && (
                   <>
                     <span className="mx-2">•</span>
-                    Version <span className="font-mono">{app.version}</span>
+                    VERSION: <span className="text-neutral-950">{app.version}</span>
                   </>
                 )}
               </p>
@@ -151,17 +153,17 @@ export default function AppDetailPage() {
                 className="w-full sm:w-auto"
               >
                 <Button variant="primary" size="lg" className="w-full sm:w-auto gap-2">
-                  Launch Application
+                  Launch Software
                   <ExternalLink className="w-4 h-4" />
                 </Button>
               </a>
             ) : app.status === 'coming_soon' ? (
-              <Button variant="secondary" size="lg" disabled className="w-full sm:w-auto gap-2">
-                <Lock className="w-4 h-4 text-slate-400" />
+              <Button variant="secondary" size="lg" disabled className="w-full sm:w-auto gap-2 opacity-50">
+                <Lock className="w-4 h-4 text-neutral-400" />
                 Coming Soon
               </Button>
             ) : (
-              <Button variant="secondary" size="lg" disabled className="w-full sm:w-auto">
+              <Button variant="secondary" size="lg" disabled className="w-full sm:w-auto opacity-50">
                 Not Available
               </Button>
             )}
@@ -173,24 +175,26 @@ export default function AppDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main overview */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="p-6 rounded-2xl border border-slate-200 bg-white space-y-4 shadow-xs">
-            <h2 className="text-lg font-bold text-slate-900">About this Application</h2>
-            <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-line">
+          <div className="p-8 border border-neutral-200 bg-white space-y-4">
+            <h2 className="font-mono text-xs uppercase tracking-wider font-bold text-neutral-950">
+              About this Application
+            </h2>
+            <p className="text-sm text-neutral-600 leading-relaxed font-sans whitespace-pre-line">
               {app.description || app.shortDescription}
             </p>
 
             {app.tags && app.tags.length > 0 && (
-              <div className="pt-4 border-t border-slate-100">
-                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                  Tags & Capabilities
+              <div className="pt-4 border-t border-neutral-100">
+                <h4 className="font-mono text-[10px] uppercase tracking-wider text-neutral-400 mb-2">
+                  TAGS & CAPABILITIES
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {app.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="px-2.5 py-1 rounded-md bg-slate-100 text-xs font-medium text-slate-700"
+                      className="font-mono text-[10px] uppercase tracking-wider px-2 py-0.5 border border-neutral-200 text-neutral-700 bg-neutral-50"
                     >
-                      {tag}
+                      #{tag}
                     </span>
                   ))}
                 </div>
@@ -198,56 +202,55 @@ export default function AppDetailPage() {
             )}
           </div>
 
-          {/* Ecosystem note */}
-          <div className="p-6 rounded-2xl border border-blue-100 bg-blue-50/50 space-y-2">
-            <div className="flex items-center gap-2 text-blue-900 font-semibold text-sm">
-              <Sparkles className="w-4 h-4 text-blue-600" />
-              <span>Docdril Ecosystem Integration</span>
+          <div className="p-6 border border-neutral-950 bg-neutral-50 space-y-2">
+            <div className="font-mono text-xs uppercase tracking-wider font-bold text-neutral-950">
+              Docdril Ecosystem Architecture
             </div>
-            <p className="text-xs text-blue-800/90 leading-relaxed">
-              This application is registered in DocStore. In future updates, your central Docdril
-              account will directly authenticate your sessions and manage software entitlements
-              across connected tools.
+            <p className="text-xs text-neutral-600 font-sans leading-relaxed">
+              This application is registered in DocStore. Your central Docdril identity will authenticate
+              sessions and manage software entitlements across connected satellite applications.
             </p>
           </div>
         </div>
 
         {/* Sidebar Information */}
         <div className="space-y-6">
-          <div className="p-6 rounded-2xl border border-slate-200 bg-white space-y-4 shadow-xs">
-            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-              Product Overview
+          <div className="p-6 border border-neutral-950 bg-white space-y-4">
+            <h3 className="font-mono text-xs uppercase tracking-widest font-bold text-neutral-950">
+              SPECIFICATIONS
             </h3>
 
-            <div className="space-y-3 text-xs">
-              <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-500">Status</span>
-                <span className="font-semibold text-slate-800 capitalize">{app.status.replace('_', ' ')}</span>
+            <div className="space-y-3 font-mono text-xs">
+              <div className="flex items-center justify-between py-2 border-b border-neutral-100">
+                <span className="text-neutral-400">STATUS</span>
+                <span className="font-bold text-neutral-950 uppercase">{app.status}</span>
               </div>
-              <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-500">Account Requirement</span>
-                <span className="font-semibold text-slate-800">Docdril Unified Account</span>
+              <div className="flex items-center justify-between py-2 border-b border-neutral-100">
+                <span className="text-neutral-400">ACCOUNT</span>
+                <span className="font-bold text-neutral-950">DOCDRIL SSO</span>
               </div>
-              <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                <span className="text-slate-500">Platform Deployment</span>
-                <span className="font-semibold text-slate-800">
-                  {app.applicationUrl ? 'Cloud Hosted' : 'Pending Deployment'}
+              <div className="flex items-center justify-between py-2 border-b border-neutral-100">
+                <span className="text-neutral-400">HOSTING</span>
+                <span className="font-bold text-neutral-950">
+                  {app.applicationUrl ? 'CLOUD' : 'PENDING'}
                 </span>
               </div>
               <div className="flex items-center justify-between py-2">
-                <span className="text-slate-500">Access Tier</span>
-                <span className="font-semibold text-slate-800">Access Management In Progress</span>
+                <span className="text-neutral-400">TIER</span>
+                <span className="font-bold text-neutral-950">STANDALONE</span>
               </div>
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl border border-slate-200 bg-white space-y-3 shadow-xs">
-            <div className="flex items-center gap-2 text-slate-900 font-semibold text-sm">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Verified Application</span>
+          <div className="p-6 border border-neutral-200 bg-white space-y-2">
+            <div className="flex items-center gap-2 text-neutral-950">
+              <ShieldCheck className="w-4 h-4 text-emerald-700" />
+              <span className="font-mono text-xs uppercase font-bold tracking-wider">
+                VERIFIED SOFTWARE
+              </span>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Official software catalog record maintained by Docdril. Product URLs and integrity are verified.
+            <p className="text-xs text-neutral-500 font-sans leading-relaxed">
+              Official catalog entry registered and verified under the Docdril platform.
             </p>
           </div>
         </div>

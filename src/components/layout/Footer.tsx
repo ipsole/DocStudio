@@ -1,48 +1,76 @@
 import React from 'react';
 import Link from 'next/link';
-import { Boxes } from 'lucide-react';
+import Image from 'next/image';
 
 export function Footer() {
   return (
-    <footer className="border-t border-slate-200 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center">
-                <Boxes className="w-4 h-4" />
+    <footer className="border-t border-neutral-200 bg-white">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
+          <div className="md:col-span-2 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-7 h-7 relative">
+                <Image src="/docdril.svg" alt="Docdril" fill className="object-contain" />
               </div>
-              <span className="font-bold text-slate-900 text-base tracking-tight">DocStore</span>
-              <span className="text-xs text-slate-400">by Docdril</span>
+              <span className="font-light text-xl tracking-[-0.03em] uppercase text-neutral-950 font-sans">
+                DocStore
+              </span>
+              <span className="font-mono text-[10px] tracking-widest text-neutral-400 uppercase">
+                BY DOCDRIL
+              </span>
             </div>
-            <p className="text-sm text-slate-500 max-w-sm">
-              The central software platform and account ecosystem powering applications built by Docdril.
+            <p className="text-xs sm:text-sm text-neutral-600 max-w-md leading-relaxed font-sans">
+              The centralized software platform powering independent creative, animation, and
+              productivity tools created under the Docdril ecosystem.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-6 text-sm text-slate-600">
-            <Link href="/" className="hover:text-slate-900 transition-colors">
-              Home
-            </Link>
-            <Link href="/apps" className="hover:text-slate-900 transition-colors">
-              Explore Apps
-            </Link>
-            <Link href="/dashboard" className="hover:text-slate-900 transition-colors">
-              Dashboard
-            </Link>
-            <Link href="/account" className="hover:text-slate-900 transition-colors">
-              Account
-            </Link>
+          <div>
+            <h4 className="font-mono text-xs uppercase tracking-wider font-semibold text-neutral-950 mb-4">
+              Platform
+            </h4>
+            <div className="flex flex-col space-y-2.5 text-xs uppercase tracking-wider font-medium text-neutral-600 font-sans">
+              <Link href="/" className="hover:text-black transition-colors">
+                Home
+              </Link>
+              <Link href="/apps" className="hover:text-black transition-colors">
+                Explore Apps
+              </Link>
+              <Link href="/dashboard" className="hover:text-black transition-colors">
+                Dashboard
+              </Link>
+              <Link href="/account" className="hover:text-black transition-colors">
+                Account Settings
+              </Link>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="font-mono text-xs uppercase tracking-wider font-semibold text-neutral-950 mb-4">
+              Ecosystem
+            </h4>
+            <div className="flex flex-col space-y-2.5 text-xs uppercase tracking-wider font-medium text-neutral-600 font-sans">
+              <a
+                href="https://docdril.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-black transition-colors"
+              >
+                Docdril Main Site ↗
+              </a>
+              <span className="text-neutral-400">Docdril Creative-Tech</span>
+              <span className="text-neutral-400">Single Central Account</span>
+            </div>
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-          <p>© {new Date().getFullYear()} Docdril. All rights reserved.</p>
-          <p className="flex items-center gap-2">
-            <span>DocStore Platform Foundation</span>
+        <div className="mt-12 pt-8 border-t border-neutral-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 font-mono text-[11px] text-neutral-400 uppercase">
+          <p>© {new Date().getFullYear()} DOCDRIL. ALL RIGHTS RESERVED.</p>
+          <div className="flex items-center gap-4">
+            <span>DOCSTORE PLATFORM 1.0</span>
             <span>•</span>
-            <span>Firebase Connected</span>
-          </p>
+            <span className="text-emerald-700">FIREBASE CONNECTED</span>
+          </div>
         </div>
       </div>
     </footer>

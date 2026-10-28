@@ -2,11 +2,12 @@
 
 import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Boxes, AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 
 function SignInForm() {
   const router = useRouter();
@@ -19,22 +20,6 @@ function SignInForm() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const handleGoogleSignIn = async () => {
-    setError(null);
-    setGoogleLoading(true);
-    try {
-      await signInWithGoogle();
-      router.push(redirectPath);
-    } catch (err: unknown) {
-      const fbErr = err as { code?: string; message?: string };
-      if (fbErr.code !== 'auth/popup-closed-by-user') {
-        setError(fbErr.message || 'Google sign in failed.');
-      }
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,16 +49,32 @@ function SignInForm() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      router.push(redirectPath);
+    } catch (err: unknown) {
+      const fbErr = err as { code?: string; message?: string };
+      if (fbErr.code !== 'auth/popup-closed-by-user') {
+        setError(fbErr.message || 'Google sign in failed.');
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   return (
-    <div className="bg-white py-8 px-6 shadow-sm border border-slate-200 rounded-2xl sm:px-10 space-y-6">
+    <div className="bg-white border border-neutral-950 p-8 sm:p-10 space-y-6 rounded-none">
       {!isConfigured && (
-        <div className="p-3.5 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 text-xs leading-relaxed">
-          <strong>Notice:</strong> Firebase configuration is pending in <code className="font-mono">.env.local</code>. Please populate the credentials from the <code className="font-mono">software-business</code> Firebase project.
+        <div className="p-3.5 border border-amber-300 bg-amber-50 text-amber-900 font-mono text-xs leading-relaxed">
+          <strong>NOTICE:</strong> Firebase configuration is pending in <code className="font-mono">.env.local</code>.
         </div>
       )}
 
       {error && (
-        <div className="p-3.5 rounded-xl border border-red-200 bg-red-50 text-red-700 text-xs flex items-center gap-2">
+        <div className="p-3.5 border border-red-500 bg-red-50 text-red-700 font-mono text-xs flex items-center gap-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
@@ -109,12 +110,14 @@ function SignInForm() {
           Continue with Google
         </Button>
 
-        <div className="relative my-4">
+        <div className="relative my-5">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200" />
+            <div className="w-full border-t border-neutral-200" />
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-slate-400 font-medium">Or continue with email</span>
+          <div className="relative flex justify-center font-mono text-[10px] uppercase">
+            <span className="bg-white px-2 text-neutral-400 font-semibold tracking-wider">
+              Or with email credentials
+            </span>
           </div>
         </div>
       </div>
@@ -134,12 +137,14 @@ function SignInForm() {
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-sm font-medium text-slate-700">Password</label>
+            <label className="block font-mono text-[11px] uppercase tracking-wider font-semibold text-neutral-800">
+              Password
+            </label>
             <Link
               href="/forgot-password"
-              className="text-xs font-semibold text-blue-600 hover:text-blue-700"
+              className="font-mono text-xs uppercase tracking-wider text-neutral-500 hover:text-black hover:underline"
             >
-              Forgot password?
+              Forgot?
             </Link>
           </div>
           <Input
@@ -163,10 +168,10 @@ function SignInForm() {
         </Button>
       </form>
 
-      <div className="pt-4 border-t border-slate-100 text-center text-xs text-slate-500">
-        Don&apos;t have an account yet?{' '}
-        <Link href="/sign-up" className="font-semibold text-blue-600 hover:text-blue-700">
-          Create an account
+      <div className="pt-4 border-t border-neutral-200 text-center font-mono text-xs uppercase tracking-wider text-neutral-500">
+        Don&apos;t have an account?{' '}
+        <Link href="/sign-up" className="font-bold text-neutral-950 underline ml-1">
+          Create Account
         </Link>
       </div>
     </div>
@@ -175,18 +180,20 @@ function SignInForm() {
 
 export default function SignInPage() {
   return (
-    <div className="min-h-[80vh] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <Link href="/" className="inline-flex items-center gap-2 group">
-          <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center">
-            <Boxes className="w-5 h-5" />
+    <div className="min-h-[80vh] flex flex-col justify-center py-16 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3">
+        <Link href="/" className="inline-flex items-center gap-3 group">
+          <div className="w-8 h-8 relative shrink-0">
+            <Image src="/docdril.svg" alt="Docdril" fill className="object-contain" />
           </div>
-          <span className="font-bold text-slate-900 text-xl tracking-tight">DocStore</span>
+          <span className="font-light text-2xl tracking-[-0.03em] uppercase text-neutral-950 font-sans">
+            DocStore
+          </span>
         </Link>
-        <h2 className="mt-6 text-2xl font-bold tracking-tight text-slate-900">
-          Sign in to your account
+        <h2 className="text-3xl font-light tracking-[-0.03em] uppercase text-neutral-950 font-sans">
+          Sign In
         </h2>
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="font-mono text-xs uppercase tracking-wider text-neutral-400">
           Access your unified Docdril software dashboard
         </p>
       </div>
@@ -194,9 +201,11 @@ export default function SignInPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <Suspense
           fallback={
-            <div className="bg-white py-12 px-6 shadow-sm border border-slate-200 rounded-2xl sm:px-10 flex flex-col items-center justify-center gap-3">
-              <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-              <p className="text-xs text-slate-400">Loading sign in...</p>
+            <div className="bg-white p-12 border border-neutral-950 flex flex-col items-center justify-center gap-3">
+              <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
+              <p className="font-mono text-xs uppercase tracking-wider text-neutral-400">
+                Loading session...
+              </p>
             </div>
           }
         >

@@ -18,7 +18,6 @@ import {
   Database,
   Eye,
   EyeOff,
-  Boxes,
 } from 'lucide-react';
 
 export default function AdminPage() {
@@ -159,7 +158,7 @@ export default function AdminPage() {
         throw new Error(result.error || 'Operation failed.');
       }
 
-      setSuccessMsg(editingApp ? 'Product updated successfully.' : 'Product created successfully.');
+      setSuccessMsg(editingApp ? 'Product updated successfully.' : 'Product registered successfully.');
       setTimeout(() => setSuccessMsg(null), 4000);
       setIsModalOpen(false);
       await loadAdminApps();
@@ -199,107 +198,118 @@ export default function AdminPage() {
 
   return (
     <ProtectedRoute requireAdmin={true}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 py-12 space-y-10">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-neutral-950 pb-6">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="p-1 rounded bg-blue-100 text-blue-700">
-                <Shield className="w-4 h-4" />
-              </span>
-              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Product Catalog Administration</h1>
+            <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">
+              PRIVILEGED INTERFACE
             </div>
-            <p className="text-xs text-slate-500">
+            <h1 className="text-3xl sm:text-4xl font-light tracking-[-0.03em] uppercase text-neutral-950 font-sans">
+              Product Administration
+            </h1>
+            <p className="text-xs sm:text-sm text-neutral-600 font-sans">
               Manage software catalog entries, configure launch endpoints, and update lifecycle statuses.
             </p>
           </div>
 
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" onClick={handleSeedDemoData} className="gap-1.5 text-xs">
-              <Database className="w-3.5 h-3.5 text-slate-500" />
-              Seed Demo Products
+            <Button variant="secondary" size="sm" onClick={handleSeedDemoData} className="gap-1.5">
+              <Database className="w-3.5 h-3.5" />
+              Seed Demo
             </Button>
-            <Button variant="primary" size="sm" onClick={openCreateModal} className="gap-1.5 text-xs">
+            <Button variant="primary" size="sm" onClick={openCreateModal} className="gap-1.5">
               <Plus className="w-3.5 h-3.5" />
-              Register New Product
+              New Product
             </Button>
           </div>
         </div>
 
         {/* Notifications */}
         {error && (
-          <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm flex items-center justify-between">
+          <div className="p-4 border border-red-500 bg-red-50 text-red-700 font-mono text-xs uppercase tracking-wider flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
             </div>
-            <button type="button" onClick={() => setError(null)} className="text-xs font-semibold">
-              Dismiss
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="text-xs font-bold underline cursor-pointer"
+            >
+              DISMISS
             </button>
           </div>
         )}
 
         {successMsg && (
-          <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm flex items-center gap-2">
+          <div className="p-4 border border-emerald-600 bg-emerald-50 text-emerald-800 font-mono text-xs uppercase tracking-wider flex items-center gap-2">
             <CheckCircle className="w-4 h-4 shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
         {/* Catalog Table */}
-        <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-xs">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-800">
-              Registered Products ({apps.length})
+        <div className="border border-neutral-950 bg-white overflow-hidden rounded-none">
+          <div className="px-6 py-4 border-b border-neutral-200 flex items-center justify-between">
+            <h2 className="font-mono text-xs uppercase tracking-wider font-bold text-neutral-950">
+              REGISTERED CATALOG ITEMS ({apps.length})
             </h2>
-            <Button variant="ghost" size="sm" onClick={loadAdminApps} className="gap-1.5 text-xs text-slate-500">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={loadAdminApps}
+              className="gap-1.5 text-xs font-mono"
+            >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
+              REFRESH
             </Button>
           </div>
 
           {loading ? (
-            <div className="p-12 text-center text-xs text-slate-400">Loading catalog...</div>
+            <div className="p-16 text-center font-mono text-xs uppercase text-neutral-400">
+              Loading catalog from Firestore...
+            </div>
           ) : apps.length > 0 ? (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50/80 border-b border-slate-200/80 text-slate-500 font-semibold uppercase tracking-wider">
+              <table className="w-full text-left font-mono text-xs">
+                <thead className="bg-neutral-50 border-b border-neutral-950 text-neutral-950 font-bold uppercase tracking-wider">
                   <tr>
-                    <th className="py-3 px-4">Product Name</th>
-                    <th className="py-3 px-4">Slug</th>
-                    <th className="py-3 px-4">Category</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4">Visibility</th>
-                    <th className="py-3 px-4">Launch Endpoint</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
+                    <th className="py-3.5 px-4">Product Name</th>
+                    <th className="py-3.5 px-4">Slug</th>
+                    <th className="py-3.5 px-4">Category</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4">Visibility</th>
+                    <th className="py-3.5 px-4">Launch Endpoint</th>
+                    <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
+                <tbody className="divide-y divide-neutral-200 text-neutral-800">
                   {apps.map((app) => (
-                    <tr key={app.id} className="hover:bg-slate-50/50 transition-colors">
-                      <td className="py-3 px-4 font-semibold text-slate-900 flex items-center gap-2">
+                    <tr key={app.id} className="hover:bg-neutral-50 transition-colors">
+                      <td className="py-3 px-4 font-bold text-neutral-950 flex items-center gap-2">
                         <span>{app.name}</span>
                         {app.isDemo && (
                           <Badge variant="neutral" size="sm">
-                            Demo
+                            DEMO
                           </Badge>
                         )}
                       </td>
-                      <td className="py-3 px-4 font-mono text-slate-500">{app.slug}</td>
-                      <td className="py-3 px-4 capitalize">{app.category}</td>
+                      <td className="py-3 px-4 text-neutral-500">{app.slug}</td>
+                      <td className="py-3 px-4 uppercase">{app.category}</td>
                       <td className="py-3 px-4">
                         <StatusBadge status={app.status} />
                       </td>
                       <td className="py-3 px-4">
                         {app.visibility === 'public' ? (
-                          <span className="inline-flex items-center gap-1 text-slate-700 font-medium">
-                            <Eye className="w-3 h-3 text-emerald-600" />
-                            Public
+                          <span className="inline-flex items-center gap-1 text-emerald-800 font-semibold">
+                            <Eye className="w-3 h-3" />
+                            PUBLIC
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-slate-400 font-medium">
-                            <EyeOff className="w-3 h-3 text-slate-400" />
-                            Private
+                          <span className="inline-flex items-center gap-1 text-neutral-400">
+                            <EyeOff className="w-3 h-3" />
+                            PRIVATE
                           </span>
                         )}
                       </td>
@@ -309,13 +319,13 @@ export default function AdminPage() {
                             href={app.applicationUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline inline-flex items-center gap-1"
+                            className="text-neutral-950 underline inline-flex items-center gap-1 hover:text-black"
                           >
                             <span className="truncate">{app.applicationUrl}</span>
                             <ExternalLink className="w-3 h-3 shrink-0" />
                           </a>
                         ) : (
-                          <span className="text-slate-400 italic">None configured</span>
+                          <span className="text-neutral-400 italic">None</span>
                         )}
                       </td>
                       <td className="py-3 px-4 text-right">
@@ -323,10 +333,10 @@ export default function AdminPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => openEditModal(app)}
-                          className="gap-1 text-xs"
+                          className="gap-1 font-mono text-xs"
                         >
-                          <Edit2 className="w-3 h-3 text-slate-500" />
-                          Edit
+                          <Edit2 className="w-3 h-3" />
+                          EDIT
                         </Button>
                       </td>
                     </tr>
@@ -335,24 +345,24 @@ export default function AdminPage() {
               </table>
             </div>
           ) : (
-            <div className="p-12 text-center text-xs text-slate-500">
-              No products found in Firestore. Click &ldquo;Register New Product&rdquo; or &ldquo;Seed Demo Products&rdquo; to populate the catalog.
+            <div className="p-16 text-center font-mono text-xs text-neutral-500 uppercase">
+              No products found in Firestore. Click &ldquo;New Product&rdquo; or &ldquo;Seed Demo&rdquo; to populate.
             </div>
           )}
         </div>
 
         {/* Modal: Create / Edit Product */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-white rounded-3xl border border-slate-200 max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-xl my-8">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <h3 className="text-lg font-bold text-slate-900">
-                  {editingApp ? `Edit: ${editingApp.name}` : 'Register New Software Product'}
+          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white border-2 border-neutral-950 max-w-2xl w-full p-8 space-y-6 rounded-none my-8">
+              <div className="flex items-center justify-between border-b border-neutral-200 pb-4">
+                <h3 className="font-light text-2xl tracking-[-0.03em] uppercase text-neutral-950 font-sans">
+                  {editingApp ? `Edit: ${editingApp.name}` : 'Register New Software'}
                 </h3>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
+                  className="font-mono text-sm font-bold text-neutral-400 hover:text-neutral-950 cursor-pointer"
                 >
                   ✕
                 </button>
@@ -369,20 +379,27 @@ export default function AdminPage() {
                       setFormData((prev) => ({
                         ...prev,
                         name,
-                        // Auto-slug if new product
-                        slug: !editingApp && !prev.slug ? name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : prev.slug,
+                        slug:
+                          !editingApp && !prev.slug
+                            ? name
+                                .toLowerCase()
+                                .replace(/[^a-z0-9]+/g, '-')
+                                .replace(/(^-|-$)/g, '')
+                            : prev.slug,
                       }));
                     }}
                     placeholder="e.g. Docdril Canvas"
                   />
                   <Input
-                    label="Slug (Unique URL identifier)"
+                    label="Slug (URL Key)"
                     required
                     value={formData.slug}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value.toLowerCase() }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, slug: e.target.value.toLowerCase() }))
+                    }
                     placeholder="e.g. docdril-canvas"
                     disabled={Boolean(editingApp)}
-                    helperText={editingApp ? 'Slug cannot be modified once created' : 'Lowercase, numbers, and hyphens only'}
+                    helperText={editingApp ? 'Slug cannot be modified once created' : undefined}
                   />
                 </div>
 
@@ -390,30 +407,38 @@ export default function AdminPage() {
                   label="Short Description (Summary)"
                   required
                   value={formData.shortDescription}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, shortDescription: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, shortDescription: e.target.value }))
+                  }
                   placeholder="One sentence overview shown on catalog cards"
                 />
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  <label className="block font-mono text-[11px] uppercase tracking-wider font-semibold text-neutral-800 mb-1.5">
                     Full Description
                   </label>
                   <textarea
                     rows={4}
                     value={formData.description}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                    className="w-full rounded-xl border border-slate-200 p-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, description: e.target.value }))
+                    }
+                    className="w-full border border-neutral-300 p-3 text-sm text-neutral-950 focus:outline-none focus:border-neutral-950 rounded-none font-sans"
                     placeholder="Detailed overview of features and capabilities"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Category</label>
+                    <label className="block font-mono text-[11px] uppercase tracking-wider font-semibold text-neutral-800 mb-1.5">
+                      Category
+                    </label>
                     <select
                       value={formData.category}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, category: e.target.value }))}
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 bg-white"
+                      onChange={(e) =>
+                        setFormData((prev) => ({ ...prev, category: e.target.value }))
+                      }
+                      className="w-full border border-neutral-300 px-3 py-2 text-xs font-mono uppercase text-neutral-950 bg-white rounded-none"
                     >
                       <option value="creative">Creative & Design</option>
                       <option value="animation">Animation & Motion</option>
@@ -423,11 +448,18 @@ export default function AdminPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Lifecycle Status</label>
+                    <label className="block font-mono text-[11px] uppercase tracking-wider font-semibold text-neutral-800 mb-1.5">
+                      Status
+                    </label>
                     <select
                       value={formData.status}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, status: e.target.value as AppStatus }))}
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 bg-white"
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          status: e.target.value as AppStatus,
+                        }))
+                      }
+                      className="w-full border border-neutral-300 px-3 py-2 text-xs font-mono uppercase text-neutral-950 bg-white rounded-none"
                     >
                       <option value="draft">Draft (Internal)</option>
                       <option value="coming_soon">Coming Soon</option>
@@ -437,14 +469,21 @@ export default function AdminPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1.5">Visibility</label>
+                    <label className="block font-mono text-[11px] uppercase tracking-wider font-semibold text-neutral-800 mb-1.5">
+                      Visibility
+                    </label>
                     <select
                       value={formData.visibility}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, visibility: e.target.value as AppVisibility }))}
-                      className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-900 bg-white"
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          visibility: e.target.value as AppVisibility,
+                        }))
+                      }
+                      className="w-full border border-neutral-300 px-3 py-2 text-xs font-mono uppercase text-neutral-950 bg-white rounded-none"
                     >
                       <option value="public">Public</option>
-                      <option value="private">Private (Restricted)</option>
+                      <option value="private">Private</option>
                     </select>
                   </div>
                 </div>
@@ -453,14 +492,17 @@ export default function AdminPage() {
                   <Input
                     label="Application URL"
                     value={formData.applicationUrl}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, applicationUrl: e.target.value }))}
-                    placeholder="https://app.docdril.com or relative route"
-                    helperText="URL to launch the live application"
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, applicationUrl: e.target.value }))
+                    }
+                    placeholder="https://app.docdril.com"
                   />
                   <Input
                     label="Version"
                     value={formData.version}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, version: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, version: e.target.value }))
+                    }
                     placeholder="1.0.0"
                   />
                 </div>
@@ -468,11 +510,13 @@ export default function AdminPage() {
                 <Input
                   label="Tags (comma-separated)"
                   value={formData.tags}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, tags: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, tags: e.target.value }))
+                  }
                   placeholder="Design, Vector, Cloud"
                 />
 
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <div className="flex items-center justify-end gap-3 pt-6 border-t border-neutral-200">
                   <Button
                     type="button"
                     variant="outline"

@@ -26,26 +26,27 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
   if (loading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-        <p className="text-sm text-slate-500 font-medium">Verifying authentication...</p>
+        <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
+        <p className="font-mono text-xs uppercase tracking-wider text-neutral-400">
+          Verifying identity session...
+        </p>
       </div>
     );
   }
 
   if (!isConfigured) {
     return (
-      <div className="max-w-xl mx-auto my-12 p-6 rounded-xl border border-amber-200 bg-amber-50 text-amber-900">
-        <h3 className="font-semibold text-lg flex items-center gap-2">
-          <span>⚠️</span> Firebase Configuration Needed
+      <div className="max-w-xl mx-auto my-16 p-8 border border-neutral-950 bg-white space-y-4">
+        <h3 className="font-mono text-sm uppercase tracking-wider font-bold text-neutral-950">
+          Firebase Configuration Notice
         </h3>
-        <p className="mt-2 text-sm text-amber-800">
-          Firebase credentials are not yet configured in <code className="bg-amber-100 px-1.5 py-0.5 rounded text-xs font-mono">.env.local</code>.
-          Please configure your Firebase credentials from the <code className="font-mono">software-business</code> Firebase Console to enable authentication.
+        <p className="text-xs text-neutral-600 font-sans leading-relaxed">
+          Firebase credentials are not fully populated in <code className="bg-neutral-100 px-1 py-0.5 font-mono">.env.local</code>.
         </p>
-        <div className="mt-4">
+        <div className="pt-2">
           <Link href="/">
-            <Button variant="outline" size="sm">
-              Return Home
+            <Button variant="secondary" size="sm">
+              Return to Homepage
             </Button>
           </Link>
         </div>
@@ -56,7 +57,9 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
   if (!user) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center px-4">
-        <p className="text-slate-600 font-medium">Please sign in to access this page.</p>
+        <p className="font-mono text-xs uppercase tracking-wider text-neutral-500">
+          Authentication required to access this resource
+        </p>
         <Link href={`/sign-in?redirect=${encodeURIComponent(pathname)}`}>
           <Button variant="primary">Sign In to Continue</Button>
         </Link>
@@ -66,18 +69,20 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
 
   if (requireAdmin && !isAdmin) {
     return (
-      <div className="max-w-md mx-auto my-16 p-8 text-center bg-white rounded-2xl border border-slate-200 shadow-xs">
-        <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 mx-auto flex items-center justify-center mb-4">
+      <div className="max-w-lg mx-auto my-20 p-8 text-center bg-white border border-neutral-950 space-y-4">
+        <div className="w-12 h-12 border border-neutral-950 text-neutral-950 mx-auto flex items-center justify-center mb-2">
           <ShieldAlert className="w-6 h-6" />
         </div>
-        <h2 className="text-xl font-bold text-slate-900">Access Restricted</h2>
-        <p className="text-sm text-slate-500 mt-2">
-          This area is restricted to DocStore platform administrators. Your account (<code className="text-xs bg-slate-100 px-1 py-0.5 rounded font-mono">{user.email}</code>) does not currently have administrative privileges.
+        <h2 className="font-mono text-sm uppercase tracking-wider font-bold text-neutral-950">
+          Access Restricted
+        </h2>
+        <p className="text-xs text-neutral-600 font-sans leading-relaxed">
+          This portal is reserved for DocStore platform administrators. Your account (<code className="font-mono text-[11px] bg-neutral-100 px-1 py-0.5">{user.email}</code>) does not hold administrative authorization.
         </p>
-        <div className="mt-6 flex justify-center gap-3">
+        <div className="pt-4 flex justify-center gap-3">
           <Link href="/dashboard">
-            <Button variant="secondary" size="sm">
-              Go to Dashboard
+            <Button variant="primary" size="sm">
+              User Dashboard
             </Button>
           </Link>
           <Link href="/">

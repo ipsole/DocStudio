@@ -8,12 +8,10 @@ import { AppCard } from '@/components/apps/AppCard';
 import { AppFilter } from '@/components/apps/AppFilter';
 import { Button } from '@/components/ui/Button';
 import {
-  Boxes,
   ArrowRight,
   ShieldCheck,
   Cpu,
   Layers,
-  Sparkles,
   Inbox,
   Lock,
 } from 'lucide-react';
@@ -50,39 +48,36 @@ export default function HomePage() {
   });
 
   return (
-    <div className="space-y-20 pb-20">
+    <div className="space-y-24 pb-24">
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-16 sm:pt-24 pb-12 bg-gradient-to-b from-white via-slate-50/50 to-transparent border-b border-slate-200/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-blue-200 bg-blue-50/80 text-blue-700 text-xs font-semibold">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>The Docdril Software Platform</span>
+      <section className="border-b border-neutral-200 bg-white pt-20 sm:pt-28 pb-16 sm:pb-24">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8">
+          <div className="max-w-4xl space-y-6">
+            <div className="inline-flex items-center gap-2 border border-neutral-950 px-2.5 py-1 font-mono text-[11px] uppercase tracking-widest text-neutral-950">
+              <span className="w-2 h-2 bg-neutral-950" />
+              <span>THE DOCDRIL SOFTWARE PLATFORM</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
-              One Central Platform. <br className="hidden sm:inline" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
-                All Docdril Software.
-              </span>
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-light tracking-[-0.04em] uppercase text-neutral-950 font-sans leading-[0.98]">
+              ONE CENTRAL ACCOUNT. <br />
+              <span className="font-extrabold">ALL DOCDRIL SOFTWARE.</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-              DocStore is the central launchpad to discover, access, and manage applications
-              built by Docdril. Experience independent software tools connected through one
-              unified account.
+            <p className="text-base sm:text-xl text-neutral-600 max-w-2xl font-sans leading-relaxed">
+              DocStore is the central launchpad for discovering, accessing, and orchestrating
+              independent software applications developed under the Docdril ecosystem.
             </p>
 
-            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="pt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
               <Link href="/apps">
-                <Button variant="primary" size="lg" className="w-full sm:w-auto shadow-sm">
+                <Button variant="primary" size="lg" className="w-full sm:w-auto">
                   Explore Software Catalog
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 ml-1.5" />
                 </Button>
               </Link>
               <Link href="/sign-up">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                  Create Account
+                <Button variant="secondary" size="lg" className="w-full sm:w-auto">
+                  Create Central Account
                 </Button>
               </Link>
             </div>
@@ -90,146 +85,148 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Ecosystem Pillars */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="p-6 rounded-2xl border border-slate-200 bg-white shadow-xs">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
-              <Cpu className="w-5 h-5" />
+      {/* Ecosystem Architecture Pillars */}
+      <section className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8">
+        <div className="border border-neutral-950 grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-neutral-950">
+          <div className="p-8 space-y-3 bg-white">
+            <div className="font-mono text-xs uppercase tracking-wider text-neutral-400">
+              PILLAR 01
             </div>
-            <h3 className="text-base font-semibold text-slate-900">One Unified Identity</h3>
-            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-              Sign in once with your Docdril central account to navigate smoothly between all current
-              and future software products.
+            <h3 className="text-xl font-bold uppercase tracking-[-0.02em] text-neutral-950 font-sans">
+              Centralized Identity
+            </h3>
+            <p className="text-xs sm:text-sm text-neutral-600 font-sans leading-relaxed">
+              Sign in once with your Docdril central account to seamlessly access all current
+              tools and future software releases without duplicate credentials.
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl border border-slate-200 bg-white shadow-xs">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center mb-4">
-              <Layers className="w-5 h-5" />
+          <div className="p-8 space-y-3 bg-white">
+            <div className="font-mono text-xs uppercase tracking-wider text-neutral-400">
+              PILLAR 02
             </div>
-            <h3 className="text-base font-semibold text-slate-900">Independent Applications</h3>
-            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-              Each application is engineered for focus and performance, yet integrated into
-              a shared discovery catalog and data infrastructure.
+            <h3 className="text-xl font-bold uppercase tracking-[-0.02em] text-neutral-950 font-sans">
+              Independent Tools
+            </h3>
+            <p className="text-xs sm:text-sm text-neutral-600 font-sans leading-relaxed">
+              Each software product is independently engineered and deployed for peak performance,
+              unified under a shared discovery and access layer.
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl border border-slate-200 bg-white shadow-xs">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
-              <ShieldCheck className="w-5 h-5" />
+          <div className="p-8 space-y-3 bg-white">
+            <div className="font-mono text-xs uppercase tracking-wider text-neutral-400">
+              PILLAR 03
             </div>
-            <h3 className="text-base font-semibold text-slate-900">Secure Architecture</h3>
-            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-              Built on Google Firebase with strictly enforced Firestore security rules, token
-              validation, and protected server-side boundaries.
+            <h3 className="text-xl font-bold uppercase tracking-[-0.02em] text-neutral-950 font-sans">
+              Secure Infrastructure
+            </h3>
+            <p className="text-xs sm:text-sm text-neutral-600 font-sans leading-relaxed">
+              Backed by Google Cloud Firestore and Firebase Authentication with strictly enforced
+              least-privilege security rules and protected server boundaries.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Software Discovery / Catalog Preview */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 border-b border-slate-200 pb-4">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Software Catalog</h2>
-              <p className="text-sm text-slate-500 mt-1">
-                Browse available software applications and upcoming tools under development.
-              </p>
+      {/* Software Discovery / Catalog */}
+      <section className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 space-y-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 border-b border-neutral-950 pb-4">
+          <div>
+            <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">
+              DATA-DRIVEN CATALOG
             </div>
-            <Link href="/apps" className="text-sm font-semibold text-blue-600 hover:text-blue-700">
-              View all applications →
-            </Link>
+            <h2 className="text-3xl font-light tracking-[-0.03em] uppercase text-neutral-950 font-sans">
+              Software Directory
+            </h2>
           </div>
-
-          {/* Filter & Search */}
-          <AppFilter
-            selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            totalCount={filteredApps.length}
-          />
-
-          {/* App Cards Grid */}
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((n) => (
-                <div
-                  key={n}
-                  className="h-64 rounded-2xl border border-slate-200 bg-white p-6 animate-pulse space-y-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-slate-200" />
-                    <div className="space-y-2 flex-1">
-                      <div className="h-4 bg-slate-200 rounded w-1/2" />
-                      <div className="h-3 bg-slate-100 rounded w-1/4" />
-                    </div>
-                  </div>
-                  <div className="h-12 bg-slate-100 rounded" />
-                </div>
-              ))}
-            </div>
-          ) : filteredApps.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredApps.map((app) => (
-                <AppCard key={app.id} app={app} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16 px-4 rounded-2xl border border-dashed border-slate-200 bg-white">
-              <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-3">
-                <Inbox className="w-6 h-6" />
-              </div>
-              <h3 className="text-base font-semibold text-slate-900">No applications found</h3>
-              <p className="text-sm text-slate-500 max-w-sm mx-auto mt-1">
-                {searchQuery || selectedCategory !== 'all'
-                  ? 'No software matches your current search criteria. Try resetting filters.'
-                  : 'Products will appear here as they are published to the catalog.'}
-              </p>
-              {(searchQuery || selectedCategory !== 'all') && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedCategory('all');
-                    setSearchQuery('');
-                  }}
-                  className="mt-4 text-xs font-semibold text-blue-600 hover:underline"
-                >
-                  Clear filters
-                </button>
-              )}
-            </div>
-          )}
+          <Link
+            href="/apps"
+            className="font-mono text-xs uppercase tracking-wider font-semibold text-neutral-950 hover:underline inline-flex items-center gap-1"
+          >
+            Browse Full Directory →
+          </Link>
         </div>
+
+        {/* Filter & Search */}
+        <AppFilter
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          totalCount={filteredApps.length}
+        />
+
+        {/* App Cards Grid */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="h-64 border border-neutral-200 bg-white p-6 animate-pulse space-y-4 rounded-none"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-neutral-200 rounded-none" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 bg-neutral-200 w-1/2" />
+                    <div className="h-3 bg-neutral-100 w-1/4" />
+                  </div>
+                </div>
+                <div className="h-12 bg-neutral-100" />
+              </div>
+            ))}
+          </div>
+        ) : filteredApps.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredApps.map((app) => (
+              <AppCard key={app.id} app={app} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 px-4 border border-dashed border-neutral-300 bg-white rounded-none">
+            <div className="w-12 h-12 border border-neutral-950 text-neutral-950 mx-auto flex items-center justify-center mb-4">
+              <Inbox className="w-6 h-6" />
+            </div>
+            <h3 className="font-mono text-sm uppercase tracking-wider font-bold text-neutral-950">
+              No matching applications
+            </h3>
+            <p className="text-xs text-neutral-500 max-w-sm mx-auto mt-1 font-sans">
+              {searchQuery || selectedCategory !== 'all'
+                ? 'No software matches your current search criteria. Try resetting filters.'
+                : 'Products will appear here as they are published to Firestore.'}
+            </p>
+            {(searchQuery || selectedCategory !== 'all') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCategory('all');
+                  setSearchQuery('');
+                }}
+                className="mt-4 font-mono text-xs uppercase tracking-wider font-semibold text-neutral-950 underline cursor-pointer"
+              >
+                Reset filters
+              </button>
+            )}
+          </div>
+        )}
       </section>
 
       {/* Ecosystem Philosophy Banner */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 text-white p-8 sm:p-12 relative overflow-hidden">
-          <div className="relative z-10 max-w-2xl space-y-4">
-            <span className="text-xs font-mono uppercase tracking-wider text-blue-400">
-              Architecture & Vision
+      <section className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8">
+        <div className="border border-neutral-950 bg-neutral-950 text-white p-8 sm:p-14">
+          <div className="max-w-3xl space-y-4">
+            <span className="font-mono text-xs uppercase tracking-widest text-neutral-400">
+              ARCHITECTURE & PHILOSOPHY
             </span>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              Built to grow alongside the Docdril ecosystem
+            <h2 className="text-2xl sm:text-4xl font-light tracking-[-0.03em] uppercase leading-tight font-sans">
+              ENGINEERED FOR EXTENSIBILITY. <br />
+              BUILT FOR FUTURE EXPANSION.
             </h2>
-            <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
-              DocStore is deliberately structured to support independently deployed software—from
-              creative utilities to document workflow engines. As new products launch, they link into
-              this central platform without rebuilding account or security infrastructure.
+            <p className="text-xs sm:text-base text-neutral-400 leading-relaxed font-sans">
+              DocStore is built to support independently deployed software—from canvas design tools to
+              document automation engines. As new products launch, they link into this central
+              platform without rebuilding account or security infrastructure.
             </p>
-            <div className="pt-2 flex flex-wrap gap-4 text-xs text-slate-400">
-              <span className="flex items-center gap-1.5">
-                <Boxes className="w-4 h-4 text-blue-400" />
-                Data-driven catalog
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Lock className="w-4 h-4 text-blue-400" />
-                Role-based access ready
-              </span>
-            </div>
           </div>
         </div>
       </section>
