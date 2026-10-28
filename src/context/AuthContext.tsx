@@ -110,25 +110,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
     }
     await signInWithEmailAndPassword(auth, email, pass);
-    if (typeof window !== 'undefined') {
-      try {
-        sessionStorage.setItem('docstudio_login_welcome', 'pending');
-      } catch {
-        // ignore
-      }
-    }
   };
 
   const signInWithGoogle = async () => {
     if (!isConfigured || !auth) {
       throw new Error('Firebase Authentication is not yet configured.');
-    }
-    if (typeof window !== 'undefined') {
-      try {
-        sessionStorage.setItem('docstudio_login_welcome', 'pending');
-      } catch {
-        // ignore
-      }
     }
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
@@ -142,19 +128,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const credential = GoogleAuthProvider.credential(idToken);
     const result = await signInWithCredential(auth, credential);
     if (result.user) {
-      if (typeof window !== 'undefined') {
+      const profile = await ensureUserProfile(
+        result.user.uid,
+        result.user.email || '',
+        result.user.displayName,
+        result.user.photoURL
+      );
+      const createdTime = typeof profile?.createdAt === 'number' ? profile.createdAt : Number(profile?.createdAt || 0);
+      // Only show intro welcome if this account was created in the last 2 minutes
+      if (profile && Date.now() - createdTime < 120000 && typeof window !== 'undefined') {
         try {
           sessionStorage.setItem('docstudio_login_welcome', 'pending');
         } catch {
           // ignore
         }
       }
-      await ensureUserProfile(
-        result.user.uid,
-        result.user.email || '',
-        result.user.displayName,
-        result.user.photoURL
-      );
     }
     return result.user;
   };
