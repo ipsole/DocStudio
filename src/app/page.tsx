@@ -279,18 +279,23 @@ export default function HomePage() {
                       </p>
                     </div>
 
-                    <div className="flex items-baseline gap-1 pt-1">
-                      <span className="text-3xl sm:text-4xl font-extrabold text-neutral-950 dark:text-white font-mono tracking-tight">
-                        {plan.price}
-                      </span>
-                      <span className="text-xs text-neutral-500 font-sans ml-1">
+                    <div className="flex items-baseline gap-2 pt-1 flex-wrap">
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-3xl sm:text-4xl font-extrabold text-neutral-950 dark:text-white font-sans tracking-tight">
+                          {plan.priceInr}
+                        </span>
+                        <span className="text-sm sm:text-base font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
+                          ({plan.priceUsd} USD)
+                        </span>
+                      </div>
+                      <span className="text-xs text-neutral-500 font-sans ml-0.5">
                         {plan.period}
                       </span>
                     </div>
 
                     <div className="p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-xs font-sans">
                       <span className="text-neutral-500 dark:text-neutral-400">Includes </span>
-                      <span className="font-bold text-neutral-950 dark:text-white font-mono">
+                      <span className="font-bold text-neutral-950 dark:text-white font-sans">
                         {plan.creditsAllotment} Monthly Credits
                       </span>
                     </div>
@@ -366,12 +371,15 @@ export default function HomePage() {
                           +{pack.credits} Credits
                         </span>
                       </div>
-                      <div className="flex items-baseline gap-1.5 pt-0.5">
-                        <span className="text-2xl font-extrabold text-neutral-950 dark:text-white font-mono">
-                          {pack.price}
+                      <div className="flex items-baseline gap-1.5 pt-0.5 flex-wrap">
+                        <span className="text-xl sm:text-2xl font-extrabold text-neutral-950 dark:text-white font-sans tracking-tight">
+                          {pack.priceInr}
                         </span>
-                        <span className="text-[11px] text-neutral-500 font-mono">
-                          ({pack.costPerCredit})
+                        <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
+                          ({pack.priceUsd} USD)
+                        </span>
+                        <span className="text-[11px] text-neutral-400 font-sans">
+                          • {pack.costPerCredit}
                         </span>
                       </div>
                       <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans leading-relaxed pt-1">
@@ -388,7 +396,7 @@ export default function HomePage() {
                       className="w-full py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-950 hover:text-white dark:hover:bg-white dark:hover:text-black transition-all cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
-                      <span>Purchase {pack.price}</span>
+                      <span>Purchase {pack.priceInr} ({pack.priceUsd})</span>
                     </button>
                   </div>
                 ))}

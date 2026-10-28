@@ -128,12 +128,15 @@ export function CreditTopUpModal({
 
             {/* Price & Credit Summary Box */}
             <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 space-y-3">
-              <div className="flex items-baseline justify-between">
-                <div>
-                  <span className="text-3xl font-extrabold font-mono text-neutral-950 dark:text-white">
-                    {pack.price}
+              <div className="flex items-baseline justify-between flex-wrap gap-2">
+                <div className="flex items-baseline gap-1.5 flex-wrap">
+                  <span className="text-2xl sm:text-3xl font-extrabold font-sans tracking-tight text-neutral-950 dark:text-white">
+                    {pack.priceInr}
                   </span>
-                  <span className="text-xs text-neutral-500 font-sans ml-1.5">
+                  <span className="text-xs sm:text-sm font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
+                    ({pack.priceUsd} USD)
+                  </span>
+                  <span className="text-xs text-neutral-500 font-sans ml-1">
                     one-time payment
                   </span>
                 </div>
@@ -145,7 +148,7 @@ export function CreditTopUpModal({
               <div className="border-t border-neutral-200/70 dark:border-neutral-800 pt-3 space-y-2 text-xs font-sans text-neutral-600 dark:text-neutral-400">
                 <div className="flex items-center justify-between">
                   <span>Unit Rate</span>
-                  <span className="font-mono text-neutral-900 dark:text-white font-medium">
+                  <span className="font-sans text-neutral-900 dark:text-white font-medium">
                     {pack.costPerCredit}
                   </span>
                 </div>
@@ -181,7 +184,7 @@ export function CreditTopUpModal({
                   isLoading={loading}
                 >
                   <CreditCard className="w-4 h-4" />
-                  <span>Purchase & Top Up {pack.price}</span>
+                  <span>Purchase & Top Up {pack.priceInr} ({pack.priceUsd})</span>
                 </Button>
                 <div className="flex items-center justify-center gap-1.5 text-[11px] text-neutral-500 font-sans">
                   <ShieldCheck className="w-3.5 h-3.5 text-neutral-400" />

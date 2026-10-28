@@ -80,18 +80,23 @@ export default function PricingPage() {
                   </p>
                 </div>
 
-                <div className="flex items-baseline gap-1 pt-1">
-                  <span className="text-4xl sm:text-5xl font-extrabold text-neutral-950 dark:text-white font-mono tracking-tight">
-                    {plan.price}
-                  </span>
-                  <span className="text-xs text-neutral-500 font-sans ml-1">
+                <div className="flex items-baseline gap-2 pt-1 flex-wrap">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl sm:text-4xl lg:text-[2.65rem] font-extrabold text-neutral-950 dark:text-white font-sans tracking-tight">
+                      {plan.priceInr}
+                    </span>
+                    <span className="text-sm sm:text-base font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
+                      ({plan.priceUsd} USD)
+                    </span>
+                  </div>
+                  <span className="text-xs text-neutral-500 font-sans ml-0.5">
                     {plan.period}
                   </span>
                 </div>
 
                 <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-xs font-sans">
                   <span className="text-neutral-500 dark:text-neutral-400">Includes </span>
-                  <span className="font-bold text-neutral-950 dark:text-white font-mono">
+                  <span className="font-bold text-neutral-950 dark:text-white font-sans">
                     {plan.creditsAllotment} Monthly Credits
                   </span>
                   <span className="text-neutral-500 dark:text-neutral-400"> (Shared cross-app)</span>
@@ -174,12 +179,15 @@ export default function PricingPage() {
                   {pack.description}
                 </p>
 
-                <div className="flex items-baseline gap-2 pt-1">
-                  <span className="text-3xl sm:text-4xl font-extrabold text-neutral-950 dark:text-white font-mono">
-                    {pack.price}
+                <div className="flex items-baseline gap-2 pt-1 flex-wrap">
+                  <span className="text-2xl sm:text-3xl font-extrabold text-neutral-950 dark:text-white font-sans tracking-tight">
+                    {pack.priceInr}
                   </span>
-                  <span className="text-xs text-neutral-500 font-mono">
-                    ({pack.costPerCredit})
+                  <span className="text-xs sm:text-sm font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
+                    ({pack.priceUsd} USD)
+                  </span>
+                  <span className="text-[11px] text-neutral-400 font-sans">
+                    • {pack.costPerCredit}
                   </span>
                 </div>
 
@@ -210,7 +218,7 @@ export default function PricingPage() {
                   }`}
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Purchase {pack.price} Top-Up</span>
+                  <span>Purchase {pack.priceInr} ({pack.priceUsd})</span>
                 </button>
               </div>
             </div>
