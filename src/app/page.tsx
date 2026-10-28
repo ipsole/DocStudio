@@ -197,24 +197,6 @@ export default function HomePage() {
           <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[6.5rem] font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-tight select-none">
             DocStudio
           </h1>
-          <div className="flex items-center justify-center gap-2 mt-2">
-            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 font-sans">
-              The unified software ecosystem of Docdril
-            </p>
-            {!user && (
-              <>
-                <span className="text-neutral-300 dark:text-neutral-700">•</span>
-                <button
-                  type="button"
-                  onClick={() => setReplayIntro(true)}
-                  className="text-[11px] font-mono text-neutral-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
-                  title="Replay intro animation"
-                >
-                  Play Film ↺
-                </button>
-              </>
-            )}
-          </div>
         </div>
 
       {/* Tabs Selector Directly Below Login Screen */}
