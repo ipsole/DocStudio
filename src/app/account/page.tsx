@@ -6,7 +6,8 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import { AvatarIconPicker, renderUserIcon } from '@/components/ui/AvatarIconPicker';
+import { AvatarIconPicker } from '@/components/ui/AvatarIconPicker';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 import {
   KeyRound,
   Shield,
@@ -33,7 +34,9 @@ export default function AccountPage() {
       setDisplayName(profile?.displayName || user?.displayName || '');
       setPhoneNumber(profile?.phoneNumber || '');
       setBio(profile?.bio || '');
-      setAvatarIcon(profile?.avatarIcon || 'User');
+      const hasGooglePhoto = Boolean(user?.photoURL || profile?.photoURL);
+      const initialIcon = profile?.avatarIcon || (hasGooglePhoto ? 'google' : 'User');
+      setAvatarIcon(initialIcon);
     }
   }, [profile, user]);
 
@@ -42,11 +45,12 @@ export default function AccountPage() {
     setProfileSaving(true);
     setError(null);
     try {
+      const hasGooglePhoto = Boolean(user?.photoURL || profile?.photoURL);
       await updateProfileDetails({
         displayName: displayName.trim(),
         phoneNumber: phoneNumber.trim(),
         bio: bio.trim(),
-        avatarIcon: avatarIcon || 'User',
+        avatarIcon: avatarIcon || (hasGooglePhoto ? 'google' : 'User'),
       });
       setProfileSuccess(true);
       setTimeout(() => setProfileSuccess(false), 3000);
@@ -94,16 +98,17 @@ export default function AccountPage() {
 
         {/* Profile Card */}
         <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-xl backdrop-blur-xl shadow-sm dark:shadow-none">
-          {/* Header row: Avatar preview + Name */}
+          {/* Header row: Live Avatar Hero + Identity */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-neutral-200 dark:border-neutral-900">
             <div className="flex items-center gap-5">
-              <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white flex items-center justify-center text-xl font-bold rounded-xl shrink-0 shadow-sm">
-                {avatarIcon && renderUserIcon(avatarIcon, 'w-8 h-8 text-neutral-900 dark:text-white')}
-                {!avatarIcon && (
-                  <span>
-                    {displayName.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </span>
-                )}
+              <div className="relative shrink-0">
+                <UserAvatar
+                  user={user}
+                  profile={profile}
+                  avatarIcon={avatarIcon}
+                  size="xl"
+                  showGoogleBadge={avatarIcon === 'google' || (!avatarIcon && Boolean(user?.photoURL || profile?.photoURL))}
+                />
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
@@ -117,10 +122,20 @@ export default function AccountPage() {
                     </Badge>
                   )}
                 </div>
-                <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-2 font-sans">
+                <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-2 font-sans flex-wrap">
                   <span className="uppercase text-[11px] font-semibold text-neutral-400 dark:text-neutral-500">UID:</span>
                   <span className="bg-neutral-100 dark:bg-neutral-900 px-2 py-0.5 border border-neutral-200 dark:border-neutral-800 font-mono text-[11px] text-neutral-700 dark:text-neutral-300 select-all rounded">
                     {user?.uid}
+                  </span>
+                  <span className="text-neutral-300 dark:text-neutral-700">•</span>
+                  <span className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
+                    {avatarIcon === 'google' || (!avatarIcon && (user?.photoURL || profile?.photoURL))
+                      ? 'Google Profile Photo'
+                      : avatarIcon?.startsWith('persona-')
+                      ? 'Studio Persona Active'
+                      : avatarIcon?.startsWith('grad-')
+                      ? 'Luxury Monogram Active'
+                      : 'Creative Emblem Active'}
                   </span>
                 </div>
               </div>
@@ -132,11 +147,18 @@ export default function AccountPage() {
           </div>
 
           <form onSubmit={handleUpdateProfile} className="space-y-6">
-            {/* 1. Avatar Icon Picker (50 Icons) */}
-            <AvatarIconPicker
-              selectedIcon={avatarIcon}
-              onSelectIcon={(iconId) => setAvatarIcon(iconId)}
-            />
+            {/* 1. Avatar Studio Picker */}
+            <div className="space-y-2">
+              <label className="block text-xs font-sans font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">
+                Avatar Identity & Profile Presentation
+              </label>
+              <AvatarIconPicker
+                selectedIcon={avatarIcon}
+                onSelectIcon={(iconId) => setAvatarIcon(iconId)}
+                user={user}
+                profile={profile}
+              />
+            </div>
 
             {/* 2. Contact details */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">

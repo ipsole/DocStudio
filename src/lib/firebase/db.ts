@@ -163,6 +163,7 @@ export async function ensureUserProfile(
         email,
         displayName: displayName || email.split('@')[0],
         photoURL: photoURL || null,
+        avatarIcon: photoURL ? 'google' : null,
         isAdmin: false,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -173,20 +174,29 @@ export async function ensureUserProfile(
         email,
         displayName: displayName || email.split('@')[0],
         photoURL: photoURL || null,
+        avatarIcon: photoURL ? 'google' : null,
         isAdmin: false,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
     } else {
       const data = snap.data();
+      // Sync Google photoURL to Firestore if missing
+      if (photoURL && !data.photoURL) {
+        try {
+          await updateDoc(userDocRef, { photoURL });
+        } catch {
+          // ignore
+        }
+      }
       return {
         uid,
         email: data.email || email,
         displayName: data.displayName || null,
         phoneNumber: data.phoneNumber || null,
         bio: data.bio || null,
-        photoURL: data.photoURL || null,
-        avatarIcon: data.avatarIcon || null,
+        photoURL: data.photoURL || photoURL || null,
+        avatarIcon: data.avatarIcon || (photoURL || data.photoURL ? 'google' : null),
         isAdmin: Boolean(data.isAdmin),
         createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : Date.now(),
         updatedAt: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : Date.now(),
@@ -207,7 +217,8 @@ export async function updateUserProfile(
     displayName?: string;
     phoneNumber?: string;
     bio?: string;
-    avatarIcon?: string;
+    avatarIcon?: string | null;
+    photoURL?: string | null;
   }
 ): Promise<boolean> {
   if (!isFirebaseConfigured() || !db) return false;

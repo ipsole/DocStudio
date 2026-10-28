@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { renderUserIcon } from '@/components/ui/AvatarIconPicker';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 import {
   LogOut,
   LayoutDashboard,
@@ -102,19 +102,16 @@ export function Navbar() {
                 <button
                   type="button"
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="w-9 h-9 rounded-full border border-neutral-300 dark:border-neutral-800 hover:border-neutral-500 dark:hover:border-neutral-500 bg-neutral-100 dark:bg-neutral-950 flex items-center justify-center text-neutral-900 dark:text-white transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  className="w-9 h-9 rounded-full border border-neutral-300 dark:border-neutral-800 hover:border-neutral-500 dark:hover:border-neutral-500 bg-neutral-100 dark:bg-neutral-950 flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 overflow-hidden shadow-sm"
                   aria-label="Account Menu"
                   title={profile?.displayName || user.email || 'My Account'}
                 >
-                  {profile?.avatarIcon ? (
-                    renderUserIcon(profile.avatarIcon, 'w-4 h-4 text-neutral-900 dark:text-white')
-                  ) : (
-                    <span className="font-sans text-xs font-semibold">
-                      {profile?.displayName
-                        ? profile.displayName.charAt(0).toUpperCase()
-                        : user.email?.charAt(0).toUpperCase()}
-                    </span>
-                  )}
+                  <UserAvatar
+                    user={user}
+                    profile={profile}
+                    size="sm"
+                    className="w-full h-full"
+                  />
                 </button>
 
                 {userDropdownOpen && (
@@ -122,13 +119,16 @@ export function Navbar() {
                     className="absolute right-0 mt-2 w-64 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl py-1.5 shadow-2xl z-50 text-neutral-800 dark:text-neutral-200 backdrop-blur-xl"
                     onMouseLeave={() => setUserDropdownOpen(false)}
                   >
-                    <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-900 bg-neutral-50/80 dark:bg-neutral-900/60 rounded-t-xl">
-                      <p className="text-[11px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
-                        Active Account
-                      </p>
-                      <p className="text-xs font-semibold text-neutral-900 dark:text-white truncate mt-0.5 font-sans">
-                        {user.email}
-                      </p>
+                    <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-900 bg-neutral-50/80 dark:bg-neutral-900/60 rounded-t-xl flex items-center gap-3">
+                      <UserAvatar user={user} profile={profile} size="sm" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-neutral-950 dark:text-white truncate font-sans">
+                          {profile?.displayName || user.displayName || 'DocStudio User'}
+                        </p>
+                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate font-sans">
+                          {user.email}
+                        </p>
+                      </div>
                     </div>
 
                     <Link

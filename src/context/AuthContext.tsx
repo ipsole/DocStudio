@@ -37,7 +37,8 @@ interface AuthContextType {
     displayName?: string;
     phoneNumber?: string;
     bio?: string;
-    avatarIcon?: string;
+    avatarIcon?: string | null;
+    photoURL?: string | null;
   }) => Promise<void>;
 }
 
@@ -196,7 +197,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     displayName?: string;
     phoneNumber?: string;
     bio?: string;
-    avatarIcon?: string;
+    avatarIcon?: string | null;
+    photoURL?: string | null;
   }) => {
     if (!user) throw new Error('Not authenticated');
     if (updates.displayName && auth?.currentUser) {
