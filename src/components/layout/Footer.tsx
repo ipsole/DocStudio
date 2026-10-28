@@ -1,6 +1,5 @@
 import React from 'react';
 import Link from 'next/link';
-import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
 
 export function Footer() {
   return (
@@ -8,13 +7,9 @@ export function Footer() {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="md:col-span-2 space-y-4">
-            <div className="flex items-center gap-3">
-              <DocdrilLogo size={26} className="text-neutral-950 dark:text-white" />
-              <span className="font-bold text-xl tracking-tight uppercase text-neutral-950 dark:text-white font-sans">
+            <div>
+              <span className="font-serif font-normal text-2xl sm:text-3xl tracking-[0.01em] text-neutral-950 dark:text-white select-none">
                 DocStudio
-              </span>
-              <span className="font-mono text-[10px] tracking-widest text-neutral-500 uppercase">
-                BY DOCDRIL
               </span>
             </div>
             <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 max-w-md leading-relaxed font-sans">
