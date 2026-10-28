@@ -61,9 +61,9 @@ export default function HomePage() {
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center bg-white text-neutral-900 dark:bg-black dark:text-white px-4 sm:px-6 md:px-8 pt-0 sm:pt-1 pb-12 sm:pb-16 overflow-hidden transition-colors duration-200">
-      {/* Crisp Typography - Previous Modern Sans Type, Sized Proportionately */}
+      {/* Luxury Serif Typography - Natural Wide Proportions, Uncompressed */}
       <div className="relative z-10 text-center select-none pt-0 pb-6 sm:pb-8">
-        <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold tracking-[-0.04em] text-neutral-950 dark:text-white uppercase font-sans leading-none select-none">
+        <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[6.5rem] font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-tight select-none">
           DocStudio
         </h1>
       </div>

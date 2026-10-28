@@ -11,8 +11,8 @@ const config: Config = {
     extend: {
       fontFamily: {
         serif: [
-          '"Instrument Serif"',
           '"Playfair Display"',
+          '"Bodoni Moda"',
           'Didot',
           '"Bodoni 72"',
           '"Cormorant Garamond"',
