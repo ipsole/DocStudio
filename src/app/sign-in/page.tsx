@@ -57,7 +57,9 @@ function SignInForm() {
       router.push(redirectPath);
     } catch (err: unknown) {
       const fbErr = err as { code?: string; message?: string };
-      if (fbErr.code !== 'auth/popup-closed-by-user') {
+      if (fbErr.code === 'auth/account-exists-with-different-credential') {
+        setError('An account already exists with this email address using password. Please sign in with your email and password.');
+      } else if (fbErr.code !== 'auth/popup-closed-by-user') {
         setError(fbErr.message || 'Google sign in failed.');
       }
     } finally {

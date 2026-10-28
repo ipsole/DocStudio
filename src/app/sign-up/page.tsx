@@ -29,7 +29,9 @@ export default function SignUpPage() {
       router.push('/dashboard');
     } catch (err: unknown) {
       const fbErr = err as { code?: string; message?: string };
-      if (fbErr.code !== 'auth/popup-closed-by-user') {
+      if (fbErr.code === 'auth/account-exists-with-different-credential') {
+        setError('An account already exists with this email address using password. Please sign in with your email and password.');
+      } else if (fbErr.code !== 'auth/popup-closed-by-user') {
         setError(fbErr.message || 'Google sign up failed.');
       }
     } finally {
@@ -59,7 +61,7 @@ export default function SignUpPage() {
     } catch (err: unknown) {
       const fbErr = err as { code?: string; message?: string };
       if (fbErr.code === 'auth/email-already-in-use') {
-        setError('An account with this email address already exists.');
+        setError('An account with this email address already exists. If you created it with Google, please click "Continue with Google" or head to Sign In.');
       } else if (fbErr.code === 'auth/weak-password') {
         setError('Password is too weak. Please use at least 6 characters.');
       } else if (fbErr.code === 'auth/invalid-email') {
