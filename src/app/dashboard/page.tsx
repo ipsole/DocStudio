@@ -282,7 +282,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
                 Quota Healthy
               </span>
               <Link
-                href="/pricing"
+                href="/pricing#credits"
                 className="text-neutral-900 dark:text-white font-semibold hover:underline text-xs flex items-center gap-1"
               >
                 <span>Get More Credits +</span>

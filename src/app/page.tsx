@@ -7,6 +7,8 @@ import { getPublicApps } from '@/lib/firebase/db';
 import { DocApp } from '@/types';
 import { AppCard } from '@/components/apps/AppCard';
 import { IntroSplash } from '@/components/ui/IntroSplash';
+import { PRICING_PLANS, CREDIT_PACKS, CreditPack } from '@/lib/pricingData';
+import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
 import {
   Loader2,
   Check,
@@ -16,57 +18,9 @@ import {
   PlayCircle,
   Layers,
   LayoutDashboard,
+  Zap,
+  Plus,
 } from 'lucide-react';
-
-const PRICING_PLANS = [
-  {
-    name: 'Starter',
-    description: 'Ideal for trying out Docdril creative and document tools.',
-    price: '$0',
-    period: '/ month',
-    features: [
-      'Access to free tier tools',
-      'Standard export resolution',
-      'Community support',
-      'Unified single sign-on',
-    ],
-    cta: 'Get Started Free',
-    href: '/sign-up',
-    popular: false,
-  },
-  {
-    name: 'Docdril Pro',
-    description: 'Full unlimited access to all creative & document suites.',
-    price: '$19',
-    period: '/ month',
-    features: [
-      'Unlimited access to all software',
-      '4K & vector export pipelines',
-      'Shared cross-app credits',
-      'Priority cloud rendering',
-      'Early access to new tools',
-    ],
-    cta: 'Upgrade to Pro',
-    href: '/sign-up',
-    popular: true,
-  },
-  {
-    name: 'Studio Team',
-    description: 'For creative teams and studios working across workspaces.',
-    price: '$49',
-    period: '/ month',
-    features: [
-      'Everything in Pro for up to 5 seats',
-      'Collaborative projects & artboards',
-      'Centralized billing & admin portal',
-      'Dedicated 24/7 support',
-      'Custom domain access',
-    ],
-    cta: 'Contact Sales',
-    href: 'mailto:support@docdril.com',
-    popular: false,
-  },
-];
 
 const TUTORIAL_GUIDES = [
   {
@@ -111,6 +65,8 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState<HomeTab>('softwares');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [replayIntro, setReplayIntro] = useState(false);
+  const [selectedPack, setSelectedPack] = useState<CreditPack | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     async function loadCatalog() {
@@ -283,55 +239,66 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Tab 2: Pricings */}
+        {/* Tab 2: Pricings in INR */}
         {activeTab === 'pricings' && (
-          <div id="pricings" className="space-y-8 animate-fadeIn pt-2">
+          <div id="pricings" className="space-y-12 animate-fadeIn pt-2">
             <div className="text-center max-w-xl mx-auto space-y-1">
               <h2 className="text-2xl sm:text-3xl font-bold font-sans text-neutral-950 dark:text-white">
                 Unified Ecosystem Subscriptions
               </h2>
-              <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
-                Subscribe once to unlock creative and document generation suites across all subdomains.
+              <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-sans">
+                Subscribe once in INR (₹) to unlock creative and document generation suites across all subdomains.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-7">
+            {/* Monthly Subscription Plans */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-7 items-stretch">
               {PRICING_PLANS.map((plan) => (
                 <div
-                  key={plan.name}
-                  className={`relative flex flex-col justify-between rounded-2xl border p-6 sm:p-7 transition-all ${
+                  key={plan.id}
+                  className={`relative flex flex-col justify-between rounded-3xl border p-6 sm:p-7 transition-all ${
                     plan.popular
-                      ? 'border-neutral-950 dark:border-white bg-neutral-50/70 dark:bg-neutral-950 shadow-md'
-                      : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/60'
+                      ? 'border-neutral-950 dark:border-white bg-neutral-50/80 dark:bg-neutral-950 shadow-lg ring-1 ring-neutral-950/10 dark:ring-white/20'
+                      : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/60 shadow-sm'
                   }`}
                 >
-                  {plan.popular && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-neutral-950 dark:bg-white text-white dark:text-black text-[10px] font-mono uppercase tracking-widest rounded-full font-bold flex items-center gap-1 shadow-sm">
-                      <Sparkles className="w-3 h-3" /> Most Popular
+                  {plan.badge && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-neutral-950 dark:bg-white text-white dark:text-black text-[11px] font-sans font-bold uppercase tracking-wider rounded-full flex items-center gap-1 shadow-sm">
+                      <Sparkles className="w-3 h-3 text-amber-400 dark:text-amber-500" />
+                      {plan.badge}
                     </span>
                   )}
 
-                  <div className="space-y-3.5">
+                  <div className="space-y-4">
                     <div>
-                      <h3 className="text-base font-bold text-neutral-950 dark:text-white font-sans">
+                      <h3 className="text-lg font-bold text-neutral-950 dark:text-white font-sans">
                         {plan.name}
                       </h3>
-                      <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1 font-sans leading-relaxed">
                         {plan.description}
                       </p>
                     </div>
 
                     <div className="flex items-baseline gap-1 pt-1">
-                      <span className="text-3xl sm:text-4xl font-extrabold text-neutral-950 dark:text-white font-mono">
+                      <span className="text-3xl sm:text-4xl font-extrabold text-neutral-950 dark:text-white font-mono tracking-tight">
                         {plan.price}
                       </span>
-                      <span className="text-xs text-neutral-500 font-mono">{plan.period}</span>
+                      <span className="text-xs text-neutral-500 font-sans ml-1">
+                        {plan.period}
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-xs font-sans">
+                      <span className="text-neutral-500 dark:text-neutral-400">Includes </span>
+                      <span className="font-bold text-neutral-950 dark:text-white font-mono">
+                        {plan.creditsAllotment} Monthly Credits
+                      </span>
                     </div>
 
                     <div className="border-t border-neutral-200 dark:border-neutral-800 pt-3.5 space-y-2">
                       {plan.features.map((feat) => (
-                        <div key={feat} className="flex items-center gap-2 text-xs text-neutral-700 dark:text-neutral-300">
-                          <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <div key={feat} className="flex items-start gap-2 text-xs text-neutral-700 dark:text-neutral-300 font-sans">
+                          <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                           <span>{feat}</span>
                         </div>
                       ))}
@@ -353,6 +320,79 @@ export default function HomePage() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Additional On-Demand Credit Top-Ups */}
+            <div className="pt-6 border-t border-neutral-200 dark:border-neutral-800 space-y-6">
+              <div className="text-center max-w-xl mx-auto space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                  <Zap className="w-3 h-3" />
+                  <span>Permanent Top-Up • Never Expire</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold font-sans text-neutral-950 dark:text-white">
+                  Add Extra Credits Anytime
+                </h3>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400 font-sans">
+                  Need extra generation headroom? Top up credits on demand without changing your subscription.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {CREDIT_PACKS.map((pack) => (
+                  <div
+                    key={pack.id}
+                    className={`relative p-5 rounded-2xl border transition-all flex flex-col justify-between space-y-3 ${
+                      pack.popular
+                        ? 'border-emerald-600/80 dark:border-emerald-500/80 bg-emerald-50/20 dark:bg-emerald-950/20'
+                        : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/40'
+                    }`}
+                  >
+                    {pack.savingsBadge && (
+                      <span className={`absolute -top-2.5 right-4 px-2.5 py-0.5 text-[10px] font-sans font-bold uppercase rounded-full ${
+                        pack.popular
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-neutral-800 text-white dark:bg-neutral-200 dark:text-black'
+                      }`}>
+                        {pack.savingsBadge}
+                      </span>
+                    )}
+
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-sm text-neutral-950 dark:text-white font-sans">
+                          {pack.name}
+                        </span>
+                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 font-sans">
+                          +{pack.credits} Credits
+                        </span>
+                      </div>
+                      <div className="flex items-baseline gap-1.5 pt-0.5">
+                        <span className="text-2xl font-extrabold text-neutral-950 dark:text-white font-mono">
+                          {pack.price}
+                        </span>
+                        <span className="text-[11px] text-neutral-500 font-mono">
+                          ({pack.costPerCredit})
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans leading-relaxed pt-1">
+                        {pack.description}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedPack(pack);
+                        setModalOpen(true);
+                      }}
+                      className="w-full py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-950 hover:text-white dark:hover:bg-white dark:hover:text-black transition-all cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Purchase {pack.price}</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -407,6 +447,13 @@ export default function HomePage() {
         )}
       </div>
     </div>
+
+    {/* Credit Purchase Modal */}
+    <CreditTopUpModal
+      pack={selectedPack}
+      isOpen={modalOpen}
+      onClose={() => setModalOpen(false)}
+    />
     </>
   );
 }
