@@ -171,7 +171,10 @@ export async function ensureUserProfile(
         uid,
         email: data.email || email,
         displayName: data.displayName || null,
+        phoneNumber: data.phoneNumber || null,
+        bio: data.bio || null,
         photoURL: data.photoURL || null,
+        avatarIcon: data.avatarIcon || null,
         isAdmin: Boolean(data.isAdmin),
         createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : Date.now(),
         updatedAt: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : Date.now(),
@@ -188,7 +191,12 @@ export async function ensureUserProfile(
  */
 export async function updateUserProfile(
   uid: string,
-  updates: { displayName?: string }
+  updates: {
+    displayName?: string;
+    phoneNumber?: string;
+    bio?: string;
+    avatarIcon?: string;
+  }
 ): Promise<boolean> {
   if (!isFirebaseConfigured() || !db) return false;
 

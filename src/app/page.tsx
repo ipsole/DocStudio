@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { getPublicApps } from '@/lib/firebase/db';
 import { DocApp } from '@/types';
 import { AppCard } from '@/components/apps/AppCard';
-import { Search, SlidersHorizontal, Inbox } from 'lucide-react';
+import { Search, Inbox } from 'lucide-react';
 import { CATEGORIES } from '@/lib/seedData';
 
 export default function HomePage() {
@@ -12,7 +12,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     async function loadCatalog() {
@@ -41,53 +40,19 @@ export default function HomePage() {
 
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-14 space-y-8">
-      {/* 1. Centered Clean Header (matches screenshot) */}
-      <div className="max-w-2xl mx-auto text-center space-y-3">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-950 font-sans">
-          Docdril Softwares
+      {/* 1. Ultra-clean minimal header: DocStudio */}
+      <div className="max-w-2xl mx-auto text-center space-y-2 pt-2">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-neutral-950 font-sans leading-none">
+          DocStudio
         </h1>
-        <p className="text-sm text-neutral-600 font-sans leading-relaxed">
-          Browse, launch, and manage applications, creative utilities, and document tools.
+        <p className="text-sm text-neutral-500 font-sans">
+          The software ecosystem of Docdril.
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-neutral-500 font-sans pt-1">
-          <span className="text-neutral-400">Related:</span>
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('creative')}
-            className="hover:text-black underline underline-offset-2 cursor-pointer"
-          >
-            design canvas
-          </button>
-          <span>•</span>
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('animation')}
-            className="hover:text-black underline underline-offset-2 cursor-pointer"
-          >
-            kinetic motion
-          </button>
-          <span>•</span>
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('productivity')}
-            className="hover:text-black underline underline-offset-2 cursor-pointer"
-          >
-            automation pipelines
-          </button>
-          <span>•</span>
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('utilities')}
-            className="hover:text-black underline underline-offset-2 cursor-pointer"
-          >
-            utilities
-          </button>
-        </div>
       </div>
 
-      {/* 2. Horizontal Filter Bar (matches screenshot) */}
+      {/* 2. Horizontal Filter Bar */}
       <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-neutral-200 pb-4">
-        {/* Left / Center: Category Pills */}
+        {/* Category Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
           <button
             type="button"
@@ -98,7 +63,7 @@ export default function HomePage() {
                 : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
             }`}
           >
-            Discover All
+            All Softwares
           </button>
 
           {CATEGORIES.filter((c) => c.id !== 'all').map((cat) => {
@@ -120,7 +85,7 @@ export default function HomePage() {
           })}
         </div>
 
-        {/* Right: Search / Filters Toggle */}
+        {/* Right: Search */}
         <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
           <div className="relative flex-1 sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />

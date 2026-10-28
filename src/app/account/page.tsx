@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
+import { AvatarIconPicker, renderUserIcon } from '@/components/ui/AvatarIconPicker';
 import {
   KeyRound,
   Shield,
@@ -13,29 +14,50 @@ import {
   LogOut,
   CheckCircle,
   AlertCircle,
+  Phone,
+  User as UserIcon,
+  Smile,
 } from 'lucide-react';
 
 export default function AccountPage() {
-  const { user, profile, updateName, resetPassword, signOut, isAdmin } = useAuth();
-  const [displayName, setDisplayName] = useState(profile?.displayName || user?.displayName || '');
-  const [nameSaving, setNameSaving] = useState(false);
-  const [nameSuccess, setNameSuccess] = useState(false);
+  const { user, profile, updateProfileDetails, resetPassword, signOut, isAdmin } = useAuth();
+
+  const [displayName, setDisplayName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [bio, setBio] = useState('');
+  const [avatarIcon, setAvatarIcon] = useState<string | null>('User');
+
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleUpdateName = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (profile || user) {
+      setDisplayName(profile?.displayName || user?.displayName || '');
+      setPhoneNumber(profile?.phoneNumber || '');
+      setBio(profile?.bio || '');
+      setAvatarIcon(profile?.avatarIcon || 'User');
+    }
+  }, [profile, user]);
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!displayName.trim()) return;
-    setNameSaving(true);
+    setProfileSaving(true);
     setError(null);
     try {
-      await updateName(displayName.trim());
-      setNameSuccess(true);
-      setTimeout(() => setNameSuccess(false), 3000);
+      await updateProfileDetails({
+        displayName: displayName.trim(),
+        phoneNumber: phoneNumber.trim(),
+        bio: bio.trim(),
+        avatarIcon: avatarIcon || 'User',
+      });
+      setProfileSuccess(true);
+      setTimeout(() => setProfileSuccess(false), 3000);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to update name');
+      setError(err instanceof Error ? err.message : 'Failed to update profile');
     } finally {
-      setNameSaving(false);
+      setProfileSaving(false);
     }
   };
 
@@ -53,17 +75,17 @@ export default function AccountPage() {
 
   return (
     <ProtectedRoute>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
         {/* Header */}
         <div className="border-b border-neutral-950 pb-6">
-          <div className="font-mono text-[11px] uppercase tracking-widest text-neutral-400 mb-1">
-            CENTRAL IDENTITY MANAGEMENT
+          <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">
+            DOCSTUDIO IDENTITY
           </div>
-          <h1 className="text-3xl sm:text-4xl font-light tracking-[-0.03em] uppercase text-neutral-950 font-sans">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-neutral-950 font-sans">
             Account Settings
           </h1>
           <p className="mt-1 text-xs sm:text-sm text-neutral-600 font-sans">
-            Manage your personal profile and Docdril central identity settings.
+            Manage your personal profile, contact information, and avatar identity.
           </p>
         </div>
 
@@ -74,19 +96,23 @@ export default function AccountPage() {
           </div>
         )}
 
-        {/* Profile Details Card */}
+        {/* Profile Card */}
         <div className="border border-neutral-950 bg-white p-6 sm:p-8 space-y-8 rounded-none">
+          {/* Header row: Avatar preview + Name */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-neutral-200">
             <div className="flex items-center gap-5">
-              <div className="w-14 h-14 bg-neutral-950 text-white flex items-center justify-center text-xl font-sans font-bold select-none">
-                {profile?.displayName?.charAt(0).toUpperCase() ||
-                  user?.email?.charAt(0).toUpperCase() ||
-                  'U'}
+              <div className="w-16 h-16 bg-neutral-950 text-white flex items-center justify-center text-xl font-bold rounded-none shrink-0 shadow-md">
+                {avatarIcon && renderUserIcon(avatarIcon, 'w-8 h-8 text-white')}
+                {!avatarIcon && (
+                  <span>
+                    {displayName.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
+                  </span>
+                )}
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-xl font-bold tracking-[-0.02em] text-neutral-950 font-sans">
-                    {profile?.displayName || 'Docdril User'}
+                  <h2 className="text-xl font-bold tracking-tight text-neutral-950 font-sans">
+                    {displayName || 'DocStudio User'}
                   </h2>
                   {isAdmin && (
                     <Badge variant="info">
@@ -109,32 +135,63 @@ export default function AccountPage() {
             </div>
           </div>
 
-          <form onSubmit={handleUpdateName} className="space-y-5 max-w-xl">
-            <div>
+          <form onSubmit={handleUpdateProfile} className="space-y-6">
+            {/* 1. Avatar Icon Picker (50 Icons) */}
+            <AvatarIconPicker
+              selectedIcon={avatarIcon}
+              onSelectIcon={(iconId) => setAvatarIcon(iconId)}
+            />
+
+            {/* 2. Contact details */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
               <Input
-                label="Display Name"
+                label="Full Name"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                placeholder="Your full name"
+                placeholder="Piyush Chaudhary"
                 required
               />
-            </div>
-            <div>
+
               <Input
                 label="Email Address"
                 value={user?.email || ''}
                 disabled
-                helperText="Primary email linked to your Docdril central account"
+                helperText="Primary email tied to your central account"
               />
             </div>
-            <div className="flex items-center gap-4 pt-2">
-              <Button type="submit" variant="primary" size="md" isLoading={nameSaving}>
-                Save Changes
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <Input
+                label="Phone Number"
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="+91 98765 43210"
+                helperText="Optional for notifications and security recovery"
+              />
+
+              <div>
+                <label className="block font-sans text-xs uppercase tracking-wider font-semibold text-neutral-800 mb-1.5">
+                  About You / Role
+                </label>
+                <input
+                  type="text"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Founder, Creative Director, Developer..."
+                  className="w-full rounded-none border border-neutral-300 hover:border-neutral-400 focus:border-neutral-950 bg-white px-3.5 py-2.5 text-sm font-sans text-neutral-950 focus:outline-none transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 pt-4 border-t border-neutral-100">
+              <Button type="submit" variant="primary" size="md" isLoading={profileSaving}>
+                Save Profile Details
               </Button>
-              {nameSuccess && (
-                <span className="font-mono text-xs uppercase tracking-wider text-emerald-700 font-semibold flex items-center gap-1.5">
+              {profileSuccess && (
+                <span className="font-sans text-xs uppercase tracking-wider text-emerald-700 font-semibold flex items-center gap-1.5">
                   <CheckCircle className="w-3.5 h-3.5" />
-                  Saved successfully
+                  Profile updated successfully
                 </span>
               )}
             </div>
@@ -171,25 +228,10 @@ export default function AccountPage() {
           </div>
         </div>
 
-        {/* Billing & Subscriptions Preparation */}
-        <div className="border border-neutral-200 bg-white p-6 sm:p-8 space-y-3 rounded-none">
-          <div className="flex items-center gap-2 text-neutral-950">
-            <CreditCard className="w-4 h-4" />
-            <h3 className="font-sans text-xs uppercase tracking-wider font-bold">
-              Billing & Subscriptions
-            </h3>
-          </div>
-          <p className="text-xs text-neutral-600 font-sans leading-relaxed">
-            Centralized billing and software subscriptions will be managed here once the payment
-            and checkout system is established. No active payment methods or recurring charges currently
-            exist on your account.
-          </p>
-        </div>
-
         {/* Sign Out */}
         <div className="pt-6 border-t border-neutral-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <p className="text-xs uppercase tracking-wider text-neutral-400 font-sans">
-            Sign out of your DocStore session on this device.
+            Sign out of your DocStudio session on this device.
           </p>
           <Button
             type="button"

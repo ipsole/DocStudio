@@ -10,15 +10,15 @@ export function Footer() {
           <div className="md:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
               <DocdrilLogo size={26} />
-              <span className="font-light text-xl tracking-[-0.03em] uppercase text-neutral-950 font-sans">
-                DocStore
+              <span className="font-bold text-xl tracking-tight uppercase text-neutral-950 font-sans">
+                DocStudio
               </span>
               <span className="font-mono text-[10px] tracking-widest text-neutral-400 uppercase">
                 BY DOCDRIL
               </span>
             </div>
             <p className="text-xs sm:text-sm text-neutral-600 max-w-md leading-relaxed font-sans">
-              The centralized software platform powering independent creative, animation, and
+              The centralized software platform powering creative, animation, and
               productivity tools created under the Docdril ecosystem.
             </p>
           </div>
@@ -65,7 +65,7 @@ export function Footer() {
         <div className="mt-12 pt-8 border-t border-neutral-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 font-mono text-[11px] text-neutral-400 uppercase">
           <p>© {new Date().getFullYear()} DOCDRIL. ALL RIGHTS RESERVED.</p>
           <div className="flex items-center gap-4">
-            <span>DOCSTORE PLATFORM 1.0</span>
+            <span>DOCSTUDIO PLATFORM 1.0</span>
             <span>•</span>
             <span className="text-emerald-700">FIREBASE CONNECTED</span>
           </div>

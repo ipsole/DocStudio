@@ -29,6 +29,12 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateName: (newName: string) => Promise<void>;
+  updateProfileDetails: (updates: {
+    displayName?: string;
+    phoneNumber?: string;
+    bio?: string;
+    avatarIcon?: string;
+  }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -140,6 +146,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile((prev) => (prev ? { ...prev, displayName: newName } : null));
   };
 
+  const updateProfileDetails = async (updates: {
+    displayName?: string;
+    phoneNumber?: string;
+    bio?: string;
+    avatarIcon?: string;
+  }) => {
+    if (!user) throw new Error('Not authenticated');
+    if (updates.displayName && auth?.currentUser) {
+      await fbUpdateProfile(auth.currentUser, { displayName: updates.displayName });
+    }
+    await dbUpdateUserProfile(user.uid, updates);
+    setProfile((prev) => (prev ? { ...prev, ...updates } : null));
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -154,6 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signOut,
         resetPassword,
         updateName,
+        updateProfileDetails,
       }}
     >
       {children}

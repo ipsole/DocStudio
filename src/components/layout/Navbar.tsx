@@ -6,6 +6,7 @@ import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
+import { renderUserIcon } from '@/components/ui/AvatarIconPicker';
 import {
   Menu,
   X,
@@ -13,7 +14,6 @@ import {
   LayoutDashboard,
   Settings,
   Shield,
-  ArrowRight,
 } from 'lucide-react';
 
 export function Navbar() {
@@ -27,21 +27,21 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8">
-        <div className="flex h-18 items-center justify-between gap-4">
+        <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo & Brand Identity */}
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center gap-3 group select-none">
-              <DocdrilLogo size={30} />
+              <DocdrilLogo size={28} />
               <div className="flex flex-col">
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xl sm:text-2xl font-light tracking-[-0.03em] font-sans uppercase leading-none text-neutral-950">
-                    DocStore
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-950 font-sans">
+                    DocStudio
                   </span>
-                  <span className="text-[10px] font-mono font-bold tracking-wider text-neutral-500 uppercase border border-neutral-300 px-1 py-0.2 leading-none">
+                  <span className="text-[9px] font-mono font-bold tracking-wider text-neutral-500 uppercase border border-neutral-300 px-1 py-0.2 leading-none">
                     BETA
                   </span>
                 </div>
-                <span className="text-[10px] font-mono tracking-widest uppercase text-neutral-400 mt-0.5">
+                <span className="text-[9px] font-mono tracking-widest uppercase text-neutral-400">
                   BY DOCDRIL
                 </span>
               </div>
@@ -51,18 +51,18 @@ export function Navbar() {
             <div className="hidden md:flex items-center gap-2">
               <Link
                 href="/apps"
-                className={`px-3 py-1.5 text-xs sm:text-sm font-medium uppercase tracking-[-0.02em] font-sans transition-colors ${
+                className={`px-3 py-1.5 text-xs sm:text-sm font-medium tracking-tight transition-colors ${
                   isActive('/apps')
                     ? 'text-neutral-950 font-bold border-b-2 border-neutral-950'
                     : 'text-neutral-600 hover:text-neutral-950'
                 }`}
               >
-                Explore Apps
+                Softwares
               </Link>
               {user && (
                 <Link
                   href="/dashboard"
-                  className={`px-3 py-1.5 text-xs sm:text-sm font-medium uppercase tracking-[-0.02em] font-sans transition-colors ${
+                  className={`px-3 py-1.5 text-xs sm:text-sm font-medium tracking-tight transition-colors ${
                     isActive('/dashboard')
                       ? 'text-neutral-950 font-bold border-b-2 border-neutral-950'
                       : 'text-neutral-600 hover:text-neutral-950'
@@ -74,7 +74,7 @@ export function Navbar() {
               {isAdmin && (
                 <Link
                   href="/admin"
-                  className={`px-3 py-1.5 text-xs sm:text-sm font-medium uppercase tracking-[-0.02em] font-sans transition-colors flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 text-xs sm:text-sm font-medium tracking-tight transition-colors flex items-center gap-1.5 ${
                     isActive('/admin')
                       ? 'text-neutral-950 font-bold border-b-2 border-neutral-950'
                       : 'text-neutral-600 hover:text-neutral-950'
@@ -96,10 +96,16 @@ export function Navbar() {
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                   className="flex items-center gap-2.5 px-3 py-1.5 border border-neutral-950 bg-white hover:bg-neutral-50 transition-all cursor-pointer rounded-none"
                 >
-                  <div className="w-6 h-6 bg-neutral-950 text-white flex items-center justify-center text-xs font-semibold">
-                    {profile?.displayName
-                      ? profile.displayName.charAt(0).toUpperCase()
-                      : user.email?.charAt(0).toUpperCase()}
+                  <div className="w-6 h-6 bg-neutral-950 text-white flex items-center justify-center text-xs font-semibold shrink-0">
+                    {profile?.avatarIcon ? (
+                      renderUserIcon(profile.avatarIcon, 'w-3.5 h-3.5 text-white')
+                    ) : (
+                      <span>
+                        {profile?.displayName
+                          ? profile.displayName.charAt(0).toUpperCase()
+                          : user.email?.charAt(0).toUpperCase()}
+                      </span>
+                    )}
                   </div>
                   <span className="text-xs font-medium text-neutral-900 max-w-[140px] truncate tracking-tight">
                     {profile?.displayName || user.email?.split('@')[0]}
@@ -201,23 +207,23 @@ export function Navbar() {
           <Link
             href="/apps"
             onClick={() => setMobileMenuOpen(false)}
-            className="block py-2 text-sm font-semibold uppercase tracking-wider text-neutral-900 border-b border-neutral-100"
+            className="block py-2 text-sm font-semibold tracking-tight text-neutral-900 border-b border-neutral-100"
           >
-            Explore Apps
+            Softwares
           </Link>
           {user ? (
             <>
               <Link
                 href="/dashboard"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block py-2 text-sm font-semibold uppercase tracking-wider text-neutral-900 border-b border-neutral-100"
+                className="block py-2 text-sm font-semibold tracking-tight text-neutral-900 border-b border-neutral-100"
               >
                 Dashboard
               </Link>
               <Link
                 href="/account"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block py-2 text-sm font-semibold uppercase tracking-wider text-neutral-900 border-b border-neutral-100"
+                className="block py-2 text-sm font-semibold tracking-tight text-neutral-900 border-b border-neutral-100"
               >
                 Account Settings
               </Link>
@@ -225,7 +231,7 @@ export function Navbar() {
                 <Link
                   href="/admin"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block py-2 text-sm font-semibold uppercase tracking-wider text-neutral-950 border-b border-neutral-100"
+                  className="block py-2 text-sm font-semibold tracking-tight text-neutral-950 border-b border-neutral-100"
                 >
                   Admin Portal
                 </Link>
@@ -237,7 +243,7 @@ export function Navbar() {
                     setMobileMenuOpen(false);
                     await signOut();
                   }}
-                  className="w-full text-left py-2 text-sm font-semibold uppercase tracking-wider text-red-600"
+                  className="w-full text-left py-2 text-sm font-semibold tracking-tight text-red-600"
                 >
                   Sign Out ({user.email})
                 </button>

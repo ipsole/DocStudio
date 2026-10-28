@@ -5,7 +5,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-  title: 'DocStore | The Central Software Platform of Docdril',
+  title: 'DocStudio | The Software Ecosystem of Docdril',
   description:
     'Discover, access, and manage the software ecosystem of Docdril through one unified account.',
 };

@@ -27,7 +27,10 @@ export interface UserProfile {
   uid: string;
   email: string;
   displayName: string | null;
+  phoneNumber?: string | null;
+  bio?: string | null;
   photoURL?: string | null;
+  avatarIcon?: string | null;
   isAdmin?: boolean;
   createdAt: string | number;
   updatedAt: string | number;

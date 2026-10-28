@@ -184,8 +184,8 @@ export default function SignInPage() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3">
         <Link href="/" className="inline-flex items-center gap-3 group">
           <DocdrilLogo size={32} />
-          <span className="font-light text-2xl tracking-[-0.03em] uppercase text-neutral-950 font-sans">
-            DocStore
+          <span className="font-bold text-2xl tracking-tight text-neutral-950 font-sans">
+            DocStudio
           </span>
         </Link>
         <h2 className="text-3xl font-light tracking-[-0.03em] uppercase text-neutral-950 font-sans">
