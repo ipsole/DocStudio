@@ -90,9 +90,9 @@ function SignInForm() {
   };
 
   return (
-    <div className="bg-white dark:bg-neutral-950/90 border border-neutral-200 dark:border-neutral-800 p-8 sm:p-10 space-y-6 rounded-2xl shadow-xl dark:shadow-2xl backdrop-blur-xl text-neutral-900 dark:text-white">
+    <div className="bg-white dark:bg-neutral-950/90 border border-neutral-200 dark:border-neutral-800 p-6 sm:p-7 space-y-4 rounded-2xl shadow-xl dark:shadow-2xl backdrop-blur-xl text-neutral-900 dark:text-white">
       <div className="space-y-1">
-        <h2 className="text-2xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
           Sign In
         </h2>
         <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
@@ -101,13 +101,13 @@ function SignInForm() {
       </div>
 
       {!isConfigured && (
-        <div className="p-3.5 border border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/60 dark:text-amber-300 font-mono text-xs leading-relaxed rounded">
+        <div className="p-3 border border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/60 dark:text-amber-300 font-mono text-xs leading-relaxed rounded">
           <strong>NOTICE:</strong> Firebase configuration is pending in <code className="font-mono text-neutral-950 dark:text-white">.env.local</code>.
         </div>
       )}
 
       {error && (
-        <div className="p-3.5 border border-red-300 bg-red-50 text-red-700 dark:border-red-800/80 dark:bg-red-950/70 dark:text-red-300 font-mono text-xs flex items-center gap-2 rounded">
+        <div className="p-3 border border-red-300 bg-red-50 text-red-700 dark:border-red-800/80 dark:bg-red-950/70 dark:text-red-300 font-mono text-xs flex items-center gap-2 rounded">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
@@ -117,7 +117,7 @@ function SignInForm() {
         <Button
           type="button"
           variant="outline"
-          className="w-full gap-2 text-xs font-semibold"
+          className="w-full gap-2 text-xs font-semibold h-11"
           onClick={handleGoogleSignIn}
           isLoading={googleLoading}
           disabled={googleLoading || !isConfigured}
@@ -142,11 +142,11 @@ function SignInForm() {
           </svg>
           Continue with Google
         </Button>
-        <p className="mt-2 text-center text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
+        <p className="mt-1.5 text-center text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
           ⚡ 1-tap instant Google sign-in active on this screen
         </p>
 
-        <div className="relative my-5">
+        <div className="relative my-3.5">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-neutral-200 dark:border-neutral-800" />
           </div>
@@ -158,7 +158,7 @@ function SignInForm() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3.5">
         <div>
           <Input
             label="Email address"
@@ -172,8 +172,8 @@ function SignInForm() {
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="block font-mono text-[11px] uppercase tracking-wider font-semibold text-neutral-700 dark:text-neutral-300">
+          <div className="flex items-center justify-between mb-1">
+            <label className="block font-mono text-xs uppercase tracking-wider font-semibold text-neutral-700 dark:text-neutral-300">
               Password
             </label>
             <Link
@@ -196,7 +196,7 @@ function SignInForm() {
         <Button
           type="submit"
           variant="primary"
-          className="w-full mt-2"
+          className="w-full mt-1 h-11"
           isLoading={loading}
           disabled={loading || !isConfigured}
         >
@@ -204,7 +204,7 @@ function SignInForm() {
         </Button>
       </form>
 
-      <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800 text-center font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+      <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 text-center font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
         Don&apos;t have an account?{' '}
         <Link href="/sign-up" className="font-bold text-neutral-950 hover:text-neutral-700 dark:text-white underline ml-1 dark:hover:text-neutral-200">
           Create Account
@@ -216,30 +216,30 @@ function SignInForm() {
 
 export default function SignInPage() {
   return (
-    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center py-10 sm:py-16 px-4 sm:px-6 md:px-8 text-neutral-900 dark:text-white transition-colors duration-200">
-      <div className="w-full max-w-[1360px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
-        {/* Left Column: Brand Hero with Logo above, big DocStudio in luxury serif */}
-        <div className="lg:col-span-7 flex flex-col justify-center space-y-6 select-none">
-          <Link href="/" className="inline-flex items-center gap-3 w-fit group">
-            <DocdrilLogo size={48} className="text-neutral-950 dark:text-white transition-transform group-hover:scale-105" />
+    <div className="min-h-[calc(100vh-4.5rem)] flex items-center justify-center py-4 sm:py-6 px-4 sm:px-6 md:px-8 text-neutral-900 dark:text-white transition-colors duration-200">
+      <div className="w-full max-w-[1300px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
+        {/* Left Column: Brand Hero with Logo Centered above DocStudio */}
+        <div className="lg:col-span-7 flex flex-col items-center text-center justify-center space-y-4 select-none">
+          <Link href="/" className="inline-flex items-center justify-center group" title="DocStudio">
+            <DocdrilLogo size={76} className="text-neutral-950 dark:text-white transition-transform group-hover:scale-105" />
           </Link>
-          <div className="space-y-4">
-            <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-[6.5rem] font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-[1.05]">
+          <div className="space-y-2">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-[1.05]">
               DocStudio
             </h1>
-            <p className="text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-xl font-sans leading-relaxed">
+            <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-md mx-auto font-sans leading-relaxed">
               The unified software ecosystem of Docdril. Sign in once to access creative canvases, motion sequencers, and document pipelines across all subdomains.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2 pt-2 text-xs font-mono text-neutral-600 dark:text-neutral-400">
-            <span className="px-3.5 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900/70">
+          <div className="flex flex-wrap justify-center gap-2 pt-1 text-xs font-mono text-neutral-600 dark:text-neutral-400">
+            <span className="px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900/70">
               Single Sign-On
             </span>
-            <span className="px-3.5 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900/70">
+            <span className="px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900/70">
               Shared Credits
             </span>
-            <span className="px-3.5 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900/70">
+            <span className="px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900/70">
               All Subdomains
             </span>
           </div>
@@ -250,7 +250,7 @@ export default function SignInPage() {
           <div className="w-full max-w-md">
             <Suspense
               fallback={
-                <div className="bg-white dark:bg-neutral-950 p-12 border border-neutral-200 dark:border-neutral-800 rounded-2xl flex flex-col items-center justify-center gap-3 shadow-sm">
+                <div className="bg-white dark:bg-neutral-950 p-10 border border-neutral-200 dark:border-neutral-800 rounded-2xl flex flex-col items-center justify-center gap-3 shadow-sm">
                   <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
                   <p className="font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                     Loading session...
