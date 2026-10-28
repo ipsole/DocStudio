@@ -216,10 +216,10 @@ function SignInForm() {
 
 export default function SignInPage() {
   return (
-    <div className="min-h-[calc(100vh-4.5rem)] flex items-center justify-center py-4 sm:py-6 px-4 sm:px-6 md:px-8 text-neutral-900 dark:text-white transition-colors duration-200">
-      <div className="w-full max-w-[1300px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
+    <div className="min-h-[calc(100vh-4.5rem)] flex items-center justify-center py-4 px-4 sm:px-6 md:px-8 text-neutral-900 dark:text-white transition-colors duration-200">
+      <div className="w-full max-w-[1240px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
         {/* Left Column: Brand Hero with Logo Centered above DocStudio */}
-        <div className="lg:col-span-7 flex flex-col items-center text-center justify-center space-y-4 select-none">
+        <div className="lg:col-span-6 flex flex-col items-center text-center justify-center space-y-3 select-none">
           <Link href="/" className="inline-flex items-center justify-center group" title="DocStudio">
             <DocdrilLogo size={76} className="text-neutral-950 dark:text-white transition-transform group-hover:scale-105" />
           </Link>
@@ -245,12 +245,12 @@ export default function SignInPage() {
           </div>
         </div>
 
-        {/* Right Column: Sign In Card */}
-        <div className="lg:col-span-5 flex justify-center lg:justify-end">
-          <div className="w-full max-w-md">
+        {/* Right Column: Wider, Low-Height Sign In Card */}
+        <div className="lg:col-span-6 flex justify-center">
+          <div className="w-full max-w-[490px]">
             <Suspense
               fallback={
-                <div className="bg-white dark:bg-neutral-950 p-10 border border-neutral-200 dark:border-neutral-800 rounded-2xl flex flex-col items-center justify-center gap-3 shadow-sm">
+                <div className="bg-white dark:bg-neutral-950 p-8 border border-neutral-200 dark:border-neutral-800 rounded-2xl flex flex-col items-center justify-center gap-3 shadow-sm">
                   <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
                   <p className="font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                     Loading session...

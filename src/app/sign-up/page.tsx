@@ -97,10 +97,10 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4.5rem)] flex items-center justify-center py-4 sm:py-6 px-4 sm:px-6 md:px-8 text-neutral-900 dark:text-white transition-colors duration-200">
-      <div className="w-full max-w-[1300px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
+    <div className="min-h-[calc(100vh-4.5rem)] flex items-center justify-center py-4 px-4 sm:px-6 md:px-8 text-neutral-900 dark:text-white transition-colors duration-200">
+      <div className="w-full max-w-[1240px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
         {/* Left Column: Brand Hero with Logo Centered above DocStudio */}
-        <div className="lg:col-span-7 flex flex-col items-center text-center justify-center space-y-4 select-none">
+        <div className="lg:col-span-6 flex flex-col items-center text-center justify-center space-y-3 select-none">
           <Link href="/" className="inline-flex items-center justify-center group" title="DocStudio">
             <DocdrilLogo size={76} className="text-neutral-950 dark:text-white transition-transform group-hover:scale-105" />
           </Link>
@@ -126,11 +126,11 @@ export default function SignUpPage() {
           </div>
         </div>
 
-        {/* Right Column: Sign Up Card */}
-        <div className="lg:col-span-5 flex justify-center lg:justify-end">
-          <div className="w-full max-w-md bg-white dark:bg-neutral-950/90 border border-neutral-200 dark:border-neutral-800 p-6 sm:p-7 space-y-4 rounded-2xl shadow-xl dark:shadow-2xl backdrop-blur-xl text-neutral-900 dark:text-white">
-            <div className="space-y-1">
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+        {/* Right Column: Wider, Low-Height Sign Up Card */}
+        <div className="lg:col-span-6 flex justify-center">
+          <div className="w-full max-w-[530px] bg-white dark:bg-neutral-950/90 border border-neutral-200 dark:border-neutral-800 p-5 sm:p-6 space-y-3 rounded-2xl shadow-xl dark:shadow-2xl backdrop-blur-xl text-neutral-900 dark:text-white">
+            <div className="space-y-0.5">
+              <h2 className="text-xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
                 Create Account
               </h2>
               <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
@@ -139,13 +139,13 @@ export default function SignUpPage() {
             </div>
 
             {!isConfigured && (
-              <div className="p-3 border border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/60 dark:text-amber-300 font-mono text-xs leading-relaxed rounded">
+              <div className="p-2.5 border border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/60 dark:text-amber-300 font-mono text-xs leading-relaxed rounded">
                 <strong>NOTICE:</strong> Firebase configuration is pending in <code className="font-mono text-neutral-950 dark:text-white">.env.local</code>.
               </div>
             )}
 
             {error && (
-              <div className="p-3 border border-red-300 bg-red-50 text-red-700 dark:border-red-800/80 dark:bg-red-950/70 dark:text-red-300 font-mono text-xs flex items-center gap-2 rounded">
+              <div className="p-2.5 border border-red-300 bg-red-50 text-red-700 dark:border-red-800/80 dark:bg-red-950/70 dark:text-red-300 font-mono text-xs flex items-center gap-2 rounded">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -155,7 +155,7 @@ export default function SignUpPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full gap-2 text-xs font-semibold h-11"
+                className="w-full gap-2 text-xs font-semibold h-10"
                 onClick={handleGoogleSignUp}
                 isLoading={googleLoading}
                 disabled={googleLoading || !isConfigured}
@@ -180,11 +180,11 @@ export default function SignUpPage() {
                 </svg>
                 Continue with Google
               </Button>
-              <p className="mt-1.5 text-center text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
+              <p className="mt-1 text-center text-[10px] text-neutral-500 dark:text-neutral-400 font-sans">
                 ⚡ 1-tap instant Google sign-in active on this screen
               </p>
 
-              <div className="relative my-3">
+              <div className="relative my-2.5">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-neutral-200 dark:border-neutral-800" />
                 </div>
@@ -196,31 +196,32 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div>
-                <Input
-                  label="Full name"
-                  type="text"
-                  required
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Jane Doe"
-                />
+            <form onSubmit={handleSubmit} className="space-y-2.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <Input
+                    label="Full name"
+                    type="text"
+                    required
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="Jane Doe"
+                  />
+                </div>
+                <div>
+                  <Input
+                    label="Email address"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="jane@example.com"
+                  />
+                </div>
               </div>
 
-              <div>
-                <Input
-                  label="Email address"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="jane@example.com"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
                   <Input
                     label="Password"
@@ -248,7 +249,7 @@ export default function SignUpPage() {
               <Button
                 type="submit"
                 variant="primary"
-                className="w-full mt-1 h-11"
+                className="w-full mt-1 h-10 text-xs font-semibold"
                 isLoading={loading}
                 disabled={loading || !isConfigured}
               >
@@ -256,7 +257,7 @@ export default function SignUpPage() {
               </Button>
             </form>
 
-            <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 text-center font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+            <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800 text-center font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
               Already have an account?{' '}
               <Link href="/sign-in" className="font-bold text-neutral-950 hover:text-neutral-700 dark:text-white underline ml-1 dark:hover:text-neutral-200">
                 Sign In
