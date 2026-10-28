@@ -18,16 +18,28 @@ import {
 
 const NAV_TABS = [
   { name: 'Home', href: '/' },
-  { name: 'Softwares', href: '/apps' },
-  { name: 'Pricings', href: '/pricing' },
-  { name: 'Tutorials', href: '/tutorials' },
+  { name: 'Softwares', href: '/#softwares' },
+  { name: 'Pricings', href: '/#pricings' },
+  { name: 'Tutorials', href: '/#tutorials' },
 ];
 
 export function Navbar() {
   const pathname = usePathname();
+  const [hash, setHash] = useState('');
   const { user, profile, isAdmin, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  React.useEffect(() => {
+    const updateHash = () => {
+      if (typeof window !== 'undefined') {
+        setHash(window.location.hash.toLowerCase());
+      }
+    };
+    updateHash();
+    window.addEventListener('hashchange', updateHash);
+    return () => window.removeEventListener('hashchange', updateHash);
+  }, []);
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-white/80 dark:bg-black/80 backdrop-blur-md text-neutral-900 dark:text-white select-none transition-colors duration-200">
@@ -37,9 +49,14 @@ export function Navbar() {
           <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-1">
             {NAV_TABS.map((tab) => {
               const isActive =
-                tab.href === '/'
-                  ? pathname === '/'
-                  : pathname?.startsWith(tab.href);
+                tab.name === 'Home'
+                  ? pathname === '/' && (!hash || hash === '#home')
+                  : tab.name === 'Softwares'
+                  ? hash === '#softwares' || pathname?.startsWith('/apps')
+                  : tab.name === 'Pricings'
+                  ? hash === '#pricings' || pathname?.startsWith('/pricing')
+                  : hash === '#tutorials' || pathname?.startsWith('/tutorials');
+
               return (
                 <Link
                   key={tab.name}
