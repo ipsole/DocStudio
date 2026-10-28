@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -14,7 +14,13 @@ function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get('redirect') || '/dashboard';
-  const { signIn, signInWithGoogle, isConfigured } = useAuth();
+  const { user, loading: authLoading, signIn, signInWithGoogle, isConfigured } = useAuth();
+
+  useEffect(() => {
+    if (user && !authLoading) {
+      router.push(redirectPath);
+    }
+  }, [user, authLoading, router, redirectPath]);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -55,7 +61,6 @@ function SignInForm() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      router.push(redirectPath);
     } catch (err: unknown) {
       const fbErr = err as { code?: string; message?: string };
       if (fbErr.code === 'auth/account-exists-with-different-credential') {
@@ -63,7 +68,6 @@ function SignInForm() {
       } else if (fbErr.code !== 'auth/popup-closed-by-user') {
         setError(fbErr.message || 'Google sign in failed.');
       }
-    } finally {
       setGoogleLoading(false);
     }
   };

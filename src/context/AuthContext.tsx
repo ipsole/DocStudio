@@ -7,6 +7,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithCredential,
   GoogleAuthProvider,
   signOut as fbSignOut,
@@ -54,6 +56,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Process redirect sign-in in the same tab
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) {
+          await ensureUserProfile(
+            result.user.uid,
+            result.user.email || '',
+            result.user.displayName,
+            result.user.photoURL
+          );
+        }
+      })
+      .catch((err) => {
+        console.warn('[AuthContext] getRedirectResult notice:', err);
+      });
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
@@ -99,15 +117,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       throw new Error('Firebase Authentication is not yet configured.');
     }
     const provider = new GoogleAuthProvider();
-    const cred = await signInWithPopup(auth, provider);
-    if (cred.user) {
-      await ensureUserProfile(
-        cred.user.uid,
-        cred.user.email || '',
-        cred.user.displayName,
-        cred.user.photoURL
-      );
-    }
+    provider.setCustomParameters({ prompt: 'select_account' });
+    await signInWithRedirect(auth, provider);
   };
 
   const signInWithGoogleCredential = async (idToken: string): Promise<User | null> => {

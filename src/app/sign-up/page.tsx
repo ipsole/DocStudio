@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
 import { useRouter } from 'next/navigation';
@@ -12,7 +12,13 @@ import { AlertCircle } from 'lucide-react';
 
 export default function SignUpPage() {
   const router = useRouter();
-  const { signUp, signInWithGoogle, isConfigured } = useAuth();
+  const { user, loading: authLoading, signUp, signInWithGoogle, isConfigured } = useAuth();
+
+  useEffect(() => {
+    if (user && !authLoading) {
+      router.push('/dashboard');
+    }
+  }, [user, authLoading, router]);
 
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
@@ -27,7 +33,6 @@ export default function SignUpPage() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      router.push('/dashboard');
     } catch (err: unknown) {
       const fbErr = err as { code?: string; message?: string };
       if (fbErr.code === 'auth/account-exists-with-different-credential') {
@@ -35,7 +40,6 @@ export default function SignUpPage() {
       } else if (fbErr.code !== 'auth/popup-closed-by-user') {
         setError(fbErr.message || 'Google sign up failed.');
       }
-    } finally {
       setGoogleLoading(false);
     }
   };
