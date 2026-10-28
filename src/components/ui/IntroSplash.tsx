@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
 
 interface IntroSplashProps {
@@ -11,6 +11,16 @@ interface IntroSplashProps {
 export function IntroSplash({ onComplete, forcePlay = false }: IntroSplashProps) {
   const [visible, setVisible] = useState(false);
   const [fadingOut, setFadingOut] = useState(false);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
+  const handleDismiss = useCallback(() => {
+    setFadingOut(true);
+    setTimeout(() => {
+      setVisible(false);
+      onCompleteRef.current?.();
+    }, 500);
+  }, []);
 
   useEffect(() => {
     // Only show on first visit in session, or when forced via prop / URL query
@@ -21,17 +31,20 @@ export function IntroSplash({ onComplete, forcePlay = false }: IntroSplashProps)
 
       if (!alreadySeen || forcePlay || urlIntro) {
         setVisible(true);
+        setFadingOut(false);
         sessionStorage.setItem('docstudio_intro_seen', 'true');
 
-        // Auto-dismiss sequence
+        // Automatic transition to main screen without waiting for user action:
+        // Keyframe timeline: Tagline finishes at ~2.45s. Hold gently, start fadeout at 2.8s
         const fadeTimer = setTimeout(() => {
           setFadingOut(true);
-        }, 3400);
+        }, 2800);
 
+        // Fully unmount and reveal main screen by 3.4s
         const endTimer = setTimeout(() => {
           setVisible(false);
-          onComplete?.();
-        }, 4100);
+          onCompleteRef.current?.();
+        }, 3400);
 
         return () => {
           clearTimeout(fadeTimer);
@@ -41,35 +54,27 @@ export function IntroSplash({ onComplete, forcePlay = false }: IntroSplashProps)
     } catch {
       // ignore storage errors
     }
-  }, [forcePlay, onComplete]);
+  }, [forcePlay]);
 
-  // Keyboard shortcut to dismiss
+  // Keyboard shortcut to dismiss early if user doesn't want to wait
   useEffect(() => {
     if (!visible) return;
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' || e.key === 'Enter') {
+      if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
         handleDismiss();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [visible]);
-
-  const handleDismiss = () => {
-    setFadingOut(true);
-    setTimeout(() => {
-      setVisible(false);
-      onComplete?.();
-    }, 450);
-  };
+  }, [visible, handleDismiss]);
 
   if (!visible) return null;
 
   return (
     <div
       onClick={handleDismiss}
-      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white text-neutral-950 select-none transition-opacity duration-700 cursor-pointer ${
-        fadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white text-neutral-950 select-none transition-all duration-600 ease-out cursor-pointer ${
+        fadingOut ? 'opacity-0 scale-[1.02] pointer-events-none' : 'opacity-100 scale-100'
       }`}
     >
       {/* Pristine Gallery Lighting Vignette */}
@@ -103,9 +108,9 @@ export function IntroSplash({ onComplete, forcePlay = false }: IntroSplashProps)
           e.stopPropagation();
           handleDismiss();
         }}
-        className="absolute bottom-8 sm:bottom-12 text-xs font-sans font-medium text-neutral-500 hover:text-black transition-colors cursor-pointer py-2 px-4 rounded-full border border-neutral-200/80 bg-white/90 shadow-sm"
+        className="absolute bottom-8 sm:bottom-12 text-xs font-sans font-medium text-neutral-400 hover:text-black transition-colors cursor-pointer py-1.5 px-3.5 rounded-full border border-neutral-200/80 bg-white/90 shadow-sm"
       >
-        Enter Studio [Esc] →
+        Skip [Esc] →
       </button>
     </div>
   );

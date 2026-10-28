@@ -54,6 +54,8 @@ export function LoginWelcomeWriter({
   const [visible, setVisible] = useState(false);
   const [fadingOut, setFadingOut] = useState(false);
   const [revealedWordCount, setRevealedWordCount] = useState(0);
+  const onCompleteRef = React.useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   // Check if we should activate on mount
   useEffect(() => {
@@ -77,9 +79,9 @@ export function LoginWelcomeWriter({
     setFadingOut(true);
     setTimeout(() => {
       setVisible(false);
-      onComplete?.();
+      onCompleteRef.current?.();
     }, 500);
-  }, [onComplete]);
+  }, []);
 
   // Keyboard shortcut: Escape or Enter or Space skips
   useEffect(() => {
