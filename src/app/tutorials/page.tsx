@@ -56,8 +56,8 @@ export default function TutorialsPage() {
               className="group p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/60 hover:border-neutral-400 dark:hover:border-neutral-600 transition-all flex flex-col justify-between"
             >
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-neutral-500">
-                  <span className="flex items-center gap-1.5 text-neutral-700 dark:text-neutral-300">
+                <div className="flex items-center justify-between text-xs font-sans text-neutral-500">
+                  <span className="flex items-center gap-1.5 font-medium text-neutral-700 dark:text-neutral-300">
                     <Icon className="w-3.5 h-3.5 text-neutral-500" />
                     {guide.category}
                   </span>

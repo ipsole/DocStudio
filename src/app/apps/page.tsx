@@ -97,7 +97,7 @@ export default function AppsCatalogPage() {
               className="w-full pl-9 pr-3 py-1.5 border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 rounded-full focus:outline-none focus:border-neutral-950 dark:focus:border-white transition-colors"
             />
           </div>
-          <span className="font-mono text-xs text-neutral-500 dark:text-neutral-400 whitespace-nowrap">
+          <span className="font-sans text-xs text-neutral-500 dark:text-neutral-400 whitespace-nowrap">
             {filteredApps.length} {filteredApps.length === 1 ? 'app' : 'apps'}
           </span>
         </div>
