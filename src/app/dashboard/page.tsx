@@ -15,7 +15,6 @@ import {
 } from '@/lib/firebase/db';
 import { DocApp, Entitlement, AppSubscription } from '@/types';
 import { AppCard } from '@/components/apps/AppCard';
-import { SubscriptionCard } from '@/components/subscriptions/SubscriptionCard';
 import {
   Settings,
   ArrowRight,
@@ -199,9 +198,44 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
           </div>
         </div>
 
-        {/* 2. Metrics & Access Ribbon (3 Sleek Floating Cards) */}
+        {/* 2. Enterprise Plan, Quota & Access Ribbon */}
         <div id="tour-quota-card" className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 animate-fade-in-up animation-delay-100">
-          {/* Card 1: Available Generation Credits */}
+          {/* Card 1: Your Current Plan & Upgrade Action */}
+          <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-all flex flex-col justify-between space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[11px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                Current Plan
+              </span>
+              <div className="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center text-neutral-900 dark:text-white">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+            </div>
+
+            <div>
+              <div className="text-2xl sm:text-3xl font-bold font-sans text-neutral-950 dark:text-white truncate">
+                {isAdmin ? 'Enterprise Admin Pass' : 'DocStudio Pro Pass'}
+              </div>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 truncate font-mono">
+                {user?.email} • All tools unlocked
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-neutral-100 dark:border-neutral-900 flex items-center justify-between text-xs">
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5 font-mono text-[11px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-dot" />
+                Active Subscription
+              </span>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-200 dark:text-black text-xs font-semibold shadow-sm transition-all active:scale-95 cursor-pointer"
+              >
+                <span>Upgrade Plan</span>
+                <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Card 2: Generation Quota with Visual Usage Meter & Get More Credits Button */}
           <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-all flex flex-col justify-between space-y-4">
             <div className="flex items-center justify-between">
               <span className="font-mono text-[11px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
@@ -213,38 +247,54 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
             </div>
 
             <div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl sm:text-4xl font-extrabold font-mono text-neutral-950 dark:text-white">
-                  {subscriptions.length > 0 ? totalCreditsRemaining : '100'}
-                </span>
-                <span className="text-xs font-mono text-neutral-500">
-                  / {subscriptions.length > 0 ? totalCreditsMax : '100'} Monthly Credits
+              <div className="flex items-baseline justify-between">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl sm:text-4xl font-extrabold font-mono text-neutral-950 dark:text-white">
+                    {subscriptions.length > 0 ? totalCreditsRemaining : 100}
+                  </span>
+                  <span className="text-xs font-mono text-neutral-500">
+                    / {subscriptions.length > 0 ? totalCreditsMax : 100} Monthly
+                  </span>
+                </div>
+                <span className="text-xs font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                  {Math.round(((subscriptions.length > 0 ? totalCreditsRemaining : 100) / (subscriptions.length > 0 ? totalCreditsMax : 100)) * 100)}% Available
                 </span>
               </div>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                Shared automatically with Canvas, Motion, and Document Pipelines.
+
+              {/* Visual Enterprise Usage Bar */}
+              <div className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-900 rounded-full overflow-hidden mt-3 mb-1">
+                <div
+                  className="h-full bg-emerald-500 dark:bg-emerald-400 rounded-full transition-all duration-500"
+                  style={{
+                    width: `${Math.min(100, Math.max(0, ((subscriptions.length > 0 ? totalCreditsRemaining : 100) / (subscriptions.length > 0 ? totalCreditsMax : 100)) * 100))}%`,
+                  }}
+                />
+              </div>
+
+              <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1">
+                Shared across Canvas, Motion, and Document Pipelines.
               </p>
             </div>
 
             <div className="pt-2 border-t border-neutral-100 dark:border-neutral-900 flex items-center justify-between text-xs">
-              <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5 text-[11px]">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 Quota Healthy
               </span>
               <Link
                 href="/pricing"
-                className="text-neutral-900 dark:text-white font-medium hover:underline text-[11px]"
+                className="text-neutral-900 dark:text-white font-semibold hover:underline text-xs flex items-center gap-1"
               >
-                Upgrade Plan →
+                <span>Get More Credits +</span>
               </Link>
             </div>
           </div>
 
-          {/* Card 2: Connected Subdomain Mesh */}
+          {/* Card 3: Connected Subdomain Mesh */}
           <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-all flex flex-col justify-between space-y-4">
             <div className="flex items-center justify-between">
               <span className="font-mono text-[11px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                Subdomain Mesh
+                Connected Suites
               </span>
               <div className="w-8 h-8 rounded-full bg-blue-500/10 dark:bg-blue-400/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
                 <Globe className="w-4 h-4" />
@@ -252,8 +302,8 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
             </div>
 
             <div>
-              <div className="text-3xl sm:text-4xl font-extrabold font-mono text-neutral-950 dark:text-white">
-                3 Subdomains
+              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-neutral-950 dark:text-white">
+                3 Active Suites
               </div>
               <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 font-mono">
                 canvas • motion • pipeline (.docdril.com)
@@ -261,40 +311,16 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
             </div>
 
             <div className="pt-2 border-t border-neutral-100 dark:border-neutral-900 flex items-center justify-between text-xs">
-              <span className="text-neutral-700 dark:text-neutral-300 font-medium">
-                Single Sign-On
+              <span className="text-neutral-700 dark:text-neutral-300 font-medium flex items-center gap-1.5 text-[11px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                SSO Synced
               </span>
-              <span className="font-mono text-[11px] text-emerald-600 dark:text-emerald-400">
-                ● Synchronized
-              </span>
-            </div>
-          </div>
-
-          {/* Card 3: Studio Pass Tier */}
-          <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-all flex flex-col justify-between space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-[11px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                Studio Identity
-              </span>
-              <div className="w-8 h-8 rounded-full bg-emerald-500/10 dark:bg-emerald-400/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-            </div>
-
-            <div>
-              <div className="text-2xl sm:text-3xl font-bold font-sans text-neutral-950 dark:text-white truncate">
-                DocStudio Pro Pass
-              </div>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 truncate font-mono">
-                {user?.email}
-              </p>
-            </div>
-
-            <div className="pt-2 border-t border-neutral-100 dark:border-neutral-900 flex items-center justify-between text-xs">
-              <span className="text-neutral-600 dark:text-neutral-400">Account Status</span>
-              <span className="font-bold text-neutral-950 dark:text-white uppercase font-mono text-[10px] bg-neutral-100 dark:bg-neutral-900 px-2 py-0.5 rounded">
-                Active Member
-              </span>
+              <a
+                href="#tour-launchpad"
+                className="text-neutral-900 dark:text-white font-semibold hover:underline text-xs flex items-center gap-1"
+              >
+                <span>Launch Apps ↓</span>
+              </a>
             </div>
           </div>
         </div>
@@ -342,62 +368,8 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
           </div>
         </section>
 
-        {/* 4. Active Subscriptions & Quota Controls */}
-        <section className="space-y-6 animate-fade-in-up animation-delay-300">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between pb-2 border-b border-neutral-200/80 dark:border-neutral-900 gap-2">
-            <div>
-              <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
-                GENERATION ALLOCATIONS
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold font-sans text-neutral-950 dark:text-white">
-                Active Subscriptions & Quotas
-              </h2>
-            </div>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
-              Atomic credit consumption synchronized across all tools
-            </p>
-          </div>
-
-          {subscriptions.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {subscriptions.map((sub) => {
-                const app = apps.find((a) => a.id === sub.appId);
-                return (
-                  <SubscriptionCard
-                    key={sub.id}
-                    subscription={sub}
-                    app={app}
-                    onCreditsUpdated={handleCreditsUpdated}
-                  />
-                );
-              })}
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-950/60 p-8 text-center space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-neutral-950 text-white dark:bg-white dark:text-black flex items-center justify-center mx-auto shadow-md">
-                <Sparkles className="w-6 h-6" />
-              </div>
-              <div className="space-y-1 max-w-md mx-auto">
-                <h3 className="font-bold text-base text-neutral-950 dark:text-white">
-                  Starter Pass Active
-                </h3>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                  Your central account is provisioned with starter monthly generation credits. Upgrade to Docdril Pro for unlimited high-priority exports.
-                </p>
-              </div>
-              <Link
-                href="/pricing"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-200 dark:text-black text-xs font-semibold shadow-md transition-all active:scale-[0.98]"
-              >
-                <span>View Pro Subscriptions</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          )}
-        </section>
-
-        {/* 5. Subdomain Developer Hub & Integration Guide */}
-        <section className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl overflow-hidden shadow-sm animate-fade-in-up animation-delay-400">
+        {/* 4. Subdomain Developer Hub & Integration Guide */}
+        <section className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl overflow-hidden shadow-sm animate-fade-in-up animation-delay-300">
           <div
             onClick={() => setShowApiDocs(!showApiDocs)}
             className="p-5 sm:p-6 cursor-pointer flex items-center justify-between hover:bg-neutral-50/80 dark:hover:bg-neutral-900/50 transition-colors select-none"
