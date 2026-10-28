@@ -1,0 +1,129 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getFirebaseAdmin } from '@/lib/firebase/admin';
+import { getAppSubscription, ensureDefaultUserSubscriptions } from '@/lib/firebase/db';
+
+export const dynamic = 'force-dynamic';
+
+/**
+ * CORS headers allowing requests from any docdril subdomain (*.docdril.com) or localhost
+ */
+function getCorsHeaders(request: NextRequest) {
+  const origin = request.headers.get('origin') || '*';
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-docstudio-app-key',
+    'Access-Control-Allow-Credentials': 'true',
+  };
+}
+
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(request),
+  });
+}
+
+export async function POST(request: NextRequest) {
+  const corsHeaders = getCorsHeaders(request);
+
+  try {
+    const body = await request.json().catch(() => ({}));
+    const authHeader = request.headers.get('authorization');
+    const { auth: adminAuth } = getFirebaseAdmin();
+
+    let verifiedUid = body.userId || body.uid;
+    let verifiedEmail = body.email;
+    let verifiedName: string | null = null;
+
+    // 1. Verify via Firebase ID Token if provided in Authorization header
+    if (authHeader && authHeader.startsWith('Bearer ') && adminAuth) {
+      const idToken = authHeader.split('Bearer ')[1];
+      try {
+        const decodedToken = await adminAuth.verifyIdToken(idToken);
+        verifiedUid = decodedToken.uid;
+        verifiedEmail = decodedToken.email;
+        verifiedName = decodedToken.name || null;
+      } catch (tokenErr) {
+        return NextResponse.json(
+          { valid: false, error: 'INVALID_TOKEN', message: 'ID token verification failed' },
+          { status: 401, headers: corsHeaders }
+        );
+      }
+    }
+
+    if (!verifiedUid) {
+      return NextResponse.json(
+        { valid: false, error: 'MISSING_CREDENTIALS', message: 'User ID or valid Bearer token is required' },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const appId = body.appId;
+    if (!appId) {
+      return NextResponse.json(
+        { valid: false, error: 'MISSING_APP_ID', message: 'Target appId is required to check subscription' },
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // 2. Ensure user has default subscriptions seeded if new
+    if (verifiedEmail) {
+      await ensureDefaultUserSubscriptions(verifiedUid, verifiedEmail);
+    }
+
+    // 3. Fetch app subscription & credit balance
+    const subscription = await getAppSubscription(verifiedUid, appId);
+
+    if (!subscription) {
+      return NextResponse.json(
+        {
+          valid: true,
+          authenticated: true,
+          user: {
+            uid: verifiedUid,
+            email: verifiedEmail || '',
+            displayName: verifiedName,
+          },
+          hasAccess: false,
+          subscription: null,
+          message: `No active subscription found for app ${appId}`,
+        },
+        { status: 200, headers: corsHeaders }
+      );
+    }
+
+    const isActive = subscription.status === 'active' || subscription.status === 'trialing';
+
+    return NextResponse.json(
+      {
+        valid: true,
+        authenticated: true,
+        user: {
+          uid: verifiedUid,
+          email: verifiedEmail || subscription.userEmail,
+          displayName: verifiedName,
+        },
+        hasAccess: isActive,
+        subscription: {
+          appId: subscription.appId,
+          appName: subscription.appName,
+          plan: subscription.plan,
+          status: subscription.status,
+          creditsRemaining: subscription.creditsRemaining,
+          creditsTotal: subscription.creditsTotal,
+          creditsUsed: subscription.creditsUsed,
+          features: subscription.features,
+          validUntil: subscription.validUntil,
+        },
+      },
+      { status: 200, headers: corsHeaders }
+    );
+  } catch (error: unknown) {
+    console.error('[API /v1/auth/verify] Error:', error);
+    return NextResponse.json(
+      { valid: false, error: 'INTERNAL_ERROR', message: (error as Error).message },
+      { status: 500, headers: corsHeaders }
+    );
+  }
+}

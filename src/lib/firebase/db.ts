@@ -8,14 +8,26 @@ import {
   query,
   where,
   serverTimestamp,
+  runTransaction,
+  addDoc,
 } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from './client';
-import { DocApp, UserProfile, Entitlement } from '@/types';
+import {
+  DocApp,
+  UserProfile,
+  Entitlement,
+  AppSubscription,
+  CreditUsageRecord,
+  SubscriptionPlan,
+  SubscriptionStatus,
+} from '@/types';
 import { DEMO_APPS } from '../seedData';
 
 const APPS_COLLECTION = 'apps';
 const USERS_COLLECTION = 'users';
 const ENTITLEMENTS_COLLECTION = 'entitlements';
+const SUBSCRIPTIONS_COLLECTION = 'subscriptions';
+const CREDIT_LOGS_COLLECTION = 'credit_logs';
 
 /**
  * Fetch public catalog apps (active and coming_soon products).
@@ -238,5 +250,291 @@ export async function getUserEntitlements(userId: string): Promise<Entitlement[]
   } catch (err) {
     console.warn('[DocStore DB] Error getting user entitlements:', err);
     return [];
+  }
+}
+
+/**
+ * Default starter apps and credit allotments for subscriptions
+ */
+export const DEFAULT_APP_SUBSCRIPTIONS = [
+  {
+    appId: 'demo-canvas',
+    appName: 'Docdril Canvas',
+    plan: 'starter' as SubscriptionPlan,
+    creditsTotal: 100,
+    creditsRemaining: 100,
+    creditsUsed: 0,
+    features: ['unlimited_artboards', 'vector_export', 'cloud_sync'],
+  },
+  {
+    appId: 'demo-motion',
+    appName: 'Docdril Motion',
+    plan: 'starter' as SubscriptionPlan,
+    creditsTotal: 50,
+    creditsRemaining: 50,
+    creditsUsed: 0,
+    features: ['1080p_render', 'timeline_sync', 'keyframes'],
+  },
+  {
+    appId: 'demo-flow',
+    appName: 'Docdril Flow',
+    plan: 'free' as SubscriptionPlan,
+    creditsTotal: 25,
+    creditsRemaining: 25,
+    creditsUsed: 0,
+    features: ['basic_automation', 'webhook_trigger'],
+  },
+];
+
+/**
+ * Fetch all subscriptions and credit balances for a user.
+ */
+export async function getUserSubscriptions(userId: string): Promise<AppSubscription[]> {
+  if (!isFirebaseConfigured() || !db) return [];
+
+  try {
+    const subsRef = collection(db, SUBSCRIPTIONS_COLLECTION);
+    const q = query(subsRef, where('userId', '==', userId));
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map((docSnap) => {
+      const d = docSnap.data();
+      return {
+        id: docSnap.id,
+        userId: d.userId,
+        userEmail: d.userEmail || '',
+        appId: d.appId,
+        appName: d.appName || d.appId,
+        plan: (d.plan || 'free') as SubscriptionPlan,
+        status: (d.status || 'active') as SubscriptionStatus,
+        creditsTotal: typeof d.creditsTotal === 'number' ? d.creditsTotal : 100,
+        creditsRemaining: typeof d.creditsRemaining === 'number' ? d.creditsRemaining : 100,
+        creditsUsed: typeof d.creditsUsed === 'number' ? d.creditsUsed : 0,
+        creditsResetPeriod: d.creditsResetPeriod || 'monthly',
+        creditsResetAt: d.creditsResetAt?.toMillis ? d.creditsResetAt.toMillis() : null,
+        features: Array.isArray(d.features) ? d.features : [],
+        validUntil: d.validUntil?.toMillis ? d.validUntil.toMillis() : null,
+        createdAt: d.createdAt?.toMillis ? d.createdAt.toMillis() : Date.now(),
+        updatedAt: d.updatedAt?.toMillis ? d.updatedAt.toMillis() : Date.now(),
+      } as AppSubscription;
+    });
+  } catch (err) {
+    console.warn('[DocStore DB] Error getting user subscriptions:', err);
+    return [];
+  }
+}
+
+/**
+ * Fetch a specific subscription for an app.
+ */
+export async function getAppSubscription(
+  userId: string,
+  appId: string
+): Promise<AppSubscription | null> {
+  if (!isFirebaseConfigured() || !db) return null;
+
+  try {
+    const subDocRef = doc(db, SUBSCRIPTIONS_COLLECTION, `${userId}_${appId}`);
+    const snap = await getDoc(subDocRef);
+    if (!snap.exists()) return null;
+
+    const d = snap.data();
+    return {
+      id: snap.id,
+      userId: d.userId,
+      userEmail: d.userEmail || '',
+      appId: d.appId,
+      appName: d.appName || d.appId,
+      plan: (d.plan || 'free') as SubscriptionPlan,
+      status: (d.status || 'active') as SubscriptionStatus,
+      creditsTotal: typeof d.creditsTotal === 'number' ? d.creditsTotal : 100,
+      creditsRemaining: typeof d.creditsRemaining === 'number' ? d.creditsRemaining : 100,
+      creditsUsed: typeof d.creditsUsed === 'number' ? d.creditsUsed : 0,
+      creditsResetPeriod: d.creditsResetPeriod || 'monthly',
+      creditsResetAt: d.creditsResetAt?.toMillis ? d.creditsResetAt.toMillis() : null,
+      features: Array.isArray(d.features) ? d.features : [],
+      validUntil: d.validUntil?.toMillis ? d.validUntil.toMillis() : null,
+      createdAt: d.createdAt?.toMillis ? d.createdAt.toMillis() : Date.now(),
+      updatedAt: d.updatedAt?.toMillis ? d.updatedAt.toMillis() : Date.now(),
+    };
+  } catch (err) {
+    console.error('[DocStore DB] Error fetching app subscription:', err);
+    return null;
+  }
+}
+
+/**
+ * Initialize starter subscriptions and credits if none exist.
+ */
+export async function ensureDefaultUserSubscriptions(
+  userId: string,
+  userEmail: string
+): Promise<AppSubscription[]> {
+  if (!isFirebaseConfigured() || !db) return [];
+
+  const existing = await getUserSubscriptions(userId);
+  if (existing.length > 0) return existing;
+
+  const initialized: AppSubscription[] = [];
+
+  for (const starter of DEFAULT_APP_SUBSCRIPTIONS) {
+    const subId = `${userId}_${starter.appId}`;
+    const subRef = doc(db, SUBSCRIPTIONS_COLLECTION, subId);
+
+    const subData = {
+      userId,
+      userEmail,
+      appId: starter.appId,
+      appName: starter.appName,
+      plan: starter.plan,
+      status: 'active',
+      creditsTotal: starter.creditsTotal,
+      creditsRemaining: starter.creditsRemaining,
+      creditsUsed: 0,
+      creditsResetPeriod: 'monthly',
+      features: starter.features,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
+    try {
+      await setDoc(subRef, subData);
+      initialized.push({
+        id: subId,
+        ...starter,
+        status: 'active',
+        userId,
+        userEmail,
+        creditsResetPeriod: 'monthly',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    } catch (err) {
+      console.warn(`[DocStore DB] Failed to seed subscription for ${starter.appId}:`, err);
+    }
+  }
+
+  return initialized.length > 0 ? initialized : existing;
+}
+
+/**
+ * Atomically consumes credits when an app on a subdomain generates content.
+ */
+export async function consumeCredits(
+  userId: string,
+  appId: string,
+  amount: number,
+  action = 'generation',
+  metadata?: Record<string, unknown>
+): Promise<{ success: boolean; creditsRemaining: number; creditsUsed: number; error?: string }> {
+  if (!isFirebaseConfigured() || !db) {
+    return { success: false, creditsRemaining: 0, creditsUsed: 0, error: 'Database not configured' };
+  }
+
+  const subDocRef = doc(db, SUBSCRIPTIONS_COLLECTION, `${userId}_${appId}`);
+
+  try {
+    const result = await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(subDocRef);
+      if (!snap.exists()) {
+        throw new Error('SUBSCRIPTION_NOT_FOUND');
+      }
+
+      const data = snap.data();
+      if (data.status !== 'active' && data.status !== 'trialing') {
+        throw new Error('SUBSCRIPTION_INACTIVE');
+      }
+
+      const remaining = typeof data.creditsRemaining === 'number' ? data.creditsRemaining : 0;
+      const used = typeof data.creditsUsed === 'number' ? data.creditsUsed : 0;
+
+      if (remaining < amount) {
+        throw new Error('INSUFFICIENT_CREDITS');
+      }
+
+      const newRemaining = remaining - amount;
+      const newUsed = used + amount;
+
+      transaction.update(subDocRef, {
+        creditsRemaining: newRemaining,
+        creditsUsed: newUsed,
+        updatedAt: serverTimestamp(),
+      });
+
+      return { remaining: newRemaining, used: newUsed };
+    });
+
+    // Log the transaction
+    try {
+      const logsRef = collection(db, CREDIT_LOGS_COLLECTION);
+      await addDoc(logsRef, {
+        userId,
+        appId,
+        amount,
+        remainingAfter: result.remaining,
+        action,
+        metadata: metadata || {},
+        timestamp: serverTimestamp(),
+      });
+    } catch (logErr) {
+      console.warn('[DocStore DB] Warning logging credit consumption:', logErr);
+    }
+
+    return {
+      success: true,
+      creditsRemaining: result.remaining,
+      creditsUsed: result.used,
+    };
+  } catch (err: unknown) {
+    const msg = (err as Error).message || 'Failed to consume credits';
+    return {
+      success: false,
+      creditsRemaining: 0,
+      creditsUsed: 0,
+      error: msg,
+    };
+  }
+}
+
+/**
+ * Top up or grant credits to a subscription.
+ */
+export async function addCredits(
+  userId: string,
+  appId: string,
+  amount: number
+): Promise<{ success: boolean; creditsRemaining: number; error?: string }> {
+  if (!isFirebaseConfigured() || !db) {
+    return { success: false, creditsRemaining: 0, error: 'Database not configured' };
+  }
+
+  const subDocRef = doc(db, SUBSCRIPTIONS_COLLECTION, `${userId}_${appId}`);
+
+  try {
+    const result = await runTransaction(db, async (transaction) => {
+      const snap = await transaction.get(subDocRef);
+      if (!snap.exists()) {
+        throw new Error('SUBSCRIPTION_NOT_FOUND');
+      }
+
+      const data = snap.data();
+      const currentRemaining = typeof data.creditsRemaining === 'number' ? data.creditsRemaining : 0;
+      const currentTotal = typeof data.creditsTotal === 'number' ? data.creditsTotal : 0;
+
+      const newRemaining = currentRemaining + amount;
+      const newTotal = currentTotal + amount;
+
+      transaction.update(subDocRef, {
+        creditsRemaining: newRemaining,
+        creditsTotal: newTotal,
+        updatedAt: serverTimestamp(),
+      });
+
+      return { remaining: newRemaining };
+    });
+
+    return { success: true, creditsRemaining: result.remaining };
+  } catch (err: unknown) {
+    return { success: false, creditsRemaining: 0, error: (err as Error).message };
   }
 }

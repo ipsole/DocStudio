@@ -4,33 +4,51 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { getPublicApps, getUserEntitlements } from '@/lib/firebase/db';
-import { DocApp, Entitlement } from '@/types';
+import {
+  getPublicApps,
+  getUserEntitlements,
+  getUserSubscriptions,
+  ensureDefaultUserSubscriptions,
+} from '@/lib/firebase/db';
+import { DocApp, Entitlement, AppSubscription } from '@/types';
 import { AppCard } from '@/components/apps/AppCard';
+import { SubscriptionCard } from '@/components/subscriptions/SubscriptionCard';
 import { Button } from '@/components/ui/Button';
 import {
   Settings,
   ArrowRight,
   Info,
   Clock,
+  Zap,
+  Code,
+  Globe,
+  CheckCircle,
+  Copy,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 export default function DashboardPage() {
   const { user, profile } = useAuth();
   const [apps, setApps] = useState<DocApp[]>([]);
   const [entitlements, setEntitlements] = useState<Entitlement[]>([]);
+  const [subscriptions, setSubscriptions] = useState<AppSubscription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showApiDocs, setShowApiDocs] = useState(false);
+  const [copiedSnippet, setCopiedSnippet] = useState(false);
 
   useEffect(() => {
     async function loadData() {
       if (!user) return;
       try {
-        const [catalogApps, userEnts] = await Promise.all([
+        const [catalogApps, userEnts, userSubs] = await Promise.all([
           getPublicApps(),
           getUserEntitlements(user.uid),
+          ensureDefaultUserSubscriptions(user.uid, user.email || ''),
         ]);
         setApps(catalogApps);
         setEntitlements(userEnts);
+        setSubscriptions(userSubs);
       } catch (err) {
         console.error('Error loading dashboard data:', err);
       } finally {
@@ -40,8 +58,49 @@ export default function DashboardPage() {
     loadData();
   }, [user]);
 
-  const activeApps = apps.filter((a) => a.status === 'active');
-  const upcomingApps = apps.filter((a) => a.status === 'coming_soon');
+  const handleCreditsUpdated = (appId: string, newRemaining: number) => {
+    setSubscriptions((prev) =>
+      prev.map((s) => (s.appId === appId ? { ...s, creditsRemaining: newRemaining } : s))
+    );
+  };
+
+  const copyCode = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedSnippet(true);
+    setTimeout(() => setCopiedSnippet(false), 2000);
+  };
+
+  const exampleVerifyCode = `// In your Subdomain App (e.g., canvas.docdril.com or motion.docdril.com)
+// 1. Verify User Session & Check Credits:
+const res = await fetch('https://studio.docdril.com/api/v1/auth/verify', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': \`Bearer \${userFirebaseIdToken}\`
+  },
+  body: JSON.stringify({
+    appId: 'demo-canvas' // your product identifier
+  })
+});
+const { hasAccess, subscription } = await res.json();
+console.log("Remaining Generations:", subscription.creditsRemaining);
+
+// 2. Consume Credits when user generates content:
+const consume = await fetch('https://studio.docdril.com/api/v1/credits/consume', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    userId: user.uid,
+    appId: 'demo-canvas',
+    amount: 1, // number of credits
+    action: 'ai_artboard_generation'
+  })
+});
+const result = await consume.json();
+if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
+  alert("Out of credits! Redirecting to upgrade...");
+  window.location.href = result.upgradeUrl;
+}`;
 
   return (
     <ProtectedRoute>
@@ -59,7 +118,7 @@ export default function DashboardPage() {
               </span>
             </h1>
             <p className="text-xs sm:text-sm text-neutral-600 font-sans">
-              Access your connected software tools and explore new releases across the Docdril platform.
+              Manage your connected software subscriptions, monitor generation credits, and launch apps across subdomains.
             </p>
           </div>
 
@@ -72,112 +131,157 @@ export default function DashboardPage() {
             </Link>
             <Link href="/apps">
               <Button variant="primary" size="sm" className="gap-2">
-                Explore Catalog
+                Catalog & Products
                 <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </Link>
           </div>
         </div>
 
-        {/* Section 1: My Applications (Entitlements) */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between border-b border-neutral-950 pb-2">
+        {/* Section 1: Active Product Subscriptions & Live Credit Quotas */}
+        <section className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-neutral-950 pb-3 gap-2">
             <div>
               <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">
-                ACTIVE ACCESS
+                MULTI-PRODUCT USAGE
               </div>
               <h2 className="text-2xl font-light tracking-[-0.03em] uppercase text-neutral-950 font-sans">
-                My Applications
+                Product Subscriptions & Generation Quotas
               </h2>
             </div>
+            <p className="text-xs text-neutral-500 font-sans">
+              Centralized balance shared with subdomain applications
+            </p>
           </div>
 
-          {entitlements.length > 0 ? (
+          {subscriptions.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {entitlements.map((ent) => {
-                const app = apps.find((a) => a.id === ent.appId);
-                if (!app) return null;
-                return <AppCard key={ent.id} app={app} showLaunchDirect={true} />;
+              {subscriptions.map((sub) => {
+                const app = apps.find((a) => a.id === sub.appId);
+                return (
+                  <SubscriptionCard
+                    key={sub.id}
+                    subscription={sub}
+                    app={app}
+                    onCreditsUpdated={handleCreditsUpdated}
+                  />
+                );
               })}
             </div>
           ) : (
-            <div className="border border-neutral-200 bg-white p-6 rounded-none">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 border border-neutral-950 bg-neutral-950 text-white flex items-center justify-center shrink-0">
-                  <Info className="w-4 h-4" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="font-mono text-xs uppercase tracking-wider font-bold text-neutral-950">
-                    Application Access Management in Progress
-                  </h3>
-                  <p className="text-xs text-neutral-600 leading-relaxed font-sans max-w-2xl">
-                    Your account does not currently hold any individual paid licenses or assigned product
-                    entitlements. As software products in the Docdril ecosystem are activated for your account,
-                    they will appear here for one-click access.
+            <div className="border border-neutral-200 bg-white p-8 text-center space-y-3">
+              <Zap className="w-8 h-8 mx-auto text-neutral-400" />
+              <h3 className="font-bold uppercase tracking-tight text-neutral-950 text-sm">
+                No active subscriptions yet
+              </h3>
+              <p className="text-xs text-neutral-500 max-w-md mx-auto">
+                Explore our catalog to subscribe to Docdril tools and unlock monthly generation allowances.
+              </p>
+              <Link href="/apps">
+                <Button variant="primary" size="sm" className="mt-2">
+                  Browse Catalog
+                </Button>
+              </Link>
+            </div>
+          )}
+        </section>
+
+        {/* Section 2: Developer Subdomain API Hub */}
+        <section className="border border-neutral-950 bg-white rounded-none overflow-hidden">
+          <div
+            onClick={() => setShowApiDocs(!showApiDocs)}
+            className="p-6 cursor-pointer flex items-center justify-between hover:bg-neutral-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-neutral-950 text-white flex items-center justify-center">
+                <Globe className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-sans text-sm font-bold uppercase tracking-wider text-neutral-950">
+                  Subdomain Single Sign-On & Central Verification API
+                </h3>
+                <p className="font-mono text-[11px] text-neutral-500">
+                  How <code className="text-neutral-950">canvas.docdril.com</code>, <code className="text-neutral-950">motion.docdril.com</code>, & future subdomains authenticate & deduct credits
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase text-neutral-600">
+              <span>{showApiDocs ? 'Hide Integration Guide' : 'View Integration Guide'}</span>
+              {showApiDocs ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </div>
+          </div>
+
+          {showApiDocs && (
+            <div className="border-t border-neutral-200 p-6 sm:p-8 space-y-6 bg-neutral-50/50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs font-sans text-neutral-700">
+                <div className="p-4 border border-neutral-200 bg-white space-y-2">
+                  <span className="font-mono text-[10px] uppercase font-bold text-neutral-400">
+                    ENDPOINT 1: SESSION & BALANCE CHECK
+                  </span>
+                  <div className="font-mono font-semibold text-neutral-950">
+                    POST /api/v1/auth/verify
+                  </div>
+                  <p className="leading-relaxed">
+                    Subdomain apps send the user ID or Bearer ID Token to verify access. Returns user identity, plan status, and remaining generation credits.
                   </p>
-                  <p className="text-xs text-neutral-400 font-mono uppercase tracking-wider pt-2">
-                    Browse public tools and active preview software below.
+                </div>
+
+                <div className="p-4 border border-neutral-200 bg-white space-y-2">
+                  <span className="font-mono text-[10px] uppercase font-bold text-neutral-400">
+                    ENDPOINT 2: ATOMIC CREDIT CONSUMPTION
+                  </span>
+                  <div className="font-mono font-semibold text-neutral-950">
+                    POST /api/v1/credits/consume
+                  </div>
+                  <p className="leading-relaxed">
+                    Whenever a user generates in a subdomain tool, calls this to decrement credits atomically. Returns 402 Insufficient Credits if quota exhausted.
                   </p>
                 </div>
+              </div>
+
+              {/* Code Snippet Box */}
+              <div className="relative border border-neutral-950 bg-neutral-950 text-neutral-100 p-5 rounded-none font-mono text-[11px] overflow-x-auto leading-relaxed">
+                <button
+                  type="button"
+                  onClick={() => copyCode(exampleVerifyCode)}
+                  className="absolute top-4 right-4 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-2.5 py-1 text-[10px] uppercase tracking-wider flex items-center gap-1.5 transition-colors"
+                >
+                  {copiedSnippet ? <CheckCircle className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  <span>{copiedSnippet ? 'Copied' : 'Copy Snippet'}</span>
+                </button>
+                <pre>{exampleVerifyCode}</pre>
               </div>
             </div>
           )}
         </section>
 
-        {/* Section 2: Active Software Available for Discovery */}
+        {/* Section 3: All Software Tools in Catalog */}
         <section className="space-y-4">
           <div className="flex items-center justify-between border-b border-neutral-950 pb-2">
             <div>
               <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">
-                AVAILABLE DIRECTORY
+                DOCDRIL PLATFORM
               </div>
               <h2 className="text-2xl font-light tracking-[-0.03em] uppercase text-neutral-950 font-sans">
-                Active Software
+                Software Ecosystem
               </h2>
             </div>
             <Link
               href="/apps"
-              className="font-mono text-xs uppercase tracking-wider font-semibold text-neutral-950 hover:underline"
+              className="text-xs font-semibold text-neutral-500 hover:text-neutral-950 font-sans uppercase tracking-wider inline-flex items-center gap-1"
             >
-              View full catalog →
+              <span>Explore All</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((n) => (
-                <div key={n} className="h-48 border border-neutral-200 bg-white p-6 animate-pulse" />
-              ))}
-            </div>
-          ) : activeApps.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {activeApps.map((app) => (
-                <AppCard key={app.id} app={app} showLaunchDirect={true} />
-              ))}
-            </div>
-          ) : (
-            <p className="font-mono text-xs uppercase text-neutral-400">
-              No active applications currently registered.
-            </p>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {apps.map((app) => (
+              <AppCard key={app.id} app={app} />
+            ))}
+          </div>
         </section>
-
-        {/* Section 3: Upcoming Releases */}
-        {upcomingApps.length > 0 && (
-          <section className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-neutral-950 pb-2">
-              <Clock className="w-4 h-4 text-neutral-950" />
-              <h2 className="text-2xl font-light tracking-[-0.03em] uppercase text-neutral-950 font-sans">
-                In Development
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {upcomingApps.map((app) => (
-                <AppCard key={app.id} app={app} showLaunchDirect={false} />
-              ))}
-            </div>
-          </section>
-        )}
       </div>
     </ProtectedRoute>
   );
