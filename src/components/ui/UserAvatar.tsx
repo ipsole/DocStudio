@@ -7,9 +7,6 @@ import {
   GRADIENT_MONOGRAMS,
   ALL_LEGACY_ICONS,
 } from '@/lib/avatarData';
-import { GoogleGLogo } from '@/components/ui/GoogleGLogo';
-import { User as UserIcon } from 'lucide-react';
-
 export interface UserAvatarProps {
   user?: {
     photoURL?: string | null;
@@ -27,7 +24,6 @@ export interface UserAvatarProps {
   avatarIcon?: string | null;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'hero';
   className?: string;
-  showGoogleBadge?: boolean;
   shape?: 'circle' | 'rounded';
 }
 
@@ -96,7 +92,6 @@ export function UserAvatar({
   avatarIcon,
   size = 'md',
   className = '',
-  showGoogleBadge = false,
   shape = 'circle',
 }: UserAvatarProps) {
   const [imgError, setImgError] = useState(false);
@@ -137,7 +132,6 @@ export function UserAvatar({
         <div
           className={`w-full h-full overflow-hidden ${radiusClass} border border-neutral-200/90 dark:border-neutral-800 shadow-sm bg-neutral-100 dark:bg-neutral-900 ring-1 ring-black/5 dark:ring-white/10`}
         >
-          {/* Use standard img with fallback */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={googlePhoto}
@@ -147,15 +141,6 @@ export function UserAvatar({
             className="w-full h-full object-cover"
           />
         </div>
-
-        {showGoogleBadge && (
-          <div
-            className={`absolute ${conf.badge} bg-white dark:bg-neutral-900 rounded-full p-0.5 shadow-md border border-neutral-200 dark:border-neutral-800 flex items-center justify-center`}
-            title="Google Verified Profile"
-          >
-            <GoogleGLogo className="w-full h-full" />
-          </div>
-        )}
       </div>
     );
   }

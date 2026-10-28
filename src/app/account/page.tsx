@@ -6,7 +6,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
-import { AvatarIconPicker } from '@/components/ui/AvatarIconPicker';
+import { AvatarEditModal } from '@/components/ui/AvatarEditModal';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import {
   KeyRound,
@@ -14,6 +14,8 @@ import {
   LogOut,
   CheckCircle,
   AlertCircle,
+  Camera,
+  Pencil,
 } from 'lucide-react';
 
 export default function AccountPage() {
@@ -23,6 +25,7 @@ export default function AccountPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [bio, setBio] = useState('');
   const [avatarIcon, setAvatarIcon] = useState<string | null>('User');
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
 
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState(false);
@@ -39,6 +42,13 @@ export default function AccountPage() {
       setAvatarIcon(initialIcon);
     }
   }, [profile, user]);
+
+  const handleSaveAvatar = async (newIcon: string) => {
+    setAvatarIcon(newIcon);
+    await updateProfileDetails({ avatarIcon: newIcon });
+    setProfileSuccess(true);
+    setTimeout(() => setProfileSuccess(false), 3000);
+  };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,16 +111,24 @@ export default function AccountPage() {
           {/* Header row: Live Avatar Hero + Identity */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-neutral-200 dark:border-neutral-900">
             <div className="flex items-center gap-5">
-              <div className="relative shrink-0">
+              <div
+                className="relative group cursor-pointer"
+                onClick={() => setIsAvatarModalOpen(true)}
+                title="Click to change avatar"
+              >
                 <UserAvatar
                   user={user}
                   profile={profile}
                   avatarIcon={avatarIcon}
                   size="xl"
-                  showGoogleBadge={avatarIcon === 'google' || (!avatarIcon && Boolean(user?.photoURL || profile?.photoURL))}
                 />
+                <div className="absolute inset-0 rounded-full bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white cursor-pointer">
+                  <Camera className="w-5 h-5 drop-shadow-sm" />
+                  <span className="text-[9px] font-sans font-medium mt-0.5">Edit</span>
+                </div>
               </div>
-              <div className="space-y-1">
+
+              <div className="space-y-1.5">
                 <div className="flex items-center gap-3">
                   <h2 className="text-xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
                     {displayName || 'DocStudio User'}
@@ -122,21 +140,21 @@ export default function AccountPage() {
                     </Badge>
                   )}
                 </div>
+
                 <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-2 font-sans flex-wrap">
                   <span className="uppercase text-[11px] font-semibold text-neutral-400 dark:text-neutral-500">UID:</span>
                   <span className="bg-neutral-100 dark:bg-neutral-900 px-2 py-0.5 border border-neutral-200 dark:border-neutral-800 font-mono text-[11px] text-neutral-700 dark:text-neutral-300 select-all rounded">
                     {user?.uid}
                   </span>
                   <span className="text-neutral-300 dark:text-neutral-700">•</span>
-                  <span className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
-                    {avatarIcon === 'google' || (!avatarIcon && (user?.photoURL || profile?.photoURL))
-                      ? 'Google Profile Photo'
-                      : avatarIcon?.startsWith('persona-')
-                      ? 'Studio Persona Active'
-                      : avatarIcon?.startsWith('grad-')
-                      ? 'Luxury Monogram Active'
-                      : 'Creative Emblem Active'}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsAvatarModalOpen(true)}
+                    className="text-xs text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white font-medium hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Pencil className="w-3 h-3" />
+                    <span>Change Avatar</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -147,21 +165,8 @@ export default function AccountPage() {
           </div>
 
           <form onSubmit={handleUpdateProfile} className="space-y-6">
-            {/* 1. Avatar Studio Picker */}
-            <div className="space-y-2">
-              <label className="block text-xs font-sans font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400">
-                Avatar Identity & Profile Presentation
-              </label>
-              <AvatarIconPicker
-                selectedIcon={avatarIcon}
-                onSelectIcon={(iconId) => setAvatarIcon(iconId)}
-                user={user}
-                profile={profile}
-              />
-            </div>
-
-            {/* 2. Contact details */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 pt-2">
+            {/* Contact details */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <Input
                 label="Full Name"
                 value={displayName}
@@ -262,6 +267,16 @@ export default function AccountPage() {
             Sign Out
           </Button>
         </div>
+
+        {/* Avatar Selection Modal (Shown ONLY when user clicks to edit/change avatar) */}
+        <AvatarEditModal
+          isOpen={isAvatarModalOpen}
+          onClose={() => setIsAvatarModalOpen(false)}
+          currentIcon={avatarIcon}
+          user={user}
+          profile={profile}
+          onSave={handleSaveAvatar}
+        />
       </div>
     </ProtectedRoute>
   );
