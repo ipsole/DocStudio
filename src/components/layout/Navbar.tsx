@@ -121,7 +121,7 @@ export function Navbar() {
                   {profile?.avatarIcon ? (
                     renderUserIcon(profile.avatarIcon, 'w-4 h-4 text-neutral-900 dark:text-white')
                   ) : (
-                    <span className="font-mono text-xs font-bold">
+                    <span className="font-sans text-xs font-semibold">
                       {profile?.displayName
                         ? profile.displayName.charAt(0).toUpperCase()
                         : user.email?.charAt(0).toUpperCase()}
@@ -135,10 +135,10 @@ export function Navbar() {
                     onMouseLeave={() => setUserDropdownOpen(false)}
                   >
                     <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-900 bg-neutral-50/80 dark:bg-neutral-900/60 rounded-t-xl">
-                      <p className="text-[10px] font-mono text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">
+                      <p className="text-[11px] font-sans font-medium text-neutral-500 dark:text-neutral-400">
                         Active Account
                       </p>
-                      <p className="text-xs font-semibold text-neutral-900 dark:text-white truncate mt-0.5 font-mono">
+                      <p className="text-xs font-semibold text-neutral-900 dark:text-white truncate mt-0.5 font-sans">
                         {user.email}
                       </p>
                     </div>

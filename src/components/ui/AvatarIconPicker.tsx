@@ -134,7 +134,7 @@ export function AvatarIconPicker({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="block text-xs uppercase tracking-wider font-mono font-semibold text-neutral-700 dark:text-neutral-300">
+        <label className="block text-xs font-sans font-medium text-neutral-700 dark:text-neutral-300">
           Select Profile Icon (50 Icons Available)
         </label>
         <div className="relative w-40">

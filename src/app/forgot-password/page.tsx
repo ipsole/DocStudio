@@ -48,7 +48,7 @@ export default function ForgotPasswordPage() {
         <h2 className="text-3xl font-light tracking-[-0.03em] uppercase text-neutral-950 dark:text-white font-sans">
           Reset Password
         </h2>
-        <p className="font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+        <p className="font-sans text-xs text-neutral-500 dark:text-neutral-400">
           Enter your registered email to receive recovery instructions
         </p>
       </div>
@@ -78,7 +78,7 @@ export default function ForgotPasswordPage() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               {error && (
-                <div className="p-3.5 border border-red-300 bg-red-50 text-red-700 dark:border-red-800/80 dark:bg-red-950/70 dark:text-red-300 font-mono text-xs flex items-center gap-2 rounded">
+                <div className="p-3.5 border border-red-300 bg-red-50 text-red-700 dark:border-red-800/80 dark:bg-red-950/70 dark:text-red-300 font-sans text-xs flex items-center gap-2 rounded">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{error}</span>
                 </div>
@@ -109,7 +109,7 @@ export default function ForgotPasswordPage() {
               <div className="pt-2 text-center">
                 <Link
                   href="/sign-in"
-                  className="font-mono text-xs uppercase tracking-wider text-neutral-500 hover:text-black dark:text-neutral-400 dark:hover:text-white inline-flex items-center gap-1.5 transition-colors"
+                  className="font-sans text-xs text-neutral-500 hover:text-black dark:text-neutral-400 dark:hover:text-white inline-flex items-center gap-1.5 transition-colors"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   Back to Sign In

@@ -101,7 +101,7 @@ export function GuidedTour({ isOpen, onClose, onNavigateToMain }: GuidedTourProp
       <div className="relative z-20 pointer-events-auto mx-auto w-full max-w-md bg-white dark:bg-neutral-950 border border-neutral-200/90 dark:border-neutral-800 rounded-3xl p-6 sm:p-7 shadow-2xl transition-all duration-300 animate-fade-in-up">
         {/* Top Header: Tag & Dismiss '✕' */}
         <div className="flex items-center justify-between gap-3 mb-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-mono uppercase tracking-[0.16em] bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-sans font-medium bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-dot" />
             <span>
               {step.tag} • {currentStep + 1} of {TOUR_STEPS.length}
@@ -153,7 +153,7 @@ export function GuidedTour({ isOpen, onClose, onNavigateToMain }: GuidedTourProp
             <button
               type="button"
               onClick={handleSkip}
-              className="text-xs font-mono uppercase tracking-wider text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer px-2 py-1"
+              className="text-xs font-sans font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer px-2 py-1"
             >
               Skip
             </button>

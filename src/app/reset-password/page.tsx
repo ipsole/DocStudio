@@ -105,7 +105,7 @@ function ResetPasswordForm() {
       {verifying && (
         <div className="py-12 text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-neutral-900 dark:text-white" />
-          <p className="font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+          <p className="font-sans text-xs text-neutral-500 dark:text-neutral-400">
             Verifying security token...
           </p>
         </div>
@@ -113,7 +113,7 @@ function ResetPasswordForm() {
 
       {!verifying && verificationError && (
         <div className="space-y-6 text-center">
-          <div className="p-4 border border-red-300 bg-red-50 text-red-700 dark:border-red-800/80 dark:bg-red-950/70 dark:text-red-300 font-mono text-xs flex items-center justify-center gap-2 rounded">
+          <div className="p-4 border border-red-300 bg-red-50 text-red-700 dark:border-red-800/80 dark:bg-red-950/70 dark:text-red-300 font-sans text-xs flex items-center justify-center gap-2 rounded">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{verificationError}</span>
           </div>
@@ -159,7 +159,7 @@ function ResetPasswordForm() {
           )}
 
           {submitError && (
-            <div className="p-3.5 border border-red-300 bg-red-50 text-red-700 dark:border-red-800/80 dark:bg-red-950/70 dark:text-red-300 font-mono text-xs flex items-center gap-2 rounded">
+            <div className="p-3.5 border border-red-300 bg-red-50 text-red-700 dark:border-red-800/80 dark:bg-red-950/70 dark:text-red-300 font-sans text-xs flex items-center gap-2 rounded">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{submitError}</span>
             </div>
@@ -201,7 +201,7 @@ function ResetPasswordForm() {
           <div className="pt-2 text-center">
             <Link
               href="/sign-in"
-              className="font-mono text-xs uppercase tracking-wider text-neutral-500 hover:text-black dark:text-neutral-400 dark:hover:text-white inline-flex items-center gap-1.5 transition-colors"
+              className="font-sans text-xs text-neutral-500 hover:text-black dark:text-neutral-400 dark:hover:text-white inline-flex items-center gap-1.5 transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               Cancel & Return to Sign In
@@ -226,7 +226,7 @@ export default function ResetPasswordPage() {
         <h2 className="text-3xl font-light tracking-[-0.03em] uppercase text-neutral-950 dark:text-white font-sans">
           Set New Password
         </h2>
-        <p className="font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+        <p className="font-sans text-xs text-neutral-500 dark:text-neutral-400">
           Enter a secure password for your DocStudio account
         </p>
       </div>

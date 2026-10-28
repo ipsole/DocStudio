@@ -74,8 +74,8 @@ export default function AccountPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 text-neutral-900 dark:text-white transition-colors duration-200">
         {/* Header */}
         <div className="border-b border-neutral-200 dark:border-neutral-900 pb-6">
-          <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1">
-            DOCSTUDIO IDENTITY
+          <div className="font-sans text-[11px] font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1">
+            DocStudio Identity
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-950 dark:text-white font-sans">
             Account Settings
@@ -86,7 +86,7 @@ export default function AccountPage() {
         </div>
 
         {error && (
-          <div className="p-4 border border-red-300 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300 text-xs font-mono uppercase tracking-wider flex items-center gap-2 rounded-lg">
+          <div className="p-4 border border-red-300 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300 text-xs font-sans flex items-center gap-2 rounded-lg">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -167,7 +167,7 @@ export default function AccountPage() {
               />
 
               <div>
-                <label className="block font-mono text-xs uppercase tracking-wider font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
+                <label className="block font-sans text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
                   About You / Role
                 </label>
                 <input
@@ -185,7 +185,7 @@ export default function AccountPage() {
                 Save Profile Details
               </Button>
               {profileSuccess && (
-                <span className="font-mono text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
+                <span className="font-sans text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                   <CheckCircle className="w-3.5 h-3.5" />
                   Profile updated successfully
                 </span>
@@ -216,7 +216,7 @@ export default function AccountPage() {
               Send Password Reset Link
             </Button>
             {resetSent && (
-              <span className="font-mono text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
+              <span className="font-sans text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
                 <CheckCircle className="w-3.5 h-3.5" />
                 Reset link sent to {user?.email}
               </span>
@@ -226,7 +226,7 @@ export default function AccountPage() {
 
         {/* Sign Out */}
         <div className="pt-6 border-t border-neutral-200 dark:border-neutral-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <p className="text-xs uppercase tracking-wider text-neutral-500 font-mono">
+          <p className="text-xs text-neutral-500 font-sans">
             Sign out of your DocStudio session on this device.
           </p>
           <Button

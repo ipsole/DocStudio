@@ -203,7 +203,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
           {/* Card 1: Your Current Plan & Upgrade Action */}
           <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-all flex flex-col justify-between space-y-4">
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[11px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                 Current Plan
               </span>
               <div className="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center text-neutral-900 dark:text-white">
@@ -215,13 +215,13 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
               <div className="text-2xl sm:text-3xl font-bold font-sans text-neutral-950 dark:text-white truncate">
                 {isAdmin ? 'Enterprise Admin Pass' : 'DocStudio Pro Pass'}
               </div>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 truncate font-mono">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 truncate font-sans">
                 {user?.email} • All tools unlocked
               </p>
             </div>
 
             <div className="pt-2 border-t border-neutral-100 dark:border-neutral-900 flex items-center justify-between text-xs">
-              <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5 font-mono text-[11px]">
+              <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5 font-sans text-[11px]">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-dot" />
                 Active Subscription
               </span>
@@ -238,7 +238,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
           {/* Card 2: Generation Quota with Visual Usage Meter & Get More Credits Button */}
           <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-all flex flex-col justify-between space-y-4">
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[11px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                 Generation Quota
               </span>
               <div className="w-8 h-8 rounded-full bg-amber-500/10 dark:bg-amber-400/10 flex items-center justify-center text-amber-600 dark:text-amber-400">
@@ -249,14 +249,14 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
             <div>
               <div className="flex items-baseline justify-between">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-3xl sm:text-4xl font-extrabold font-mono text-neutral-950 dark:text-white">
+                  <span className="text-3xl sm:text-4xl font-extrabold font-sans text-neutral-950 dark:text-white">
                     {subscriptions.length > 0 ? totalCreditsRemaining : 100}
                   </span>
-                  <span className="text-xs font-mono text-neutral-500">
+                  <span className="text-xs font-sans text-neutral-500">
                     / {subscriptions.length > 0 ? totalCreditsMax : 100} Monthly
                   </span>
                 </div>
-                <span className="text-xs font-mono font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="text-xs font-sans font-semibold text-emerald-600 dark:text-emerald-400">
                   {Math.round(((subscriptions.length > 0 ? totalCreditsRemaining : 100) / (subscriptions.length > 0 ? totalCreditsMax : 100)) * 100)}% Available
                 </span>
               </div>
@@ -293,7 +293,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
           {/* Card 3: Connected Subdomain Mesh */}
           <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-all flex flex-col justify-between space-y-4">
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[11px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+              <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                 Connected Suites
               </span>
               <div className="w-8 h-8 rounded-full bg-blue-500/10 dark:bg-blue-400/10 flex items-center justify-center text-blue-600 dark:text-blue-400">
@@ -302,10 +302,10 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
             </div>
 
             <div>
-              <div className="text-2xl sm:text-3xl font-extrabold font-mono text-neutral-950 dark:text-white">
+              <div className="text-2xl sm:text-3xl font-extrabold font-sans text-neutral-950 dark:text-white">
                 3 Active Suites
               </div>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 font-mono">
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 font-sans">
                 canvas • motion • pipeline (.docdril.com)
               </p>
             </div>
@@ -382,13 +382,13 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
                 <h3 className="font-sans text-sm font-bold text-neutral-950 dark:text-white">
                   Subdomain Single Sign-On & Credit Verification API
                 </h3>
-                <p className="font-mono text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
-                  How <code className="text-neutral-900 dark:text-neutral-200">canvas.docdril.com</code>, <code className="text-neutral-900 dark:text-neutral-200">motion.docdril.com</code>, & future apps authenticate & deduct credits
+                <p className="font-sans text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                  How <code className="font-mono text-neutral-900 dark:text-neutral-200">canvas.docdril.com</code>, <code className="font-mono text-neutral-900 dark:text-neutral-200">motion.docdril.com</code>, & future apps authenticate & deduct credits
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase text-neutral-500 dark:text-neutral-400">
+            <div className="flex items-center gap-2 text-xs font-sans font-medium text-neutral-500 dark:text-neutral-400">
               <span className="hidden sm:inline">
                 {showApiDocs ? 'Hide Integration Guide' : 'View Integration Guide'}
               </span>
@@ -400,8 +400,8 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
             <div className="border-t border-neutral-200 dark:border-neutral-800 p-6 sm:p-8 space-y-6 bg-neutral-50/40 dark:bg-neutral-900/30">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs font-sans text-neutral-700 dark:text-neutral-300">
                 <div className="p-4 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 rounded-xl space-y-2">
-                  <span className="font-mono text-[10px] uppercase font-bold text-neutral-400">
-                    ENDPOINT 1: SESSION & BALANCE CHECK
+                  <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                    Endpoint 1: Session & Balance Check
                   </span>
                   <div className="font-mono font-semibold text-neutral-950 dark:text-white">
                     POST /api/v1/auth/verify
@@ -412,8 +412,8 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
                 </div>
 
                 <div className="p-4 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 rounded-xl space-y-2">
-                  <span className="font-mono text-[10px] uppercase font-bold text-neutral-400">
-                    ENDPOINT 2: ATOMIC CREDIT CONSUMPTION
+                  <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                    Endpoint 2: Atomic Credit Consumption
                   </span>
                   <div className="font-mono font-semibold text-neutral-950 dark:text-white">
                     POST /api/v1/credits/consume

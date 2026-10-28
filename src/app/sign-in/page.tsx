@@ -150,9 +150,9 @@ function SignInForm() {
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-neutral-200 dark:border-neutral-800" />
           </div>
-          <div className="relative flex justify-center font-mono text-[10px] uppercase">
-            <span className="bg-white dark:bg-neutral-950 px-2 text-neutral-500 dark:text-neutral-400 font-semibold tracking-wider">
-              Or with email credentials
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-white dark:bg-neutral-950 px-2.5 text-neutral-500 dark:text-neutral-400 font-medium">
+              or with email credentials
             </span>
           </div>
         </div>
@@ -173,12 +173,12 @@ function SignInForm() {
 
         <div>
           <div className="flex items-center justify-between mb-1">
-            <label className="block font-mono text-xs uppercase tracking-wider font-semibold text-neutral-700 dark:text-neutral-300">
+            <label className="block font-sans text-xs font-medium text-neutral-700 dark:text-neutral-300">
               Password
             </label>
             <Link
               href="/forgot-password"
-              className="font-mono text-xs uppercase tracking-wider text-neutral-500 hover:text-black dark:text-neutral-400 dark:hover:text-white hover:underline transition-colors"
+              className="font-sans text-xs text-neutral-500 hover:text-black dark:text-neutral-400 dark:hover:text-white hover:underline transition-colors"
             >
               Forgot?
             </Link>
@@ -204,9 +204,9 @@ function SignInForm() {
         </Button>
       </form>
 
-      <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 text-center font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+      <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 text-center font-sans text-xs text-neutral-500 dark:text-neutral-400">
         Don&apos;t have an account?{' '}
-        <Link href="/sign-up" className="font-bold text-neutral-950 hover:text-neutral-700 dark:text-white underline ml-1 dark:hover:text-neutral-200">
+        <Link href="/sign-up" className="font-semibold text-neutral-950 hover:text-neutral-700 dark:text-white underline ml-1 dark:hover:text-neutral-200">
           Create Account
         </Link>
       </div>
@@ -218,10 +218,10 @@ export default function SignInPage() {
   return (
     <div className="min-h-[calc(100vh-4.5rem)] flex items-center justify-center py-4 px-4 sm:px-6 md:px-8 text-neutral-900 dark:text-white transition-colors duration-200">
       <div className="w-full max-w-[1240px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-center">
-        {/* Left Column: Brand Hero with Logo Centered above DocStudio */}
-        <div className="lg:col-span-6 flex flex-col items-center text-center justify-center space-y-3 select-none">
+        {/* Left Column: Brand Hero with Large Logo Centered above DocStudio */}
+        <div className="lg:col-span-6 flex flex-col items-center text-center justify-center space-y-4 select-none">
           <Link href="/" className="inline-flex items-center justify-center group" title="DocStudio">
-            <DocdrilLogo size={76} className="text-neutral-950 dark:text-white transition-transform group-hover:scale-105" />
+            <DocdrilLogo size={132} className="text-neutral-950 dark:text-white transition-transform group-hover:scale-105 drop-shadow-sm" />
           </Link>
           <div className="space-y-2">
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-[1.05]">
@@ -232,14 +232,14 @@ export default function SignInPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-2 pt-1 text-xs font-mono text-neutral-600 dark:text-neutral-400">
-            <span className="px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900/70">
+          <div className="flex flex-wrap justify-center gap-2 pt-1 text-xs font-sans text-neutral-600 dark:text-neutral-400">
+            <span className="px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900/70 font-medium">
               Single Sign-On
             </span>
-            <span className="px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900/70">
+            <span className="px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900/70 font-medium">
               Shared Credits
             </span>
-            <span className="px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900/70">
+            <span className="px-3 py-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/70 dark:bg-neutral-900/70 font-medium">
               All Subdomains
             </span>
           </div>

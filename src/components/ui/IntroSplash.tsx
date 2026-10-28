@@ -103,7 +103,7 @@ export function IntroSplash({ onComplete, forcePlay = false }: IntroSplashProps)
           e.stopPropagation();
           handleDismiss();
         }}
-        className="absolute bottom-8 sm:bottom-12 text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-neutral-400 hover:text-black transition-colors cursor-pointer py-2 px-4 rounded-full border border-neutral-200/80 bg-white/80 shadow-sm"
+        className="absolute bottom-8 sm:bottom-12 text-xs font-sans font-medium text-neutral-500 hover:text-black transition-colors cursor-pointer py-2 px-4 rounded-full border border-neutral-200/80 bg-white/90 shadow-sm"
       >
         Enter Studio [Esc] →
       </button>

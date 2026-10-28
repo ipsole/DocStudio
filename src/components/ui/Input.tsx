@@ -15,7 +15,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="block font-mono text-xs uppercase tracking-wider font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5"
+            className="block font-sans text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1.5"
           >
             {label}
           </label>
@@ -31,9 +31,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {error ? (
-          <p className="mt-1 font-mono text-xs text-red-600 dark:text-red-400">{error}</p>
+          <p className="mt-1 font-sans text-xs text-red-600 dark:text-red-400">{error}</p>
         ) : helperText ? (
-          <p className="mt-1 font-mono text-xs text-neutral-500 dark:text-neutral-400">{helperText}</p>
+          <p className="mt-1 font-sans text-xs text-neutral-500 dark:text-neutral-400">{helperText}</p>
         ) : null}
       </div>
     );

@@ -19,7 +19,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-mono text-xs uppercase tracking-wider font-semibold text-neutral-900 dark:text-white mb-4">
+            <h4 className="font-sans text-xs uppercase tracking-wider font-semibold text-neutral-900 dark:text-white mb-4">
               Platform
             </h4>
             <div className="flex flex-col space-y-2.5 text-xs uppercase tracking-wider font-medium text-neutral-600 dark:text-neutral-400 font-sans">
@@ -39,7 +39,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-mono text-xs uppercase tracking-wider font-semibold text-neutral-900 dark:text-white mb-4">
+            <h4 className="font-sans text-xs uppercase tracking-wider font-semibold text-neutral-900 dark:text-white mb-4">
               Ecosystem
             </h4>
             <div className="flex flex-col space-y-2.5 text-xs uppercase tracking-wider font-medium text-neutral-600 dark:text-neutral-400 font-sans">
@@ -57,7 +57,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-neutral-200 dark:border-neutral-900 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[11px] text-neutral-500">
+        <div className="mt-12 pt-8 border-t border-neutral-200 dark:border-neutral-900 flex flex-col sm:flex-row items-center justify-between gap-4 font-sans text-xs text-neutral-500">
           <p>© {new Date().getFullYear()} Docdril Inc. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <span>DocStudio Core v1.0.0</span>

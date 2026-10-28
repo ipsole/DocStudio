@@ -135,7 +135,7 @@ export function LoginWelcomeWriter({
           e.stopPropagation();
           handleDismiss();
         }}
-        className="absolute top-6 right-6 sm:top-8 sm:right-10 text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-neutral-400 hover:text-neutral-950 dark:hover:text-white transition-colors cursor-pointer py-1.5 px-3.5 rounded-full border border-neutral-200/70 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70"
+        className="absolute top-6 right-6 sm:top-8 sm:right-10 text-xs font-sans font-medium text-neutral-500 hover:text-neutral-950 dark:hover:text-white transition-colors cursor-pointer py-1.5 px-3.5 rounded-full border border-neutral-200/70 dark:border-neutral-800/80 bg-white/70 dark:bg-neutral-900/70 shadow-sm"
       >
         Skip [Esc] →
       </button>
