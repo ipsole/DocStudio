@@ -16,6 +16,8 @@ export interface DocApp {
   featured?: boolean;
   version?: string;
   tags?: string[];
+  thumbnailUrl?: string;
+  badge?: string;
   isDemo?: boolean;
   createdAt: string | number;
   updatedAt: string | number;
