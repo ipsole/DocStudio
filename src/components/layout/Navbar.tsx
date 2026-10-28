@@ -205,9 +205,9 @@ export function Navbar() {
               <Link href="/sign-in" title="Sign In">
                 <button
                   type="button"
-                  className="w-9 h-9 rounded-full border border-neutral-200 dark:border-neutral-800 hover:border-neutral-900 dark:hover:border-white bg-neutral-100 dark:bg-neutral-950 flex items-center justify-center text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-all cursor-pointer hover:scale-105 active:scale-95"
+                  className="px-4 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/90 dark:bg-neutral-900/90 hover:bg-neutral-950 hover:text-white dark:hover:bg-white dark:hover:text-black text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition-all shadow-sm active:scale-[0.98] cursor-pointer"
                 >
-                  <UserIcon className="w-4 h-4" />
+                  Sign In
                 </button>
               </Link>
             )}
