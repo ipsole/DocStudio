@@ -3,8 +3,8 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #080808;
+  --background: #000000;
+  --foreground: #ffffff;
 }
 
 body {
@@ -16,14 +16,17 @@ body {
   letter-spacing: -0.01em;
 }
 
-/* Crisp minimal scrollbars */
+/* Crisp pitch-black minimal scrollbars */
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
 }
 ::-webkit-scrollbar-track {
-  background: #ffffff;
+  background: #000000;
 }
 ::-webkit-scrollbar-thumb {
-  background: #080808;
+  background: #262626;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #404040;
 }

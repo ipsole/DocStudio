@@ -17,12 +17,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="min-h-screen flex flex-col bg-slate-50/50 text-slate-900 selection:bg-slate-900 selection:text-white">
+    <html lang="en" className="dark bg-black">
+      <body className="min-h-screen flex flex-col bg-black text-white selection:bg-white selection:text-black antialiased">
         <AuthProvider>
           <GoogleOneTap context="signin" onSuccessRedirect="/dashboard" />
           <Navbar />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 flex flex-col">{children}</main>
           <Footer />
         </AuthProvider>
       </body>
