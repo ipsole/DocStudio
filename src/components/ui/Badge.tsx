@@ -23,13 +23,13 @@ export function Badge({
   };
 
   const sizes = {
-    sm: 'text-[9px] px-1.5 py-0.2',
-    md: 'text-[10px] px-2 py-0.5',
+    sm: 'text-[10px] px-1.5 py-0.5',
+    md: 'text-[11px] px-2 py-0.5',
   };
 
   return (
     <span
-      className={`inline-flex items-center gap-1 font-mono uppercase tracking-wider border rounded-none font-semibold ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center gap-1 font-sans uppercase tracking-wider border rounded-none font-semibold ${variants[variant]} ${sizes[size]} ${className}`}
     >
       {children}
     </span>

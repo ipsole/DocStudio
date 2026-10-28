@@ -94,28 +94,28 @@ export function Navbar() {
                 <button
                   type="button"
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2.5 p-1.5 border border-neutral-950 bg-white hover:bg-neutral-50 transition-colors cursor-pointer rounded-none"
+                  className="flex items-center gap-2.5 px-3 py-1.5 border border-neutral-950 bg-white hover:bg-neutral-50 transition-all cursor-pointer rounded-none"
                 >
-                  <div className="w-7 h-7 bg-neutral-950 text-white flex items-center justify-center text-xs font-mono font-bold">
+                  <div className="w-6 h-6 bg-neutral-950 text-white flex items-center justify-center text-xs font-semibold">
                     {profile?.displayName
                       ? profile.displayName.charAt(0).toUpperCase()
                       : user.email?.charAt(0).toUpperCase()}
                   </div>
-                  <span className="text-xs font-mono uppercase font-semibold text-neutral-950 max-w-[140px] truncate">
+                  <span className="text-xs font-medium text-neutral-900 max-w-[140px] truncate tracking-tight">
                     {profile?.displayName || user.email?.split('@')[0]}
                   </span>
                 </button>
 
                 {userDropdownOpen && (
                   <div
-                    className="absolute right-0 mt-2 w-64 border border-neutral-950 bg-white py-1 shadow-2xl z-50 rounded-none"
+                    className="absolute right-0 mt-2 w-64 border border-neutral-950 bg-white py-1.5 shadow-2xl z-50 rounded-none"
                     onMouseLeave={() => setUserDropdownOpen(false)}
                   >
-                    <div className="px-4 py-2.5 border-b border-neutral-200">
-                      <p className="font-mono text-[10px] uppercase tracking-wider text-neutral-400">
+                    <div className="px-4 py-3 border-b border-neutral-100 bg-neutral-50/50">
+                      <p className="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">
                         Signed in as
                       </p>
-                      <p className="text-xs font-semibold text-neutral-950 truncate font-mono mt-0.5">
+                      <p className="text-xs font-semibold text-neutral-950 truncate mt-0.5">
                         {user.email}
                       </p>
                     </div>
@@ -123,18 +123,18 @@ export function Navbar() {
                     <Link
                       href="/dashboard"
                       onClick={() => setUserDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs uppercase tracking-wider font-semibold text-neutral-800 hover:bg-neutral-100 transition-colors"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-neutral-800 hover:bg-neutral-100 hover:text-black transition-colors"
                     >
-                      <LayoutDashboard className="w-3.5 h-3.5" />
+                      <LayoutDashboard className="w-3.5 h-3.5 text-neutral-500" />
                       Dashboard
                     </Link>
 
                     <Link
                       href="/account"
                       onClick={() => setUserDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs uppercase tracking-wider font-semibold text-neutral-800 hover:bg-neutral-100 transition-colors"
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-neutral-800 hover:bg-neutral-100 hover:text-black transition-colors"
                     >
-                      <Settings className="w-3.5 h-3.5" />
+                      <Settings className="w-3.5 h-3.5 text-neutral-500" />
                       Account Settings
                     </Link>
 
@@ -142,14 +142,14 @@ export function Navbar() {
                       <Link
                         href="/admin"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-xs uppercase tracking-wider font-semibold text-neutral-950 bg-neutral-50 hover:bg-neutral-100"
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-neutral-950 bg-neutral-50 hover:bg-neutral-100 transition-colors"
                       >
-                        <Shield className="w-3.5 h-3.5" />
+                        <Shield className="w-3.5 h-3.5 text-neutral-700" />
                         Admin Portal
                       </Link>
                     )}
 
-                    <div className="border-t border-neutral-200 my-1" />
+                    <div className="border-t border-neutral-100 my-1" />
 
                     <button
                       type="button"
@@ -157,7 +157,7 @@ export function Navbar() {
                         setUserDropdownOpen(false);
                         await signOut();
                       }}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs uppercase tracking-wider font-semibold text-red-600 hover:bg-red-50 text-left transition-colors cursor-pointer"
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 text-left transition-colors cursor-pointer"
                     >
                       <LogOut className="w-3.5 h-3.5" />
                       Sign Out

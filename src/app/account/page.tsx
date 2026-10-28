@@ -78,14 +78,14 @@ export default function AccountPage() {
         <div className="border border-neutral-950 bg-white p-6 sm:p-8 space-y-8 rounded-none">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-neutral-200">
             <div className="flex items-center gap-5">
-              <div className="w-14 h-14 bg-neutral-950 text-white flex items-center justify-center text-xl font-mono font-bold select-none">
+              <div className="w-14 h-14 bg-neutral-950 text-white flex items-center justify-center text-xl font-sans font-bold select-none">
                 {profile?.displayName?.charAt(0).toUpperCase() ||
                   user?.email?.charAt(0).toUpperCase() ||
                   'U'}
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-xl font-bold tracking-[-0.02em] text-neutral-950">
+                  <h2 className="text-xl font-bold tracking-[-0.02em] text-neutral-950 font-sans">
                     {profile?.displayName || 'Docdril User'}
                   </h2>
                   {isAdmin && (
@@ -95,16 +95,16 @@ export default function AccountPage() {
                     </Badge>
                   )}
                 </div>
-                <div className="font-mono text-xs text-neutral-500 flex items-center gap-2">
-                  <span className="uppercase text-[10px] text-neutral-400">UID:</span>
-                  <span className="bg-neutral-100 px-1.5 py-0.5 border border-neutral-200 select-all">
+                <div className="text-xs text-neutral-500 flex items-center gap-2 font-sans">
+                  <span className="uppercase text-[11px] font-semibold text-neutral-400">UID:</span>
+                  <span className="bg-neutral-100 px-2 py-0.5 border border-neutral-200 font-mono text-[11px] select-all">
                     {user?.uid}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="font-mono text-[11px] uppercase tracking-wider text-neutral-400">
+            <div className="text-[11px] uppercase tracking-wider text-neutral-400 font-sans font-semibold">
               STATUS: <span className="text-emerald-700 font-bold">VERIFIED</span>
             </div>
           </div>
@@ -145,7 +145,7 @@ export default function AccountPage() {
         <div className="border border-neutral-200 bg-white p-6 sm:p-8 space-y-4 rounded-none">
           <div className="flex items-center gap-2 text-neutral-950">
             <KeyRound className="w-4 h-4" />
-            <h3 className="font-mono text-xs uppercase tracking-wider font-bold">
+            <h3 className="font-sans text-xs uppercase tracking-wider font-bold">
               Security & Credentials
             </h3>
           </div>
@@ -163,7 +163,7 @@ export default function AccountPage() {
               Send Password Reset Link
             </Button>
             {resetSent && (
-              <span className="font-mono text-xs uppercase tracking-wider text-emerald-700 font-semibold flex items-center gap-1.5">
+              <span className="font-sans text-xs uppercase tracking-wider text-emerald-700 font-semibold flex items-center gap-1.5">
                 <CheckCircle className="w-3.5 h-3.5" />
                 Reset link sent to {user?.email}
               </span>
@@ -175,7 +175,7 @@ export default function AccountPage() {
         <div className="border border-neutral-200 bg-white p-6 sm:p-8 space-y-3 rounded-none">
           <div className="flex items-center gap-2 text-neutral-950">
             <CreditCard className="w-4 h-4" />
-            <h3 className="font-mono text-xs uppercase tracking-wider font-bold">
+            <h3 className="font-sans text-xs uppercase tracking-wider font-bold">
               Billing & Subscriptions
             </h3>
           </div>
@@ -188,7 +188,7 @@ export default function AccountPage() {
 
         {/* Sign Out */}
         <div className="pt-6 border-t border-neutral-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <p className="font-mono text-xs uppercase tracking-wider text-neutral-400">
+          <p className="text-xs uppercase tracking-wider text-neutral-400 font-sans">
             Sign out of your DocStore session on this device.
           </p>
           <Button
