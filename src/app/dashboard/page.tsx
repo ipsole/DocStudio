@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
+import { LoginWelcomeWriter } from '@/components/ui/LoginWelcomeWriter';
 import {
   getPublicApps,
   getUserEntitlements,
@@ -40,6 +41,7 @@ export default function DashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [showApiDocs, setShowApiDocs] = useState(false);
   const [copiedSnippet, setCopiedSnippet] = useState(false);
+  const [replayWelcome, setReplayWelcome] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -126,6 +128,12 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
 
   return (
     <ProtectedRoute>
+      {/* Post-Login Luxury Writing Animation */}
+      <LoginWelcomeWriter
+        forcePlay={replayWelcome}
+        onComplete={() => setReplayWelcome(false)}
+      />
+
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-12 space-y-10 sm:space-y-12">
         {/* 1. Cinematic Hero Header with Animated Logo & Luxury Typography */}
         <div className="animate-fade-in-up flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-neutral-200/80 dark:border-neutral-900">
@@ -155,6 +163,15 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
 
           {/* Quick Action Navigation Pills */}
           <div className="flex items-center gap-2.5 flex-wrap shrink-0">
+            <button
+              type="button"
+              onClick={() => setReplayWelcome(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 hover:bg-neutral-100 dark:hover:bg-neutral-900 text-xs font-mono uppercase tracking-wider text-neutral-700 dark:text-neutral-300 transition-all shadow-sm active:scale-[0.98] cursor-pointer"
+              title="Replay luxury post-login animation"
+            >
+              <span>Play Intro ↺</span>
+            </button>
+
             <Link
               href="/account"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 hover:bg-neutral-100 dark:hover:bg-neutral-900 text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition-all shadow-sm active:scale-[0.98]"
@@ -180,6 +197,38 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
                 <span>Admin</span>
               </Link>
             )}
+          </div>
+        </div>
+
+        {/* 2. Studio Manifesto Banner with Interactive Replay */}
+        <div className="animate-fade-in-up animation-delay-100 relative overflow-hidden rounded-2xl border border-neutral-200/90 dark:border-neutral-800/90 bg-gradient-to-r from-neutral-50/70 via-white to-neutral-50/70 dark:from-neutral-950/80 dark:via-neutral-900/40 dark:to-neutral-950/80 p-5 sm:p-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1.5 max-w-3xl">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500">
+                  DocStudio Manifesto
+                </span>
+                <span className="w-1 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700" />
+                <span className="text-[11px] font-sans text-neutral-500 dark:text-neutral-400">
+                  Core Purpose
+                </span>
+              </div>
+              <p className="font-serif text-base sm:text-xl text-neutral-900 dark:text-neutral-100 font-normal leading-relaxed">
+                “Welcome to <span className="font-medium text-black dark:text-white">DocStudio</span> — a space{' '}
+                <span className="italic underline decoration-neutral-300 dark:decoration-neutral-700 underline-offset-4 decoration-1">
+                  designed with purpose
+                </span>{' '}
+                to serve founders, creators, and business owners.”
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setReplayWelcome(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-xs font-mono uppercase tracking-wider text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-all shadow-sm active:scale-95 shrink-0 cursor-pointer"
+              title="Watch the post-login writing animation"
+            >
+              <span>Play Animation ↺</span>
+            </button>
           </div>
         </div>
 

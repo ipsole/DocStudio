@@ -110,11 +110,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
     }
     await signInWithEmailAndPassword(auth, email, pass);
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem('docstudio_login_welcome', 'pending');
+      } catch {
+        // ignore
+      }
+    }
   };
 
   const signInWithGoogle = async () => {
     if (!isConfigured || !auth) {
       throw new Error('Firebase Authentication is not yet configured.');
+    }
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem('docstudio_login_welcome', 'pending');
+      } catch {
+        // ignore
+      }
     }
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
@@ -128,6 +142,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const credential = GoogleAuthProvider.credential(idToken);
     const result = await signInWithCredential(auth, credential);
     if (result.user) {
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem('docstudio_login_welcome', 'pending');
+        } catch {
+          // ignore
+        }
+      }
       await ensureUserProfile(
         result.user.uid,
         result.user.email || '',
@@ -147,6 +168,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     if (displayName && cred.user) {
       await fbUpdateProfile(cred.user, { displayName });
+    }
+    if (typeof window !== 'undefined') {
+      try {
+        sessionStorage.setItem('docstudio_login_welcome', 'pending');
+      } catch {
+        // ignore
+      }
     }
     await ensureUserProfile(cred.user.uid, cred.user.email || email, displayName || null);
   };
