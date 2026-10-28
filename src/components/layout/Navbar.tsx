@@ -75,40 +75,27 @@ export function Navbar() {
 
           {/* Right: Theme Mode Toggle & Account Icon */}
           <div className="flex items-center gap-3 shrink-0">
-            {/* Pill Switch Mode Toggle Button matching design */}
+            {/* Sleek Switch Mode Toggle Button (Icon switch only, no text) */}
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex items-center gap-3 px-3.5 py-1.5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-100/90 dark:bg-neutral-900/90 hover:bg-neutral-200/80 dark:hover:bg-neutral-800/80 transition-all cursor-pointer shadow-sm active:scale-[0.98]"
+              className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 border border-neutral-200 dark:border-neutral-800 transition-colors duration-200 ease-in-out cursor-pointer shadow-sm active:scale-95 ${
+                theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-neutral-200/90 hover:bg-neutral-300/80'
+              }`}
               aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
-              <div className="flex items-center gap-1.5 text-neutral-800 dark:text-neutral-200 text-xs sm:text-sm font-medium tracking-tight">
-                {theme === 'dark' ? (
-                  <Moon className="w-3.5 h-3.5 text-neutral-300" />
-                ) : (
-                  <Sun className="w-3.5 h-3.5 text-neutral-700" />
-                )}
-                <span>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
-              </div>
-
-              {/* Slider Track with Knob containing Sun/Moon */}
+              <span className="sr-only">Toggle theme</span>
               <div
-                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out ${
-                  theme === 'dark' ? 'bg-neutral-700' : 'bg-[#d4d7dc]'
+                className={`flex h-6 w-6 items-center justify-center rounded-full bg-white dark:bg-neutral-950 shadow-sm transform transition-transform duration-200 ease-in-out ${
+                  theme === 'dark' ? 'translate-x-5 text-neutral-200' : 'translate-x-0 text-neutral-800'
                 }`}
               >
-                <div
-                  className={`flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
-                    theme === 'dark' ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                >
-                  {theme === 'dark' ? (
-                    <Moon className="w-3 h-3 text-neutral-900" />
-                  ) : (
-                    <Sun className="w-3 h-3 text-neutral-600" />
-                  )}
-                </div>
+                {theme === 'dark' ? (
+                  <Moon className="w-3.5 h-3.5" />
+                ) : (
+                  <Sun className="w-3.5 h-3.5" />
+                )}
               </div>
             </button>
 

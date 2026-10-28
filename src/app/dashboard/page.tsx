@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
 import { LoginWelcomeWriter } from '@/components/ui/LoginWelcomeWriter';
+import { GuidedTour } from '@/components/ui/GuidedTour';
 import {
   getPublicApps,
   getUserEntitlements,
@@ -42,6 +43,7 @@ export default function DashboardPage() {
   const [showApiDocs, setShowApiDocs] = useState(false);
   const [copiedSnippet, setCopiedSnippet] = useState(false);
   const [replayWelcome, setReplayWelcome] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -128,25 +130,39 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
 
   return (
     <ProtectedRoute>
-      {/* Post-Login Luxury Writing Animation */}
+      {/* Post-Login Luxury Word-by-Word Animation */}
       <LoginWelcomeWriter
         forcePlay={replayWelcome}
-        onComplete={() => setReplayWelcome(false)}
+        onComplete={() => {
+          setReplayWelcome(false);
+          try {
+            const tourSeen = localStorage.getItem('docstudio_tour_completed');
+            if (!tourSeen) {
+              setShowTour(true);
+            }
+          } catch {
+            // ignore
+          }
+        }}
+      />
+
+      {/* Skippable Guided Tour */}
+      <GuidedTour
+        isOpen={showTour}
+        onClose={() => setShowTour(false)}
       />
 
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-12 space-y-10 sm:space-y-12">
-        {/* 1. Cinematic Hero Header with Animated Logo & Luxury Typography */}
+        {/* 1. Cinematic Hero Header with Clean Logo & Luxury Typography */}
         <div className="animate-fade-in-up flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-neutral-200/80 dark:border-neutral-900">
-          <div className="flex items-start sm:items-center gap-5 sm:gap-6">
-            {/* Animated Logo Badge */}
-            <div className="relative shrink-0 animate-logo-reveal animate-subtle-float">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-neutral-950 text-white dark:bg-white dark:text-black flex items-center justify-center shadow-xl animate-logo-aura">
-                <DocdrilLogo size={42} className="text-white dark:text-black" />
-              </div>
+          <div className="flex items-start sm:items-center gap-4 sm:gap-5">
+            {/* Pure, clean vector logo mark */}
+            <div className="relative shrink-0 pt-0.5">
+              <DocdrilLogo size={42} className="text-neutral-950 dark:text-white transition-transform hover:scale-105" />
             </div>
 
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono uppercase tracking-wider bg-neutral-100/90 dark:bg-neutral-900/90 border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300">
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full text-[10px] sm:text-[11px] font-mono uppercase tracking-wider bg-neutral-100/90 dark:bg-neutral-900/90 border border-neutral-200/80 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse-dot" />
                 <span>Unified Studio Active • All Subdomains Synced</span>
               </div>
@@ -163,6 +179,15 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
 
           {/* Quick Action Navigation Pills */}
           <div className="flex items-center gap-2.5 flex-wrap shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowTour(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 hover:bg-neutral-100 dark:hover:bg-neutral-900 text-xs font-mono uppercase tracking-wider text-neutral-700 dark:text-neutral-300 transition-all shadow-sm active:scale-[0.98] cursor-pointer"
+              title="Start skippable guided tour"
+            >
+              <span>Tour ↺</span>
+            </button>
+
             <button
               type="button"
               onClick={() => setReplayWelcome(true)}
@@ -233,7 +258,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
         </div>
 
         {/* 2. Metrics & Access Ribbon (3 Sleek Floating Cards) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 animate-fade-in-up animation-delay-100">
+        <div id="tour-quota-card" className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 animate-fade-in-up animation-delay-100">
           {/* Card 1: Available Generation Credits */}
           <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-all flex flex-col justify-between space-y-4">
             <div className="flex items-center justify-between">
@@ -333,7 +358,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
         </div>
 
         {/* 3. Direct Software Launchpad */}
-        <section className="space-y-6 animate-fade-in-up animation-delay-200">
+        <section id="tour-launchpad" className="space-y-6 animate-fade-in-up animation-delay-200">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2 border-b border-neutral-200/80 dark:border-neutral-900">
             <div>
               <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
