@@ -10,6 +10,16 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
+        serif: [
+          '"Instrument Serif"',
+          '"Playfair Display"',
+          'Didot',
+          '"Bodoni 72"',
+          '"Cormorant Garamond"',
+          'Baskerville',
+          'Georgia',
+          'serif',
+        ],
         sans: [
           "-apple-system",
           "BlinkMacSystemFont",

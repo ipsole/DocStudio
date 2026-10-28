@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { renderUserIcon } from '@/components/ui/AvatarIconPicker';
@@ -22,36 +21,46 @@ export function Navbar() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-neutral-200 dark:border-neutral-900 bg-white/90 dark:bg-black/90 backdrop-blur-md text-neutral-900 dark:text-white select-none transition-colors duration-200">
+    <nav className="sticky top-0 z-50 w-full bg-white/80 dark:bg-black/80 backdrop-blur-md text-neutral-900 dark:text-white select-none transition-colors duration-200">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8">
-        <div className="flex h-16 items-center justify-between">
-          {/* Left: Minimal Clean Docdril Logo Alone (Crisp, No Glow) */}
-          <Link
-            href="/"
-            className="flex items-center group transition-transform hover:scale-105 active:scale-95"
-            title="DocStudio by Docdril"
-          >
-            <DocdrilLogo size={28} className="text-neutral-950 dark:text-white" />
-          </Link>
-
-          {/* Center: Clean & Clutter-Free */}
-          <div className="flex-1" />
-
+        <div className="flex h-14 sm:h-16 items-center justify-end">
           {/* Right: Theme Mode Toggle & Account Icon */}
-          <div className="flex items-center gap-2.5">
-            {/* Mode Toggle Button */}
+          <div className="flex items-center gap-3">
+            {/* Pill Switch Mode Toggle Button matching design */}
             <button
               type="button"
               onClick={toggleTheme}
-              className="w-9 h-9 rounded-full border border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 bg-neutral-100/80 dark:bg-neutral-900/80 flex items-center justify-center text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-all cursor-pointer hover:scale-105 active:scale-95"
-              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="flex items-center gap-3 px-3.5 py-1.5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-100/90 dark:bg-neutral-900/90 hover:bg-neutral-200/80 dark:hover:bg-neutral-800/80 transition-all cursor-pointer shadow-sm active:scale-[0.98]"
+              aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
-              {theme === 'dark' ? (
-                <Sun className="w-4 h-4 text-amber-300 transition-transform hover:rotate-45" />
-              ) : (
-                <Moon className="w-4 h-4 text-neutral-800 transition-transform hover:-rotate-12" />
-              )}
+              <div className="flex items-center gap-1.5 text-neutral-800 dark:text-neutral-200 text-xs sm:text-sm font-medium tracking-tight">
+                {theme === 'dark' ? (
+                  <Moon className="w-3.5 h-3.5 text-neutral-300" />
+                ) : (
+                  <Sun className="w-3.5 h-3.5 text-neutral-700" />
+                )}
+                <span>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
+              </div>
+
+              {/* Slider Track with Knob containing Sun/Moon */}
+              <div
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out ${
+                  theme === 'dark' ? 'bg-neutral-700' : 'bg-[#d4d7dc]'
+                }`}
+              >
+                <div
+                  className={`flex h-5 w-5 items-center justify-center rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+                    theme === 'dark' ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                >
+                  {theme === 'dark' ? (
+                    <Moon className="w-3 h-3 text-neutral-900" />
+                  ) : (
+                    <Sun className="w-3 h-3 text-neutral-600" />
+                  )}
+                </div>
+              </div>
             </button>
 
             {user ? (

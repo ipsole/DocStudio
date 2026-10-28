@@ -60,10 +60,10 @@ export default function HomePage() {
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center bg-white text-neutral-900 dark:bg-black dark:text-white px-4 sm:px-6 md:px-8 py-10 sm:py-16 overflow-hidden transition-colors duration-200">
-      {/* Clean Crisp Typography - No Fuzzy Glow */}
-      <div className="relative z-10 text-center select-none pt-4 pb-10 sm:pb-14">
-        <h1 className="text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] font-extrabold tracking-[-0.04em] text-neutral-950 dark:text-white uppercase font-sans leading-none">
+    <div className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center bg-white text-neutral-900 dark:bg-black dark:text-white px-4 sm:px-6 md:px-8 pt-0 sm:pt-1 pb-12 sm:pb-16 overflow-hidden transition-colors duration-200">
+      {/* Luxury Serif Typography matching shared design */}
+      <div className="relative z-10 text-center select-none pt-0 pb-6 sm:pb-10">
+        <h1 className="text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] font-serif font-normal tracking-normal text-neutral-950 dark:text-white leading-none select-none">
           DocStudio
         </h1>
       </div>

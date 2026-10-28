@@ -29,9 +29,11 @@ export default function RootLayout({
                   if (t === 'light') {
                     document.documentElement.classList.remove('dark');
                     document.documentElement.classList.add('light');
+                    document.documentElement.style.colorScheme = 'light';
                   } else {
                     document.documentElement.classList.add('dark');
                     document.documentElement.classList.remove('light');
+                    document.documentElement.style.colorScheme = 'dark';
                   }
                 } catch (e) {
                   document.documentElement.classList.add('dark');

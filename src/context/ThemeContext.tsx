@@ -35,13 +35,25 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const applyTheme = (newTheme: Theme) => {
+    if (typeof document === 'undefined') return;
     const root = document.documentElement;
+    const body = document.body;
     if (newTheme === 'dark') {
       root.classList.add('dark');
       root.classList.remove('light');
+      if (body) {
+        body.classList.add('dark');
+        body.classList.remove('light');
+      }
+      root.style.colorScheme = 'dark';
     } else {
       root.classList.remove('dark');
       root.classList.add('light');
+      if (body) {
+        body.classList.remove('dark');
+        body.classList.add('light');
+      }
+      root.style.colorScheme = 'light';
     }
   };
 
