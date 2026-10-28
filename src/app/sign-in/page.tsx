@@ -90,15 +90,15 @@ function SignInForm() {
   };
 
   return (
-    <div className="bg-white border border-neutral-950 p-8 sm:p-10 space-y-6 rounded-none">
+    <div className="bg-neutral-950/90 border border-neutral-800 p-8 sm:p-10 space-y-6 rounded-xl shadow-2xl backdrop-blur-xl text-white">
       {!isConfigured && (
-        <div className="p-3.5 border border-amber-300 bg-amber-50 text-amber-900 font-mono text-xs leading-relaxed">
-          <strong>NOTICE:</strong> Firebase configuration is pending in <code className="font-mono">.env.local</code>.
+        <div className="p-3.5 border border-amber-800/60 bg-amber-950/60 text-amber-300 font-mono text-xs leading-relaxed rounded">
+          <strong>NOTICE:</strong> Firebase configuration is pending in <code className="font-mono text-white">.env.local</code>.
         </div>
       )}
 
       {error && (
-        <div className="p-3.5 border border-red-500 bg-red-50 text-red-700 font-mono text-xs flex items-center gap-2">
+        <div className="p-3.5 border border-red-800/80 bg-red-950/70 text-red-300 font-mono text-xs flex items-center gap-2 rounded">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
@@ -139,10 +139,10 @@ function SignInForm() {
 
         <div className="relative my-5">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-neutral-200" />
+            <div className="w-full border-t border-neutral-800" />
           </div>
           <div className="relative flex justify-center font-mono text-[10px] uppercase">
-            <span className="bg-white px-2 text-neutral-400 font-semibold tracking-wider">
+            <span className="bg-neutral-950 px-2 text-neutral-400 font-semibold tracking-wider">
               Or with email credentials
             </span>
           </div>
@@ -164,12 +164,12 @@ function SignInForm() {
 
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label className="block font-mono text-[11px] uppercase tracking-wider font-semibold text-neutral-800">
+            <label className="block font-mono text-[11px] uppercase tracking-wider font-semibold text-neutral-300">
               Password
             </label>
             <Link
               href="/forgot-password"
-              className="font-mono text-xs uppercase tracking-wider text-neutral-500 hover:text-black hover:underline"
+              className="font-mono text-xs uppercase tracking-wider text-neutral-400 hover:text-white hover:underline transition-colors"
             >
               Forgot?
             </Link>
@@ -195,9 +195,9 @@ function SignInForm() {
         </Button>
       </form>
 
-      <div className="pt-4 border-t border-neutral-200 text-center font-mono text-xs uppercase tracking-wider text-neutral-500">
+      <div className="pt-4 border-t border-neutral-800 text-center font-mono text-xs uppercase tracking-wider text-neutral-400">
         Don&apos;t have an account?{' '}
-        <Link href="/sign-up" className="font-bold text-neutral-950 underline ml-1">
+        <Link href="/sign-up" className="font-bold text-white underline ml-1 hover:text-neutral-200">
           Create Account
         </Link>
       </div>
@@ -211,11 +211,11 @@ export default function SignInPage() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3">
         <Link href="/" className="inline-flex items-center gap-3 group">
           <DocdrilLogo size={32} />
-          <span className="font-bold text-2xl tracking-tight text-neutral-950 font-sans">
+          <span className="font-bold text-2xl tracking-tight text-white font-sans">
             DocStudio
           </span>
         </Link>
-        <h2 className="text-3xl font-light tracking-[-0.03em] uppercase text-neutral-950 font-sans">
+        <h2 className="text-3xl font-light tracking-[-0.03em] uppercase text-white font-sans">
           Sign In
         </h2>
         <p className="font-mono text-xs uppercase tracking-wider text-neutral-400">
@@ -226,7 +226,7 @@ export default function SignInPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <Suspense
           fallback={
-            <div className="bg-white p-12 border border-neutral-950 flex flex-col items-center justify-center gap-3">
+            <div className="bg-neutral-950 p-12 border border-neutral-800 rounded-xl flex flex-col items-center justify-center gap-3">
               <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
               <p className="font-mono text-xs uppercase tracking-wider text-neutral-400">
                 Loading session...

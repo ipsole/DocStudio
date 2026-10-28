@@ -42,16 +42,16 @@ export default function AppsCatalogPage() {
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 py-10 sm:py-14 space-y-8">
       {/* Centered Clean Header */}
       <div className="max-w-2xl mx-auto text-center space-y-2">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-950 font-sans">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white font-sans">
           Software Directory
         </h1>
-        <p className="text-sm text-neutral-600 font-sans">
+        <p className="text-sm text-neutral-400 font-sans">
           Discover and launch active and upcoming applications across the Docdril platform.
         </p>
       </div>
 
       {/* Filter Bar */}
-      <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-neutral-200 pb-4">
+      <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-neutral-800 pb-4">
         {/* Category Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
           <button
@@ -59,8 +59,8 @@ export default function AppsCatalogPage() {
             onClick={() => setSelectedCategory('all')}
             className={`px-4 py-1.5 text-xs font-semibold tracking-tight transition-all rounded-full cursor-pointer whitespace-nowrap ${
               selectedCategory === 'all'
-                ? 'bg-neutral-950 text-white'
-                : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+                ? 'border border-white bg-white text-black font-semibold shadow-[0_0_15px_rgba(255,255,255,0.25)]'
+                : 'border border-neutral-800 bg-neutral-900 text-neutral-300 hover:border-neutral-600 hover:text-white'
             }`}
           >
             All Softwares
@@ -75,8 +75,8 @@ export default function AppsCatalogPage() {
                 onClick={() => setSelectedCategory(cat.id)}
                 className={`px-4 py-1.5 text-xs font-medium tracking-tight transition-all rounded-full cursor-pointer whitespace-nowrap ${
                   isSelected
-                    ? 'bg-neutral-950 text-white font-semibold'
-                    : 'bg-transparent text-neutral-700 hover:bg-neutral-100'
+                    ? 'border border-white bg-white text-black font-semibold shadow-[0_0_15px_rgba(255,255,255,0.25)]'
+                    : 'border border-transparent text-neutral-400 hover:text-white hover:bg-neutral-900'
                 }`}
               >
                 {cat.label}
@@ -94,7 +94,7 @@ export default function AppsCatalogPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search software..."
-              className="w-full pl-9 pr-3 py-1.5 border border-neutral-200 bg-white text-xs text-neutral-900 placeholder:text-neutral-400 rounded-full focus:outline-none focus:border-neutral-950 transition-colors"
+              className="w-full pl-9 pr-3 py-1.5 border border-neutral-800 bg-neutral-900 text-xs text-white placeholder:text-neutral-500 rounded-full focus:outline-none focus:border-white transition-colors"
             />
           </div>
           <span className="font-mono text-xs text-neutral-400 whitespace-nowrap">
@@ -108,10 +108,10 @@ export default function AppsCatalogPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="animate-pulse space-y-3">
-              <div className="aspect-[16/10] bg-neutral-100 border border-neutral-200" />
+              <div className="aspect-[16/10] bg-neutral-900 border border-neutral-800 rounded-xl" />
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-neutral-200" />
-                <div className="h-4 bg-neutral-200 w-1/2" />
+                <div className="w-6 h-6 bg-neutral-800 rounded" />
+                <div className="h-4 bg-neutral-800 w-1/2 rounded" />
               </div>
             </div>
           ))}
@@ -123,12 +123,12 @@ export default function AppsCatalogPage() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 px-4 border border-dashed border-neutral-300 bg-white">
-          <div className="w-10 h-10 border border-neutral-950 text-neutral-950 mx-auto flex items-center justify-center mb-3">
+        <div className="text-center py-20 px-4 border border-dashed border-neutral-800 bg-neutral-950/80 rounded-xl">
+          <div className="w-10 h-10 border border-neutral-700 bg-neutral-900 text-neutral-300 rounded-full mx-auto flex items-center justify-center mb-3">
             <Inbox className="w-5 h-5" />
           </div>
-          <h3 className="font-bold text-sm text-neutral-950">No applications found</h3>
-          <p className="text-xs text-neutral-500 max-w-sm mx-auto mt-1">
+          <h3 className="font-bold text-sm text-white">No applications found</h3>
+          <p className="text-xs text-neutral-400 max-w-sm mx-auto mt-1">
             {searchQuery || selectedCategory !== 'all'
               ? 'No software matches your current filters.'
               : 'Software will appear here once added to Firestore.'}

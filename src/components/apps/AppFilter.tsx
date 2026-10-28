@@ -28,11 +28,11 @@ export function AppFilter({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="SEARCH PRODUCTS, CAPABILITIES..."
-            className="w-full pl-10 pr-4 py-2.5 border border-neutral-300 bg-white text-xs sm:text-sm font-sans tracking-wide text-neutral-950 placeholder:text-neutral-400 placeholder:font-mono placeholder:text-xs placeholder:uppercase focus:outline-none focus:border-neutral-950 transition-colors rounded-none"
+            className="w-full pl-10 pr-4 py-2.5 border border-neutral-800 bg-neutral-900/90 text-xs sm:text-sm font-sans tracking-wide text-white placeholder:text-neutral-500 placeholder:font-mono placeholder:text-xs placeholder:uppercase focus:outline-none focus:border-white transition-colors rounded-lg"
           />
         </div>
-        <div className="font-mono text-xs uppercase tracking-wider text-neutral-500 self-end sm:self-center">
-          CATALOG: <span className="font-bold text-neutral-950">{totalCount}</span> AVAILABLE
+        <div className="font-mono text-xs uppercase tracking-wider text-neutral-400 self-end sm:self-center">
+          CATALOG: <span className="font-bold text-white">{totalCount}</span> AVAILABLE
         </div>
       </div>
 
@@ -45,10 +45,10 @@ export function AppFilter({
               key={cat.id}
               type="button"
               onClick={() => onSelectCategory(cat.id)}
-              className={`whitespace-nowrap px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-all cursor-pointer rounded-none ${
+              className={`whitespace-nowrap px-4 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-all cursor-pointer rounded-full ${
                 isSelected
-                  ? 'border border-neutral-950 bg-neutral-950 text-white font-semibold'
-                  : 'border border-neutral-300 bg-white text-neutral-700 hover:border-neutral-950 hover:text-black'
+                  ? 'border border-white bg-white text-black font-semibold shadow-[0_0_15px_rgba(255,255,255,0.25)]'
+                  : 'border border-neutral-800 bg-neutral-900 text-neutral-300 hover:border-neutral-600 hover:text-white'
               }`}
             >
               {cat.label}

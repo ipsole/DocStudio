@@ -106,18 +106,18 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
     <ProtectedRoute>
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 py-12 space-y-12">
         {/* Welcome Header */}
-        <div className="border border-neutral-950 bg-white p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 rounded-none">
+        <div className="border border-neutral-800 bg-neutral-950/80 backdrop-blur-xl p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 rounded-xl shadow-xl">
           <div className="space-y-1.5">
             <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">
               CENTRAL ACCOUNT ACTIVE
             </div>
-            <h1 className="text-2xl sm:text-4xl font-light tracking-[-0.03em] uppercase text-neutral-950 font-sans leading-none">
+            <h1 className="text-2xl sm:text-4xl font-light tracking-[-0.03em] uppercase text-white font-sans leading-none">
               Welcome back,{' '}
-              <span className="font-bold">
+              <span className="font-bold text-white">
                 {profile?.displayName || user?.displayName || user?.email?.split('@')[0]}
               </span>
             </h1>
-            <p className="text-xs sm:text-sm text-neutral-600 font-sans">
+            <p className="text-xs sm:text-sm text-neutral-400 font-sans">
               Manage your connected software subscriptions, monitor generation credits, and launch apps across subdomains.
             </p>
           </div>
@@ -140,16 +140,16 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
 
         {/* Section 1: Active Product Subscriptions & Live Credit Quotas */}
         <section className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-neutral-950 pb-3 gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between border-b border-neutral-800 pb-3 gap-2">
             <div>
               <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">
                 MULTI-PRODUCT USAGE
               </div>
-              <h2 className="text-2xl font-light tracking-[-0.03em] uppercase text-neutral-950 font-sans">
+              <h2 className="text-2xl font-light tracking-[-0.03em] uppercase text-white font-sans">
                 Product Subscriptions & Generation Quotas
               </h2>
             </div>
-            <p className="text-xs text-neutral-500 font-sans">
+            <p className="text-xs text-neutral-400 font-sans">
               Centralized balance shared with subdomain applications
             </p>
           </div>
@@ -169,12 +169,12 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
               })}
             </div>
           ) : (
-            <div className="border border-neutral-200 bg-white p-8 text-center space-y-3">
-              <Zap className="w-8 h-8 mx-auto text-neutral-400" />
-              <h3 className="font-bold uppercase tracking-tight text-neutral-950 text-sm">
+            <div className="border border-neutral-800 bg-neutral-950/80 p-8 text-center space-y-3 rounded-xl">
+              <Zap className="w-8 h-8 mx-auto text-neutral-500" />
+              <h3 className="font-bold uppercase tracking-tight text-white text-sm">
                 No active subscriptions yet
               </h3>
-              <p className="text-xs text-neutral-500 max-w-md mx-auto">
+              <p className="text-xs text-neutral-400 max-w-md mx-auto">
                 Explore our catalog to subscribe to Docdril tools and unlock monthly generation allowances.
               </p>
               <Link href="/apps">
@@ -187,65 +187,65 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
         </section>
 
         {/* Section 2: Developer Subdomain API Hub */}
-        <section className="border border-neutral-950 bg-white rounded-none overflow-hidden">
+        <section className="border border-neutral-800 bg-neutral-950/80 rounded-xl overflow-hidden shadow-xl">
           <div
             onClick={() => setShowApiDocs(!showApiDocs)}
-            className="p-6 cursor-pointer flex items-center justify-between hover:bg-neutral-50 transition-colors"
+            className="p-6 cursor-pointer flex items-center justify-between hover:bg-neutral-900/50 transition-colors"
           >
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-neutral-950 text-white flex items-center justify-center">
+              <div className="w-9 h-9 bg-neutral-900 border border-neutral-800 text-white rounded-lg flex items-center justify-center">
                 <Globe className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="font-sans text-sm font-bold uppercase tracking-wider text-neutral-950">
+                <h3 className="font-sans text-sm font-bold uppercase tracking-wider text-white">
                   Subdomain Single Sign-On & Central Verification API
                 </h3>
-                <p className="font-mono text-[11px] text-neutral-500">
-                  How <code className="text-neutral-950">canvas.docdril.com</code>, <code className="text-neutral-950">motion.docdril.com</code>, & future subdomains authenticate & deduct credits
+                <p className="font-mono text-[11px] text-neutral-400">
+                  How <code className="text-neutral-200">canvas.docdril.com</code>, <code className="text-neutral-200">motion.docdril.com</code>, & future subdomains authenticate & deduct credits
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase text-neutral-600">
+            <div className="flex items-center gap-2 text-xs font-mono font-semibold uppercase text-neutral-400">
               <span>{showApiDocs ? 'Hide Integration Guide' : 'View Integration Guide'}</span>
               {showApiDocs ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </div>
           </div>
 
           {showApiDocs && (
-            <div className="border-t border-neutral-200 p-6 sm:p-8 space-y-6 bg-neutral-50/50">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs font-sans text-neutral-700">
-                <div className="p-4 border border-neutral-200 bg-white space-y-2">
+            <div className="border-t border-neutral-800 p-6 sm:p-8 space-y-6 bg-neutral-900/30">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs font-sans text-neutral-300">
+                <div className="p-4 border border-neutral-800 bg-neutral-900/60 rounded-lg space-y-2">
                   <span className="font-mono text-[10px] uppercase font-bold text-neutral-400">
                     ENDPOINT 1: SESSION & BALANCE CHECK
                   </span>
-                  <div className="font-mono font-semibold text-neutral-950">
+                  <div className="font-mono font-semibold text-white">
                     POST /api/v1/auth/verify
                   </div>
-                  <p className="leading-relaxed">
+                  <p className="leading-relaxed text-neutral-400">
                     Subdomain apps send the user ID or Bearer ID Token to verify access. Returns user identity, plan status, and remaining generation credits.
                   </p>
                 </div>
 
-                <div className="p-4 border border-neutral-200 bg-white space-y-2">
+                <div className="p-4 border border-neutral-800 bg-neutral-900/60 rounded-lg space-y-2">
                   <span className="font-mono text-[10px] uppercase font-bold text-neutral-400">
                     ENDPOINT 2: ATOMIC CREDIT CONSUMPTION
                   </span>
-                  <div className="font-mono font-semibold text-neutral-950">
+                  <div className="font-mono font-semibold text-white">
                     POST /api/v1/credits/consume
                   </div>
-                  <p className="leading-relaxed">
+                  <p className="leading-relaxed text-neutral-400">
                     Whenever a user generates in a subdomain tool, calls this to decrement credits atomically. Returns 402 Insufficient Credits if quota exhausted.
                   </p>
                 </div>
               </div>
 
               {/* Code Snippet Box */}
-              <div className="relative border border-neutral-950 bg-neutral-950 text-neutral-100 p-5 rounded-none font-mono text-[11px] overflow-x-auto leading-relaxed">
+              <div className="relative border border-neutral-800 bg-black text-neutral-200 p-5 rounded-lg font-mono text-[11px] overflow-x-auto leading-relaxed">
                 <button
                   type="button"
                   onClick={() => copyCode(exampleVerifyCode)}
-                  className="absolute top-4 right-4 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-2.5 py-1 text-[10px] uppercase tracking-wider flex items-center gap-1.5 transition-colors"
+                  className="absolute top-4 right-4 bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border border-neutral-700 px-2.5 py-1 text-[10px] uppercase tracking-wider flex items-center gap-1.5 transition-colors rounded"
                 >
                   {copiedSnippet ? <CheckCircle className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                   <span>{copiedSnippet ? 'Copied' : 'Copy Snippet'}</span>
@@ -258,18 +258,18 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
 
         {/* Section 3: All Software Tools in Catalog */}
         <section className="space-y-4">
-          <div className="flex items-center justify-between border-b border-neutral-950 pb-2">
+          <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
             <div>
               <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">
                 DOCDRIL PLATFORM
               </div>
-              <h2 className="text-2xl font-light tracking-[-0.03em] uppercase text-neutral-950 font-sans">
+              <h2 className="text-2xl font-light tracking-[-0.03em] uppercase text-white font-sans">
                 Software Ecosystem
               </h2>
             </div>
             <Link
               href="/apps"
-              className="text-xs font-semibold text-neutral-500 hover:text-neutral-950 font-sans uppercase tracking-wider inline-flex items-center gap-1"
+              className="text-xs font-semibold text-neutral-400 hover:text-white font-sans uppercase tracking-wider inline-flex items-center gap-1 transition-colors"
             >
               <span>Explore All</span>
               <ArrowRight className="w-3.5 h-3.5" />

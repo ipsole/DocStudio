@@ -134,22 +134,22 @@ export function AvatarIconPicker({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <label className="block text-xs uppercase tracking-wider font-semibold text-neutral-800">
+        <label className="block text-xs uppercase tracking-wider font-mono font-semibold text-neutral-300">
           Select Profile Icon (50 Icons Available)
         </label>
         <div className="relative w-40">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-400" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-500" />
           <input
             type="text"
             value={filterQuery}
             onChange={(e) => setFilterQuery(e.target.value)}
             placeholder="Search icon..."
-            className="w-full pl-7 pr-2.5 py-1 text-xs border border-neutral-300 focus:outline-none focus:border-neutral-950"
+            className="w-full pl-7 pr-2.5 py-1 text-xs border border-neutral-800 bg-neutral-900 text-white placeholder:text-neutral-500 focus:outline-none focus:border-white transition-colors"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 p-3 border border-neutral-300 bg-neutral-50/50 max-h-56 overflow-y-auto">
+      <div className="grid grid-cols-5 sm:grid-cols-10 gap-2 p-3 border border-neutral-800 bg-neutral-950 max-h-56 overflow-y-auto">
         {filtered.map(({ id, icon: IconComponent, label }) => {
           const isSelected = selectedIcon === id;
           return (
@@ -158,10 +158,10 @@ export function AvatarIconPicker({
               type="button"
               onClick={() => onSelectIcon(id)}
               title={label}
-              className={`w-9 h-9 flex items-center justify-center transition-all cursor-pointer ${
+              className={`w-9 h-9 flex items-center justify-center transition-all cursor-pointer rounded ${
                 isSelected
-                  ? 'bg-neutral-950 text-white ring-2 ring-neutral-950 ring-offset-1'
-                  : 'bg-white text-neutral-700 hover:bg-neutral-200 border border-neutral-200'
+                  ? 'bg-white text-black ring-2 ring-white ring-offset-2 ring-offset-black shadow-[0_0_15px_rgba(255,255,255,0.35)]'
+                  : 'bg-neutral-900 text-neutral-400 hover:text-white hover:bg-neutral-800 border border-neutral-800'
               }`}
             >
               <IconComponent className="w-4 h-4" />

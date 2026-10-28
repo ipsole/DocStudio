@@ -36,12 +36,12 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
 
   if (!isConfigured) {
     return (
-      <div className="max-w-xl mx-auto my-16 p-8 border border-neutral-950 bg-white space-y-4">
-        <h3 className="font-mono text-sm uppercase tracking-wider font-bold text-neutral-950">
+      <div className="max-w-xl mx-auto my-16 p-8 border border-neutral-800 bg-neutral-950/80 rounded-xl space-y-4 text-white">
+        <h3 className="font-mono text-sm uppercase tracking-wider font-bold text-white">
           Firebase Configuration Notice
         </h3>
-        <p className="text-xs text-neutral-600 font-sans leading-relaxed">
-          Firebase credentials are not fully populated in <code className="bg-neutral-100 px-1 py-0.5 font-mono">.env.local</code>.
+        <p className="text-xs text-neutral-400 font-sans leading-relaxed">
+          Firebase credentials are not fully populated in <code className="bg-neutral-900 border border-neutral-800 text-neutral-300 px-1.5 py-0.5 font-mono rounded">.env.local</code>.
         </p>
         <div className="pt-2">
           <Link href="/">
@@ -57,7 +57,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
   if (!user) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center px-4">
-        <p className="font-mono text-xs uppercase tracking-wider text-neutral-500">
+        <p className="font-mono text-xs uppercase tracking-wider text-neutral-400">
           Authentication required to access this resource
         </p>
         <Link href={`/sign-in?redirect=${encodeURIComponent(pathname)}`}>
@@ -69,15 +69,15 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
 
   if (requireAdmin && !isAdmin) {
     return (
-      <div className="max-w-lg mx-auto my-20 p-8 text-center bg-white border border-neutral-950 space-y-4">
-        <div className="w-12 h-12 border border-neutral-950 text-neutral-950 mx-auto flex items-center justify-center mb-2">
+      <div className="max-w-lg mx-auto my-20 p-8 text-center bg-neutral-950/80 border border-neutral-800 rounded-xl space-y-4 text-white shadow-2xl">
+        <div className="w-12 h-12 border border-neutral-700 bg-neutral-900 text-amber-400 rounded-full mx-auto flex items-center justify-center mb-2">
           <ShieldAlert className="w-6 h-6" />
         </div>
-        <h2 className="font-mono text-sm uppercase tracking-wider font-bold text-neutral-950">
+        <h2 className="font-mono text-sm uppercase tracking-wider font-bold text-white">
           Access Restricted
         </h2>
-        <p className="text-xs text-neutral-600 font-sans leading-relaxed">
-          This portal is reserved for DocStore platform administrators. Your account (<code className="font-mono text-[11px] bg-neutral-100 px-1 py-0.5">{user.email}</code>) does not hold administrative authorization.
+        <p className="text-xs text-neutral-400 font-sans leading-relaxed">
+          This portal is reserved for DocStore platform administrators. Your account (<code className="font-mono text-[11px] bg-neutral-900 border border-neutral-800 text-neutral-300 px-1.5 py-0.5 rounded">{user.email}</code>) does not hold administrative authorization.
         </p>
         <div className="pt-4 flex justify-center gap-3">
           <Link href="/dashboard">

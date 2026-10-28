@@ -15,21 +15,21 @@ export function Badge({
   className = '',
 }: BadgeProps) {
   const variants = {
-    default: 'bg-white text-neutral-900 border-neutral-300',
-    neutral: 'bg-neutral-100 text-neutral-700 border-neutral-300',
-    success: 'bg-emerald-50 text-emerald-800 border-emerald-300',
-    warning: 'bg-amber-50 text-amber-800 border-amber-300',
-    info: 'bg-neutral-950 text-white border-neutral-950',
+    default: 'bg-neutral-900 text-neutral-200 border-neutral-800',
+    neutral: 'bg-neutral-900/60 text-neutral-400 border-neutral-800',
+    success: 'bg-emerald-950/60 text-emerald-300 border-emerald-800/80',
+    warning: 'bg-amber-950/60 text-amber-300 border-amber-800/80',
+    info: 'bg-neutral-900 text-white border-neutral-700',
   };
 
   const sizes = {
     sm: 'text-[10px] px-1.5 py-0.5',
-    md: 'text-[11px] px-2 py-0.5',
+    md: 'text-[11px] px-2.5 py-0.5',
   };
 
   return (
     <span
-      className={`inline-flex items-center gap-1 font-sans uppercase tracking-wider border rounded-none font-semibold ${variants[variant]} ${sizes[size]} ${className}`}
+      className={`inline-flex items-center gap-1 font-sans uppercase tracking-wider border rounded-md font-semibold ${variants[variant]} ${sizes[size]} ${className}`}
     >
       {children}
     </span>
