@@ -21,19 +21,19 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      'inline-flex items-center justify-center uppercase font-sans tracking-[-0.02em] font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white disabled:opacity-40 disabled:cursor-not-allowed select-none rounded-none cursor-pointer';
+      'inline-flex items-center justify-center uppercase font-sans tracking-[-0.02em] font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-400 dark:focus-visible:ring-white disabled:opacity-40 disabled:cursor-not-allowed select-none rounded-lg cursor-pointer';
 
     const variants = {
       primary:
-        'border border-white bg-white text-black hover:bg-neutral-200 hover:border-neutral-200 font-semibold shadow-[0_0_15px_rgba(255,255,255,0.15)]',
+        'border border-neutral-950 bg-neutral-950 text-white hover:bg-neutral-800 dark:border-white dark:bg-white dark:text-black dark:hover:bg-neutral-200 dark:hover:border-neutral-200 font-semibold shadow-sm',
       secondary:
-        'border border-neutral-700 bg-neutral-900 text-white hover:bg-neutral-800 hover:border-neutral-500',
+        'border border-neutral-300 bg-neutral-100 text-neutral-900 hover:bg-neutral-200 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:hover:bg-neutral-800',
       outline:
-        'border border-neutral-800 bg-neutral-950 text-neutral-200 hover:border-white hover:text-white',
+        'border border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-50 hover:border-neutral-400 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-200 dark:hover:border-neutral-600 dark:hover:text-white',
       ghost:
-        'text-neutral-400 hover:text-white hover:bg-neutral-900 border border-transparent',
+        'text-neutral-600 hover:text-black hover:bg-neutral-100 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-900 border border-transparent',
       danger:
-        'border border-red-800 bg-red-950/60 text-red-300 hover:bg-red-900 hover:text-white',
+        'border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-800 dark:bg-red-950/60 dark:text-red-300 dark:hover:bg-red-900',
     };
 
     const sizes = {

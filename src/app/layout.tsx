@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
+import { ThemeProvider } from '@/context/ThemeContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { GoogleOneTap } from '@/components/auth/GoogleOneTap';
@@ -17,14 +18,38 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark bg-black">
-      <body className="min-h-screen flex flex-col bg-black text-white selection:bg-white selection:text-black antialiased">
-        <AuthProvider>
-          <GoogleOneTap context="signin" onSuccessRedirect="/dashboard" />
-          <Navbar />
-          <main className="flex-1 flex flex-col">{children}</main>
-          <Footer />
-        </AuthProvider>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var t = localStorage.getItem('docstudio-theme');
+                  if (t === 'light') {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.classList.add('light');
+                  } else {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.classList.remove('light');
+                  }
+                } catch (e) {
+                  document.documentElement.classList.add('dark');
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-screen flex flex-col bg-white text-neutral-900 dark:bg-black dark:text-white selection:bg-neutral-900 selection:text-white dark:selection:bg-white dark:selection:text-black antialiased transition-colors duration-200">
+        <ThemeProvider>
+          <AuthProvider>
+            <GoogleOneTap context="signin" onSuccessRedirect="/dashboard" />
+            <Navbar />
+            <main className="flex-1 flex flex-col">{children}</main>
+            <Footer />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

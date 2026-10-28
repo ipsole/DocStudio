@@ -28,11 +28,11 @@ export function AppFilter({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="SEARCH PRODUCTS, CAPABILITIES..."
-            className="w-full pl-10 pr-4 py-2.5 border border-neutral-800 bg-neutral-900/90 text-xs sm:text-sm font-sans tracking-wide text-white placeholder:text-neutral-500 placeholder:font-mono placeholder:text-xs placeholder:uppercase focus:outline-none focus:border-white transition-colors rounded-lg"
+            className="w-full pl-10 pr-4 py-2.5 border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900/90 text-xs sm:text-sm font-sans tracking-wide text-neutral-950 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 placeholder:font-mono placeholder:text-xs placeholder:uppercase focus:outline-none focus:border-neutral-950 dark:focus:border-white transition-colors rounded-lg"
           />
         </div>
-        <div className="font-mono text-xs uppercase tracking-wider text-neutral-400 self-end sm:self-center">
-          CATALOG: <span className="font-bold text-white">{totalCount}</span> AVAILABLE
+        <div className="font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400 self-end sm:self-center">
+          CATALOG: <span className="font-bold text-neutral-950 dark:text-white">{totalCount}</span> AVAILABLE
         </div>
       </div>
 
@@ -47,8 +47,8 @@ export function AppFilter({
               onClick={() => onSelectCategory(cat.id)}
               className={`whitespace-nowrap px-4 py-1.5 font-mono text-[11px] uppercase tracking-wider transition-all cursor-pointer rounded-full ${
                 isSelected
-                  ? 'border border-white bg-white text-black font-semibold shadow-[0_0_15px_rgba(255,255,255,0.25)]'
-                  : 'border border-neutral-800 bg-neutral-900 text-neutral-300 hover:border-neutral-600 hover:text-white'
+                  ? 'border border-neutral-950 bg-neutral-950 text-white dark:border-white dark:bg-white dark:text-black font-semibold shadow-sm'
+                  : 'border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-neutral-500 dark:hover:border-neutral-600 hover:text-black dark:hover:text-white'
               }`}
             >
               {cat.label}

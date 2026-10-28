@@ -53,10 +53,10 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
                   <Palette className="w-4 h-4 text-emerald-400" />
                 </div>
                 {/* Transform anchor points */}
-                <span className="absolute -top-1 -left-1 w-2 h-2 bg-white border border-neutral-950 shadow-[0_0_6px_rgba(255,255,255,0.8)]" />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-white border border-neutral-950 shadow-[0_0_6px_rgba(255,255,255,0.8)]" />
-                <span className="absolute -bottom-1 -left-1 w-2 h-2 bg-white border border-neutral-950 shadow-[0_0_6px_rgba(255,255,255,0.8)]" />
-                <span className="absolute -bottom-1 -right-1 w-2 h-2 bg-white border border-neutral-950 shadow-[0_0_6px_rgba(255,255,255,0.8)]" />
+                <span className="absolute -top-1 -left-1 w-2 h-2 bg-white border border-neutral-900 rounded-sm" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-white border border-neutral-900 rounded-sm" />
+                <span className="absolute -bottom-1 -left-1 w-2 h-2 bg-white border border-neutral-900 rounded-sm" />
+                <span className="absolute -bottom-1 -right-1 w-2 h-2 bg-white border border-neutral-900 rounded-sm" />
               </div>
             </div>
 
@@ -158,7 +158,7 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
   };
 
   const renderSmallIcon = () => {
-    const iconClass = 'w-4 h-4 text-white';
+    const iconClass = 'w-4 h-4 text-neutral-800 dark:text-white';
     switch (app.icon) {
       case 'Palette':
         return <Palette className={iconClass} />;
@@ -174,11 +174,11 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
   };
 
   return (
-    <div className="group relative flex flex-col rounded-xl border border-neutral-800/80 bg-neutral-950/80 p-3 hover:border-neutral-500 transition-all duration-500 hover:shadow-[0_0_40px_rgba(255,255,255,0.1)] backdrop-blur-xl">
+    <div className="group relative flex flex-col rounded-xl border border-neutral-200 dark:border-neutral-800/80 bg-white dark:bg-neutral-950/80 p-3 hover:border-neutral-400 dark:hover:border-neutral-500 transition-all duration-300 shadow-sm hover:shadow-md dark:shadow-none backdrop-blur-xl">
       {/* 1. Visual Thumbnail Preview Container */}
       <Link
         href={`/apps/${app.slug}`}
-        className="relative block w-full aspect-[16/10] rounded-lg overflow-hidden border border-neutral-900 bg-black"
+        className="relative block w-full aspect-[16/10] rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-900 bg-neutral-950"
       >
         {renderVisualMockup()}
 
@@ -195,7 +195,7 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="px-3.5 py-1.5 bg-white text-black font-sans text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 rounded hover:bg-neutral-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+              className="px-3.5 py-1.5 bg-neutral-950 text-white dark:bg-white dark:text-black font-sans text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 rounded hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors shadow-sm"
             >
               Launch
               <ExternalLink className="w-3.5 h-3.5" />
@@ -208,18 +208,18 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
       <div className="pt-3.5 pb-1 px-1 flex items-center justify-between gap-3">
         {/* Left: App Icon + Name + Team Badge */}
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-7 h-7 rounded-md border border-neutral-800 bg-neutral-900 flex items-center justify-center shrink-0">
+          <div className="w-7 h-7 rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center shrink-0">
             {renderSmallIcon()}
           </div>
           <div className="flex flex-col min-w-0">
             <Link
               href={`/apps/${app.slug}`}
-              className="font-bold text-sm text-white truncate tracking-tight hover:text-neutral-300 transition-colors"
+              className="font-bold text-sm text-neutral-950 dark:text-white truncate tracking-tight hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
             >
               {app.name}
             </Link>
           </div>
-          <span className="font-mono text-[9px] font-bold uppercase tracking-wider bg-neutral-900 text-neutral-400 px-1.5 py-0.5 border border-neutral-800 rounded shrink-0">
+          <span className="font-mono text-[9px] font-bold uppercase tracking-wider bg-neutral-100 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 px-1.5 py-0.5 border border-neutral-200 dark:border-neutral-800 rounded shrink-0">
             DOCDRIL
           </span>
         </div>
@@ -227,13 +227,13 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
         {/* Right: Status badge & launch button */}
         <div className="flex items-center gap-2 shrink-0">
           {app.status === 'active' ? (
-            <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/40 border border-emerald-900/60 px-2 py-0.5 rounded-full flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.9)] animate-pulse" />
+            <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 px-2 py-0.5 rounded-full flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Active
             </span>
           ) : (
-            <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-950/40 border border-amber-900/60 px-2 py-0.5 rounded-full flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]" />
+            <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 px-2 py-0.5 rounded-full flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
               Soon
             </span>
           )}
@@ -243,7 +243,7 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
               href={app.applicationUrl!}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-neutral-400 hover:text-white p-1 transition-colors"
+              className="text-neutral-500 hover:text-black dark:text-neutral-400 dark:hover:text-white p-1 transition-colors"
               title="Launch Application"
             >
               <ExternalLink className="w-3.5 h-3.5" />
@@ -253,7 +253,7 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
       </div>
 
       {/* 3. Short description in muted silver */}
-      <p className="text-xs text-neutral-400 line-clamp-1 mt-1 px-1 font-sans">
+      <p className="text-xs text-neutral-600 dark:text-neutral-400 line-clamp-1 mt-1 px-1 font-sans">
         {app.shortDescription}
       </p>
     </div>

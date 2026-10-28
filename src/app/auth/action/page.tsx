@@ -20,9 +20,9 @@ function AuthActionHandler() {
   }, [router, searchParams]);
 
   return (
-    <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-4">
-      <Loader2 className="w-8 h-8 animate-spin text-white" />
-      <p className="font-mono text-xs uppercase tracking-wider text-neutral-400">
+    <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-4 text-neutral-900 dark:text-white">
+      <Loader2 className="w-8 h-8 animate-spin text-neutral-900 dark:text-white" />
+      <p className="font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
         Redirecting to DocStudio...
       </p>
     </div>
@@ -34,7 +34,7 @@ export default function AuthActionPage() {
     <Suspense
       fallback={
         <div className="min-h-[70vh] flex flex-col items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-white" />
+          <Loader2 className="w-8 h-8 animate-spin text-neutral-900 dark:text-white" />
         </div>
       }
     >

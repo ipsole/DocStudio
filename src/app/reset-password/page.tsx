@@ -101,11 +101,11 @@ function ResetPasswordForm() {
   };
 
   return (
-    <div className="bg-neutral-950/90 border border-neutral-800 p-8 sm:p-10 space-y-6 rounded-xl shadow-2xl backdrop-blur-xl text-white">
+    <div className="bg-white dark:bg-neutral-950/90 border border-neutral-200 dark:border-neutral-800 p-8 sm:p-10 space-y-6 rounded-xl shadow-xl dark:shadow-2xl backdrop-blur-xl text-neutral-900 dark:text-white">
       {verifying && (
         <div className="py-12 text-center space-y-4">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-white" />
-          <p className="font-mono text-xs uppercase tracking-wider text-neutral-400">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-neutral-900 dark:text-white" />
+          <p className="font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
             Verifying security token...
           </p>
         </div>
@@ -113,7 +113,7 @@ function ResetPasswordForm() {
 
       {!verifying && verificationError && (
         <div className="space-y-6 text-center">
-          <div className="p-4 border border-red-800/80 bg-red-950/70 text-red-300 font-mono text-xs flex items-center justify-center gap-2 rounded">
+          <div className="p-4 border border-red-300 bg-red-50 text-red-700 dark:border-red-800/80 dark:bg-red-950/70 dark:text-red-300 font-mono text-xs flex items-center justify-center gap-2 rounded">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{verificationError}</span>
           </div>
@@ -129,14 +129,14 @@ function ResetPasswordForm() {
 
       {!verifying && !verificationError && success && (
         <div className="text-center space-y-5">
-          <div className="w-12 h-12 bg-neutral-900 border border-neutral-800 text-emerald-400 rounded-full mx-auto flex items-center justify-center">
+          <div className="w-12 h-12 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-emerald-600 dark:text-emerald-400 rounded-full mx-auto flex items-center justify-center">
             <CheckCircle className="w-6 h-6" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-bold text-white font-sans uppercase tracking-tight">
+            <h3 className="text-base font-bold text-neutral-950 dark:text-white font-sans uppercase tracking-tight">
               Password Changed Successfully
             </h3>
-            <p className="text-xs text-neutral-400 font-sans leading-relaxed">
+            <p className="text-xs text-neutral-600 dark:text-neutral-400 font-sans leading-relaxed">
               Your credentials have been updated. You can now sign in with your new password.
             </p>
           </div>
@@ -153,13 +153,13 @@ function ResetPasswordForm() {
       {!verifying && !verificationError && !success && (
         <form onSubmit={handleSubmit} className="space-y-5">
           {targetEmail && (
-            <div className="p-3 bg-neutral-900/60 border border-neutral-800 text-xs font-sans text-neutral-400 rounded">
-              Resetting password for <span className="font-semibold text-white">{targetEmail}</span>
+            <div className="p-3 bg-neutral-100 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 text-xs font-sans text-neutral-600 dark:text-neutral-400 rounded">
+              Resetting password for <span className="font-semibold text-neutral-950 dark:text-white">{targetEmail}</span>
             </div>
           )}
 
           {submitError && (
-            <div className="p-3.5 border border-red-800/80 bg-red-950/70 text-red-300 font-mono text-xs flex items-center gap-2 rounded">
+            <div className="p-3.5 border border-red-300 bg-red-50 text-red-700 dark:border-red-800/80 dark:bg-red-950/70 dark:text-red-300 font-mono text-xs flex items-center gap-2 rounded">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{submitError}</span>
             </div>
@@ -201,7 +201,7 @@ function ResetPasswordForm() {
           <div className="pt-2 text-center">
             <Link
               href="/sign-in"
-              className="font-mono text-xs uppercase tracking-wider text-neutral-400 hover:text-white inline-flex items-center gap-1.5 transition-colors"
+              className="font-mono text-xs uppercase tracking-wider text-neutral-500 hover:text-black dark:text-neutral-400 dark:hover:text-white inline-flex items-center gap-1.5 transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               Cancel & Return to Sign In
@@ -215,18 +215,18 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-[80vh] flex flex-col justify-center py-16 sm:px-6 lg:px-8">
+    <div className="min-h-[80vh] flex flex-col justify-center py-16 sm:px-6 lg:px-8 text-neutral-900 dark:text-white transition-colors duration-200">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center space-y-3">
         <Link href="/" className="inline-flex items-center gap-3 group">
-          <DocdrilLogo size={32} />
-          <span className="font-bold text-2xl tracking-tight text-white font-sans">
+          <DocdrilLogo size={32} className="text-neutral-950 dark:text-white" />
+          <span className="font-bold text-2xl tracking-tight text-neutral-950 dark:text-white font-sans">
             DocStudio
           </span>
         </Link>
-        <h2 className="text-3xl font-light tracking-[-0.03em] uppercase text-white font-sans">
+        <h2 className="text-3xl font-light tracking-[-0.03em] uppercase text-neutral-950 dark:text-white font-sans">
           Set New Password
         </h2>
-        <p className="font-mono text-xs uppercase tracking-wider text-neutral-400">
+        <p className="font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
           Enter a secure password for your DocStudio account
         </p>
       </div>
@@ -234,8 +234,8 @@ export default function ResetPasswordPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <Suspense
           fallback={
-            <div className="bg-neutral-950 border border-neutral-800 p-12 text-center rounded-xl">
-              <Loader2 className="w-6 h-6 animate-spin mx-auto text-white" />
+            <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 p-12 text-center rounded-xl shadow-sm">
+              <Loader2 className="w-6 h-6 animate-spin mx-auto text-neutral-900 dark:text-white" />
             </div>
           }
         >

@@ -60,18 +60,15 @@ export default function HomePage() {
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center bg-black text-white px-4 sm:px-6 md:px-8 py-10 sm:py-16 overflow-hidden">
-      {/* Ambient ethereal white spotlight halo behind DocStudio */}
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[700px] h-[300px] bg-gradient-to-b from-white/12 via-white/4 to-transparent rounded-full blur-[130px] pointer-events-none" />
-
-      {/* Massive Glowing White DocStudio Title Alone */}
+    <div className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center bg-white text-neutral-900 dark:bg-black dark:text-white px-4 sm:px-6 md:px-8 py-10 sm:py-16 overflow-hidden transition-colors duration-200">
+      {/* Clean Crisp Typography - No Fuzzy Glow */}
       <div className="relative z-10 text-center select-none pt-4 pb-10 sm:pb-14">
-        <h1 className="text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] font-extrabold tracking-[-0.04em] text-white uppercase font-sans leading-none drop-shadow-[0_0_45px_rgba(255,255,255,0.75)] drop-shadow-[0_0_100px_rgba(255,255,255,0.3)]">
+        <h1 className="text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] font-extrabold tracking-[-0.04em] text-neutral-950 dark:text-white uppercase font-sans leading-none">
           DocStudio
         </h1>
       </div>
 
-      {/* Directly Below: If Authenticated, Show Softwares with Good Card Effects */}
+      {/* Directly Below: If Authenticated, Show Softwares with Clean Card Effects */}
       {user ? (
         <div className="relative z-10 w-full max-w-[1400px] mx-auto">
           {loading ? (
@@ -87,10 +84,10 @@ export default function HomePage() {
           )}
         </div>
       ) : (
-        /* If Logged Out: Minimal Floating 1-Click Login */
+        /* If Logged Out: Minimal 1-Click Login */
         <div className="relative z-10 w-full max-w-sm mx-auto text-center space-y-4 pt-4">
           {googleError && (
-            <div className="p-3 border border-red-800 bg-red-950/40 text-red-300 font-mono text-xs">
+            <div className="p-3 border border-red-500 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300 font-mono text-xs rounded">
               {googleError}
             </div>
           )}
@@ -99,10 +96,10 @@ export default function HomePage() {
             type="button"
             onClick={handleGoogleSignIn}
             disabled={googleLoading || !isConfigured}
-            className="w-full h-12 px-6 bg-white hover:bg-neutral-200 text-black font-semibold text-xs tracking-wider uppercase rounded-full flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_35px_rgba(255,255,255,0.25)] cursor-pointer"
+            className="w-full h-12 px-6 bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-200 dark:text-black font-semibold text-xs tracking-wider uppercase rounded-full flex items-center justify-center gap-3 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md cursor-pointer"
           >
             {googleLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin text-black" />
+              <Loader2 className="w-4 h-4 animate-spin text-white dark:text-black" />
             ) : (
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path
@@ -126,17 +123,17 @@ export default function HomePage() {
             <span>Continue with Google</span>
           </button>
 
-          <div className="pt-2 flex items-center justify-center gap-3 font-mono text-xs text-neutral-400">
+          <div className="pt-2 flex items-center justify-center gap-3 font-mono text-xs text-neutral-500 dark:text-neutral-400">
             <Link
               href="/sign-in"
-              className="hover:text-white transition-colors underline underline-offset-4"
+              className="hover:text-black dark:hover:text-white transition-colors underline underline-offset-4"
             >
               Sign In with Email
             </Link>
             <span>•</span>
             <Link
               href="/sign-up"
-              className="hover:text-white transition-colors"
+              className="hover:text-black dark:hover:text-white transition-colors"
             >
               Create Account
             </Link>

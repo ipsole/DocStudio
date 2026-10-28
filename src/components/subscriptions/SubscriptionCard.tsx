@@ -103,7 +103,7 @@ export function SubscriptionCard({
   };
 
   return (
-    <div className="border border-neutral-800 bg-neutral-950/80 p-6 sm:p-7 space-y-6 rounded-xl flex flex-col justify-between hover:border-neutral-700 transition-colors shadow-lg text-white">
+    <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-7 space-y-6 rounded-xl flex flex-col justify-between hover:border-neutral-400 dark:hover:border-neutral-700 transition-colors shadow-sm dark:shadow-lg text-neutral-900 dark:text-white">
       <div className="space-y-4">
         {/* Top Header */}
         <div className="flex items-start justify-between gap-4">
@@ -112,13 +112,13 @@ export function SubscriptionCard({
               <span className="font-mono text-[10px] uppercase tracking-wider text-neutral-500">
                 PRODUCT SUBSCRIPTION
               </span>
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
             </div>
-            <h3 className="text-xl font-bold tracking-tight text-white font-sans">
+            <h3 className="text-xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
               {subscription.appName}
             </h3>
-            <p className="text-xs text-neutral-400 font-sans">
-              Subdomain: <code className="bg-neutral-900 px-1.5 py-0.5 border border-neutral-800 text-neutral-300 font-mono text-[11px] rounded">{subdomainUrl.replace('https://', '')}</code>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+              Subdomain: <code className="bg-neutral-100 dark:bg-neutral-900 px-1.5 py-0.5 border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 font-mono text-[11px] rounded">{subdomainUrl.replace('https://', '')}</code>
             </p>
           </div>
 
@@ -126,35 +126,35 @@ export function SubscriptionCard({
             <Badge variant="default" className="uppercase font-mono text-[10px] tracking-wider px-2 py-0.5 font-bold">
               {subscription.plan}
             </Badge>
-            <span className="text-[10px] uppercase font-mono text-emerald-400 font-bold">
+            <span className="text-[10px] uppercase font-mono text-emerald-600 dark:text-emerald-400 font-bold">
               ● {subscription.status}
             </span>
           </div>
         </div>
 
         {/* Credit Meter */}
-        <div className="p-4 border border-neutral-800/80 bg-neutral-900/60 rounded-lg space-y-2.5">
+        <div className="p-4 border border-neutral-200 dark:border-neutral-800/80 bg-neutral-50 dark:bg-neutral-900/60 rounded-lg space-y-2.5">
           <div className="flex justify-between items-baseline font-sans">
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-neutral-200">
-              <Zap className="w-3.5 h-3.5 fill-white text-white" />
+            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-neutral-800 dark:text-neutral-200">
+              <Zap className="w-3.5 h-3.5 fill-neutral-900 text-neutral-900 dark:fill-white dark:text-white" />
               <span>Generation Quota</span>
             </div>
-            <div className="text-xs font-mono font-semibold text-neutral-300">
-              <span className="text-sm font-bold text-white">{remaining}</span> / {total} credits
+            <div className="text-xs font-mono font-semibold text-neutral-600 dark:text-neutral-300">
+              <span className="text-sm font-bold text-neutral-950 dark:text-white">{remaining}</span> / {total} credits
             </div>
           </div>
 
           {/* Progress Bar */}
-          <div className="w-full h-2 bg-neutral-800 rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
             <div
               className={`h-full transition-all duration-500 ${
-                percentage > 25 ? 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'bg-amber-400'
+                percentage > 25 ? 'bg-neutral-950 dark:bg-white' : 'bg-amber-500'
               }`}
               style={{ width: `${percentage}%` }}
             />
           </div>
 
-          <div className="flex justify-between items-center text-[10px] font-mono uppercase text-neutral-400">
+          <div className="flex justify-between items-center text-[10px] font-mono uppercase text-neutral-500 dark:text-neutral-400">
             <span>{percentage}% allowance remaining</span>
             <span>Resets monthly</span>
           </div>
@@ -166,10 +166,10 @@ export function SubscriptionCard({
             <div className="text-[10px] uppercase tracking-wider font-mono text-neutral-500 font-semibold">
               Included Privileges:
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-neutral-300 font-sans">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-neutral-700 dark:text-neutral-300 font-sans">
               {subscription.features.map((feat) => (
                 <div key={feat} className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <span className="capitalize">{feat.replace(/_/g, ' ')}</span>
                 </div>
               ))}
@@ -182,8 +182,8 @@ export function SubscriptionCard({
           <div
             className={`p-3 text-xs flex items-center gap-2 border font-mono rounded ${
               feedback.type === 'success'
-                ? 'border-emerald-800 bg-emerald-950/70 text-emerald-300'
-                : 'border-red-800 bg-red-950/70 text-red-300'
+                ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300'
+                : 'border-red-300 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950/70 dark:text-red-300'
             }`}
           >
             {feedback.type === 'success' ? (
@@ -197,7 +197,7 @@ export function SubscriptionCard({
       </div>
 
       {/* Action Footer */}
-      <div className="pt-4 border-t border-neutral-800/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="pt-4 border-t border-neutral-200 dark:border-neutral-800/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <Button
           type="button"
           variant="outline"
@@ -207,7 +207,7 @@ export function SubscriptionCard({
           disabled={consuming || remaining <= 0}
           className="text-xs gap-1.5 font-semibold"
         >
-          <Sparkles className="w-3.5 h-3.5 text-white" />
+          <Sparkles className="w-3.5 h-3.5 text-neutral-900 dark:text-white" />
           Simulate 1 Gen (-1 Credit)
         </Button>
 

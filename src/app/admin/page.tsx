@@ -200,15 +200,15 @@ export default function AdminPage() {
     <ProtectedRoute requireAdmin={true}>
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 py-12 space-y-10">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 pb-6">
           <div className="space-y-1">
-            <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">
+            <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
               PRIVILEGED INTERFACE
             </div>
-            <h1 className="text-3xl sm:text-4xl font-light tracking-[-0.03em] uppercase text-white font-sans">
+            <h1 className="text-3xl sm:text-4xl font-light tracking-[-0.03em] uppercase text-neutral-950 dark:text-white font-sans">
               Product Administration
             </h1>
-            <p className="text-xs sm:text-sm text-neutral-400 font-sans">
+            <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-sans">
               Manage software catalog entries, configure launch endpoints, and update lifecycle statuses.
             </p>
           </div>
@@ -227,7 +227,7 @@ export default function AdminPage() {
 
         {/* Notifications */}
         {error && (
-          <div className="p-4 border border-red-800/80 bg-red-950/70 text-red-300 font-mono text-xs uppercase tracking-wider flex items-center justify-between rounded-lg">
+          <div className="p-4 border border-red-300 bg-red-50 text-red-700 dark:border-red-800/80 dark:bg-red-950/70 dark:text-red-300 font-mono text-xs uppercase tracking-wider flex items-center justify-between rounded-lg">
             <div className="flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{error}</span>
@@ -243,16 +243,16 @@ export default function AdminPage() {
         )}
 
         {successMsg && (
-          <div className="p-4 border border-emerald-800/80 bg-emerald-950/70 text-emerald-300 font-mono text-xs uppercase tracking-wider flex items-center gap-2 rounded-lg">
+          <div className="p-4 border border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800/80 dark:bg-emerald-950/70 dark:text-emerald-300 font-mono text-xs uppercase tracking-wider flex items-center gap-2 rounded-lg">
             <CheckCircle className="w-4 h-4 shrink-0" />
             <span>{successMsg}</span>
           </div>
         )}
 
         {/* Catalog Table */}
-        <div className="border border-neutral-800 bg-neutral-950/80 overflow-hidden rounded-xl shadow-xl text-white">
-          <div className="px-6 py-4 border-b border-neutral-800 flex items-center justify-between">
-            <h2 className="font-mono text-xs uppercase tracking-wider font-bold text-white">
+        <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 overflow-hidden rounded-xl shadow-sm dark:shadow-xl text-neutral-900 dark:text-white">
+          <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
+            <h2 className="font-mono text-xs uppercase tracking-wider font-bold text-neutral-950 dark:text-white">
               REGISTERED CATALOG ITEMS ({apps.length})
             </h2>
             <Button
@@ -273,7 +273,7 @@ export default function AdminPage() {
           ) : apps.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left font-mono text-xs">
-                <thead className="bg-neutral-900 border-b border-neutral-800 text-neutral-300 font-bold uppercase tracking-wider">
+                <thead className="bg-neutral-50 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 text-neutral-800 dark:text-neutral-300 font-bold uppercase tracking-wider">
                   <tr>
                     <th className="py-3.5 px-4">Product Name</th>
                     <th className="py-3.5 px-4">Slug</th>
@@ -284,10 +284,10 @@ export default function AdminPage() {
                     <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-neutral-800 text-neutral-300">
+                <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800 text-neutral-700 dark:text-neutral-300">
                   {apps.map((app) => (
-                    <tr key={app.id} className="hover:bg-neutral-900/60 transition-colors">
-                      <td className="py-3 px-4 font-bold text-white flex items-center gap-2">
+                    <tr key={app.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-900/60 transition-colors">
+                      <td className="py-3 px-4 font-bold text-neutral-950 dark:text-white flex items-center gap-2">
                         <span>{app.name}</span>
                         {app.isDemo && (
                           <Badge variant="neutral" size="sm">
@@ -295,14 +295,14 @@ export default function AdminPage() {
                           </Badge>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-neutral-400">{app.slug}</td>
+                      <td className="py-3 px-4 text-neutral-500 dark:text-neutral-400">{app.slug}</td>
                       <td className="py-3 px-4 uppercase">{app.category}</td>
                       <td className="py-3 px-4">
                         <StatusBadge status={app.status} />
                       </td>
                       <td className="py-3 px-4">
                         {app.visibility === 'public' ? (
-                          <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold">
+                          <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
                             <Eye className="w-3 h-3" />
                             PUBLIC
                           </span>
@@ -319,7 +319,7 @@ export default function AdminPage() {
                             href={app.applicationUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-white underline inline-flex items-center gap-1 hover:text-neutral-300"
+                            className="text-neutral-950 dark:text-white underline inline-flex items-center gap-1 hover:text-neutral-600 dark:hover:text-neutral-300"
                           >
                             <span className="truncate">{app.applicationUrl}</span>
                             <ExternalLink className="w-3 h-3 shrink-0" />
@@ -345,7 +345,7 @@ export default function AdminPage() {
               </table>
             </div>
           ) : (
-            <div className="p-16 text-center font-mono text-xs text-neutral-400 uppercase">
+            <div className="p-16 text-center font-mono text-xs text-neutral-500 dark:text-neutral-400 uppercase">
               No products found in Firestore. Click &ldquo;New Product&rdquo; or &ldquo;Seed Demo&rdquo; to populate.
             </div>
           )}
@@ -353,16 +353,16 @@ export default function AdminPage() {
 
         {/* Modal: Create / Edit Product */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-            <div className="bg-neutral-950 border border-neutral-800 max-w-2xl w-full p-8 space-y-6 rounded-xl my-8 text-white shadow-2xl">
-              <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
-                <h3 className="font-light text-2xl tracking-[-0.03em] uppercase text-white font-sans">
+          <div className="fixed inset-0 z-50 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 max-w-2xl w-full p-8 space-y-6 rounded-xl my-8 text-neutral-900 dark:text-white shadow-2xl">
+              <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 pb-4">
+                <h3 className="font-light text-2xl tracking-[-0.03em] uppercase text-neutral-950 dark:text-white font-sans">
                   {editingApp ? `Edit: ${editingApp.name}` : 'Register New Software'}
                 </h3>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="font-mono text-sm font-bold text-neutral-400 hover:text-white cursor-pointer"
+                  className="font-mono text-sm font-bold text-neutral-400 hover:text-black dark:hover:text-white cursor-pointer"
                 >
                   ✕
                 </button>
@@ -414,7 +414,7 @@ export default function AdminPage() {
                 />
 
                 <div>
-                  <label className="block font-mono text-[11px] uppercase tracking-wider font-semibold text-neutral-300 mb-1.5">
+                  <label className="block font-mono text-[11px] uppercase tracking-wider font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
                     Full Description
                   </label>
                   <textarea
@@ -423,14 +423,14 @@ export default function AdminPage() {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, description: e.target.value }))
                     }
-                    className="w-full border border-neutral-800 p-3 text-sm text-white bg-neutral-900/90 focus:outline-none focus:border-white rounded-lg font-sans placeholder:text-neutral-500"
+                    className="w-full border border-neutral-300 dark:border-neutral-800 p-3 text-sm text-neutral-950 dark:text-white bg-white dark:bg-neutral-900/90 focus:outline-none focus:border-neutral-950 dark:focus:border-white rounded-lg font-sans placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
                     placeholder="Detailed overview of features and capabilities"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block font-mono text-[11px] uppercase tracking-wider font-semibold text-neutral-300 mb-1.5">
+                    <label className="block font-mono text-[11px] uppercase tracking-wider font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
                       Category
                     </label>
                     <select
@@ -438,7 +438,7 @@ export default function AdminPage() {
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, category: e.target.value }))
                       }
-                      className="w-full border border-neutral-800 px-3 py-2 text-xs font-mono uppercase text-white bg-neutral-900 rounded-lg focus:outline-none focus:border-white"
+                      className="w-full border border-neutral-300 dark:border-neutral-800 px-3 py-2 text-xs font-mono uppercase text-neutral-950 dark:text-white bg-white dark:bg-neutral-900 rounded-lg focus:outline-none focus:border-neutral-950 dark:focus:border-white"
                     >
                       <option value="creative">Creative & Design</option>
                       <option value="animation">Animation & Motion</option>
@@ -448,7 +448,7 @@ export default function AdminPage() {
                   </div>
 
                   <div>
-                    <label className="block font-mono text-[11px] uppercase tracking-wider font-semibold text-neutral-300 mb-1.5">
+                    <label className="block font-mono text-[11px] uppercase tracking-wider font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
                       Status
                     </label>
                     <select
@@ -459,7 +459,7 @@ export default function AdminPage() {
                           status: e.target.value as AppStatus,
                         }))
                       }
-                      className="w-full border border-neutral-800 px-3 py-2 text-xs font-mono uppercase text-white bg-neutral-900 rounded-lg focus:outline-none focus:border-white"
+                      className="w-full border border-neutral-300 dark:border-neutral-800 px-3 py-2 text-xs font-mono uppercase text-neutral-950 dark:text-white bg-white dark:bg-neutral-900 rounded-lg focus:outline-none focus:border-neutral-950 dark:focus:border-white"
                     >
                       <option value="draft">Draft (Internal)</option>
                       <option value="coming_soon">Coming Soon</option>
@@ -469,7 +469,7 @@ export default function AdminPage() {
                   </div>
 
                   <div>
-                    <label className="block font-mono text-[11px] uppercase tracking-wider font-semibold text-neutral-300 mb-1.5">
+                    <label className="block font-mono text-[11px] uppercase tracking-wider font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
                       Visibility
                     </label>
                     <select
@@ -480,7 +480,7 @@ export default function AdminPage() {
                           visibility: e.target.value as AppVisibility,
                         }))
                       }
-                      className="w-full border border-neutral-800 px-3 py-2 text-xs font-mono uppercase text-white bg-neutral-900 rounded-lg focus:outline-none focus:border-white"
+                      className="w-full border border-neutral-300 dark:border-neutral-800 px-3 py-2 text-xs font-mono uppercase text-neutral-950 dark:text-white bg-white dark:bg-neutral-900 rounded-lg focus:outline-none focus:border-neutral-950 dark:focus:border-white"
                     >
                       <option value="public">Public</option>
                       <option value="private">Private</option>
@@ -516,7 +516,7 @@ export default function AdminPage() {
                   placeholder="Design, Vector, Cloud"
                 />
 
-                <div className="flex items-center justify-end gap-3 pt-6 border-t border-neutral-800">
+                <div className="flex items-center justify-end gap-3 pt-6 border-t border-neutral-200 dark:border-neutral-800">
                   <Button
                     type="button"
                     variant="outline"

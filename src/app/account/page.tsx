@@ -10,13 +10,9 @@ import { AvatarIconPicker, renderUserIcon } from '@/components/ui/AvatarIconPick
 import {
   KeyRound,
   Shield,
-  CreditCard,
   LogOut,
   CheckCircle,
   AlertCircle,
-  Phone,
-  User as UserIcon,
-  Smile,
 } from 'lucide-react';
 
 export default function AccountPage() {
@@ -75,34 +71,34 @@ export default function AccountPage() {
 
   return (
     <ProtectedRoute>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 text-white">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10 text-neutral-900 dark:text-white transition-colors duration-200">
         {/* Header */}
-        <div className="border-b border-neutral-900 pb-6">
-          <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">
+        <div className="border-b border-neutral-200 dark:border-neutral-900 pb-6">
+          <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1">
             DOCSTUDIO IDENTITY
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white font-sans">
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-950 dark:text-white font-sans">
             Account Settings
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-neutral-400 font-sans">
+          <p className="mt-1 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-sans">
             Manage your personal profile, contact information, and avatar identity.
           </p>
         </div>
 
         {error && (
-          <div className="p-4 border border-red-800 bg-red-950/40 text-red-300 text-xs font-mono uppercase tracking-wider flex items-center gap-2">
+          <div className="p-4 border border-red-300 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300 text-xs font-mono uppercase tracking-wider flex items-center gap-2 rounded-lg">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {/* Profile Card */}
-        <div className="border border-neutral-800 bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-xl backdrop-blur-xl">
+        <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-xl backdrop-blur-xl shadow-sm dark:shadow-none">
           {/* Header row: Avatar preview + Name */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-neutral-900">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-neutral-200 dark:border-neutral-900">
             <div className="flex items-center gap-5">
-              <div className="w-16 h-16 bg-neutral-900 border border-neutral-700 text-white flex items-center justify-center text-xl font-bold rounded-lg shrink-0 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
-                {avatarIcon && renderUserIcon(avatarIcon, 'w-8 h-8 text-white')}
+              <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-700 text-neutral-900 dark:text-white flex items-center justify-center text-xl font-bold rounded-xl shrink-0 shadow-sm">
+                {avatarIcon && renderUserIcon(avatarIcon, 'w-8 h-8 text-neutral-900 dark:text-white')}
                 {!avatarIcon && (
                   <span>
                     {displayName.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
@@ -111,7 +107,7 @@ export default function AccountPage() {
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-3">
-                  <h2 className="text-xl font-bold tracking-tight text-white font-sans">
+                  <h2 className="text-xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
                     {displayName || 'DocStudio User'}
                   </h2>
                   {isAdmin && (
@@ -121,17 +117,17 @@ export default function AccountPage() {
                     </Badge>
                   )}
                 </div>
-                <div className="text-xs text-neutral-400 flex items-center gap-2 font-sans">
-                  <span className="uppercase text-[11px] font-semibold text-neutral-500">UID:</span>
-                  <span className="bg-neutral-900 px-2 py-0.5 border border-neutral-800 font-mono text-[11px] text-neutral-300 select-all rounded">
+                <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-2 font-sans">
+                  <span className="uppercase text-[11px] font-semibold text-neutral-400 dark:text-neutral-500">UID:</span>
+                  <span className="bg-neutral-100 dark:bg-neutral-900 px-2 py-0.5 border border-neutral-200 dark:border-neutral-800 font-mono text-[11px] text-neutral-700 dark:text-neutral-300 select-all rounded">
                     {user?.uid}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="text-[11px] uppercase tracking-wider text-neutral-400 font-sans font-semibold">
-              STATUS: <span className="text-emerald-400 font-bold">VERIFIED</span>
+            <div className="text-[11px] uppercase tracking-wider text-neutral-500 dark:text-neutral-400 font-sans font-semibold">
+              STATUS: <span className="text-emerald-600 dark:text-emerald-400 font-bold">VERIFIED</span>
             </div>
           </div>
 
@@ -171,7 +167,7 @@ export default function AccountPage() {
               />
 
               <div>
-                <label className="block font-mono text-xs uppercase tracking-wider font-semibold text-neutral-300 mb-1.5">
+                <label className="block font-mono text-xs uppercase tracking-wider font-semibold text-neutral-700 dark:text-neutral-300 mb-1.5">
                   About You / Role
                 </label>
                 <input
@@ -179,17 +175,17 @@ export default function AccountPage() {
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
                   placeholder="Founder, Creative Director, Developer..."
-                  className="w-full rounded-md border border-neutral-800 hover:border-neutral-600 focus:border-white bg-neutral-900/90 px-3.5 py-2.5 text-sm font-sans text-white focus:outline-none transition-colors placeholder:text-neutral-500"
+                  className="w-full rounded-lg border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 focus:border-neutral-950 dark:focus:border-white bg-white dark:bg-neutral-900/90 px-3.5 py-2.5 text-sm font-sans text-neutral-900 dark:text-white focus:outline-none transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
                 />
               </div>
             </div>
 
-            <div className="flex items-center gap-4 pt-4 border-t border-neutral-900">
+            <div className="flex items-center gap-4 pt-4 border-t border-neutral-200 dark:border-neutral-900">
               <Button type="submit" variant="primary" size="md" isLoading={profileSaving}>
                 Save Profile Details
               </Button>
               {profileSuccess && (
-                <span className="font-mono text-xs uppercase tracking-wider text-emerald-400 font-semibold flex items-center gap-1.5">
+                <span className="font-mono text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
                   <CheckCircle className="w-3.5 h-3.5" />
                   Profile updated successfully
                 </span>
@@ -199,14 +195,14 @@ export default function AccountPage() {
         </div>
 
         {/* Security & Password */}
-        <div className="border border-neutral-800 bg-neutral-950/80 p-6 sm:p-8 space-y-4 rounded-xl backdrop-blur-xl">
-          <div className="flex items-center gap-2 text-white">
-            <KeyRound className="w-4 h-4 text-neutral-300" />
+        <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-4 rounded-xl backdrop-blur-xl shadow-sm dark:shadow-none">
+          <div className="flex items-center gap-2 text-neutral-950 dark:text-white">
+            <KeyRound className="w-4 h-4 text-neutral-600 dark:text-neutral-300" />
             <h3 className="font-sans text-xs uppercase tracking-wider font-bold">
               Security & Credentials
             </h3>
           </div>
-          <p className="text-xs text-neutral-400 font-sans leading-relaxed">
+          <p className="text-xs text-neutral-600 dark:text-neutral-400 font-sans leading-relaxed">
             Send a secure password reset link to your registered email address to change your password.
           </p>
           <div className="pt-2 flex items-center gap-4">
@@ -220,7 +216,7 @@ export default function AccountPage() {
               Send Password Reset Link
             </Button>
             {resetSent && (
-              <span className="font-mono text-xs uppercase tracking-wider text-emerald-400 font-semibold flex items-center gap-1.5">
+              <span className="font-mono text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
                 <CheckCircle className="w-3.5 h-3.5" />
                 Reset link sent to {user?.email}
               </span>
@@ -229,7 +225,7 @@ export default function AccountPage() {
         </div>
 
         {/* Sign Out */}
-        <div className="pt-6 border-t border-neutral-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="pt-6 border-t border-neutral-200 dark:border-neutral-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <p className="text-xs uppercase tracking-wider text-neutral-500 font-mono">
             Sign out of your DocStudio session on this device.
           </p>
