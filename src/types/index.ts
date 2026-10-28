@@ -72,6 +72,7 @@ export interface AppSubscription {
   
   // Features enabled for this tier
   features: string[];
+  freeTrialPreviouslyClaimed?: boolean;
   
   // Billing & timestamps
   validUntil?: number | string | null;

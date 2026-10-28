@@ -14,10 +14,15 @@ import {
   signOut as fbSignOut,
   sendPasswordResetEmail,
   updateProfile as fbUpdateProfile,
+  deleteUser as fbDeleteUser,
   IdTokenResult,
 } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '@/lib/firebase/client';
-import { ensureUserProfile, updateUserProfile as dbUpdateUserProfile } from '@/lib/firebase/db';
+import {
+  ensureUserProfile,
+  updateUserProfile as dbUpdateUserProfile,
+  deleteUserAccountData,
+} from '@/lib/firebase/db';
 import { UserProfile } from '@/types';
 
 interface AuthContextType {
@@ -40,6 +45,7 @@ interface AuthContextType {
     avatarIcon?: string | null;
     photoURL?: string | null;
   }) => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -208,6 +214,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile((prev) => (prev ? { ...prev, ...updates } : null));
   };
 
+  const deleteAccount = async () => {
+    if (!user) throw new Error('Not authenticated');
+
+    const googleProvider = user.providerData?.find((p) => p.providerId === 'google.com');
+    const googleUid = googleProvider?.uid || null;
+
+    // 1. Wipe Firestore documents & record anti-abuse tombstone record
+    await deleteUserAccountData(user.uid, user.email || '', googleUid);
+
+    // 2. Delete user credentials in Firebase Auth
+    if (auth?.currentUser) {
+      await fbDeleteUser(auth.currentUser);
+    }
+
+    // 3. Clear local states
+    setUser(null);
+    setProfile(null);
+    setIsAdmin(false);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -224,6 +250,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         resetPassword,
         updateName,
         updateProfileDetails,
+        deleteAccount,
       }}
     >
       {children}

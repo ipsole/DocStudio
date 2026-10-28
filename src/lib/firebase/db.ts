@@ -5,8 +5,10 @@ import {
   getDocs,
   setDoc,
   updateDoc,
+  deleteDoc,
   query,
   where,
+  limit,
   serverTimestamp,
   runTransaction,
   addDoc,
@@ -28,6 +30,7 @@ const USERS_COLLECTION = 'users';
 const ENTITLEMENTS_COLLECTION = 'entitlements';
 const SUBSCRIPTIONS_COLLECTION = 'subscriptions';
 const CREDIT_LOGS_COLLECTION = 'credit_logs';
+const TOMBSTONES_COLLECTION = 'account_tombstones';
 
 /**
  * Fetch public catalog apps (active and coming_soon products).
@@ -375,22 +378,144 @@ export async function getAppSubscription(
 }
 
 /**
+ * Normalizes email by trimming, lowercasing, and stripping Gmail dot/plus tricks
+ */
+export function normalizeEmail(email: string): string {
+  const trimmed = email.trim().toLowerCase();
+  const [local, domain] = trimmed.split('@');
+  if (!domain) return trimmed;
+  if (domain === 'gmail.com' || domain === 'googlemail.com') {
+    const cleanLocal = local.split('+')[0].replace(/\./g, '');
+    return `${cleanLocal}@gmail.com`;
+  }
+  const cleanLocal = local.split('+')[0];
+  return `${cleanLocal}@${domain}`;
+}
+
+/**
+ * Computes a SHA-256 hash string for an identifier (GDPR-safe cryptographic fingerprint)
+ */
+export async function hashIdentifier(input: string): Promise<string> {
+  const msgUint8 = new TextEncoder().encode(input);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Checks whether an email or Google identity has previously claimed free trial quota
+ */
+export async function checkIdentityTombstone(
+  email: string,
+  googleUid?: string | null
+): Promise<{ exists: boolean; freeQuotaClaimed: boolean } | null> {
+  if (!isFirebaseConfigured() || !db) return null;
+  try {
+    const norm = normalizeEmail(email);
+    const emailHash = await hashIdentifier(norm);
+    const tombRef = doc(db, TOMBSTONES_COLLECTION, emailHash);
+    const snap = await getDoc(tombRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      return { exists: true, freeQuotaClaimed: Boolean(data.freeQuotaClaimed) };
+    }
+
+    if (googleUid) {
+      const q = query(
+        collection(db, TOMBSTONES_COLLECTION),
+        where('googleUid', '==', googleUid),
+        limit(1)
+      );
+      const qSnap = await getDocs(q);
+      if (!qSnap.empty) {
+        const d = qSnap.docs[0].data();
+        return { exists: true, freeQuotaClaimed: Boolean(d.freeQuotaClaimed) };
+      }
+    }
+  } catch (err) {
+    console.warn('[DocStore DB] Tombstone check warning:', err);
+  }
+  return null;
+}
+
+/**
+ * Completely wipes user account data and records an irreversible anti-abuse tombstone
+ */
+export async function deleteUserAccountData(
+  userId: string,
+  email: string,
+  googleUid?: string | null
+): Promise<boolean> {
+  if (!isFirebaseConfigured() || !db) return false;
+
+  try {
+    // 1. Record anti-abuse tombstone BEFORE wiping data so free tier cannot be re-exploited
+    const norm = normalizeEmail(email);
+    const emailHash = await hashIdentifier(norm);
+    const tombRef = doc(db, TOMBSTONES_COLLECTION, emailHash);
+    await setDoc(
+      tombRef,
+      {
+        emailHash,
+        googleUid: googleUid || null,
+        freeQuotaClaimed: true,
+        deletedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    // 2. Delete user profile doc
+    const userDocRef = doc(db, USERS_COLLECTION, userId);
+    await deleteDoc(userDocRef);
+
+    // 3. Delete user subscriptions
+    const subsRef = collection(db, SUBSCRIPTIONS_COLLECTION);
+    const subsQuery = query(subsRef, where('userId', '==', userId));
+    const subsSnap = await getDocs(subsQuery);
+    for (const d of subsSnap.docs) {
+      await deleteDoc(d.ref);
+    }
+
+    // 4. Delete user entitlements
+    const entRef = collection(db, ENTITLEMENTS_COLLECTION);
+    const entQuery = query(entRef, where('userId', '==', userId));
+    const entSnap = await getDocs(entQuery);
+    for (const d of entSnap.docs) {
+      await deleteDoc(d.ref);
+    }
+
+    return true;
+  } catch (err) {
+    console.error('[DocStore DB] Error deleting user account data:', err);
+    return false;
+  }
+}
+
+/**
  * Initialize starter subscriptions and credits if none exist.
  */
 export async function ensureDefaultUserSubscriptions(
   userId: string,
-  userEmail: string
+  userEmail: string,
+  googleUid?: string | null
 ): Promise<AppSubscription[]> {
   if (!isFirebaseConfigured() || !db) return [];
 
   const existing = await getUserSubscriptions(userId);
   if (existing.length > 0) return existing;
 
+  // Anti-abuse check: verify if this user identity previously claimed free quota
+  const tombstone = await checkIdentityTombstone(userEmail, googleUid);
+  const previouslyClaimed = Boolean(tombstone?.freeQuotaClaimed);
+
   const initialized: AppSubscription[] = [];
 
   for (const starter of DEFAULT_APP_SUBSCRIPTIONS) {
     const subId = `${userId}_${starter.appId}`;
     const subRef = doc(db, SUBSCRIPTIONS_COLLECTION, subId);
+
+    // If free tier was previously claimed, start with 0 credits to prevent re-creation exploitation
+    const initialCredits = previouslyClaimed ? 0 : starter.creditsTotal;
 
     const subData = {
       userId,
@@ -399,11 +524,12 @@ export async function ensureDefaultUserSubscriptions(
       appName: starter.appName,
       plan: starter.plan,
       status: 'active',
-      creditsTotal: starter.creditsTotal,
-      creditsRemaining: starter.creditsRemaining,
+      creditsTotal: initialCredits,
+      creditsRemaining: initialCredits,
       creditsUsed: 0,
       creditsResetPeriod: 'monthly',
       features: starter.features,
+      freeTrialPreviouslyClaimed: previouslyClaimed,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -413,6 +539,8 @@ export async function ensureDefaultUserSubscriptions(
       initialized.push({
         id: subId,
         ...starter,
+        creditsTotal: initialCredits,
+        creditsRemaining: initialCredits,
         status: 'active',
         userId,
         userEmail,
