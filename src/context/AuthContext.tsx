@@ -7,6 +7,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithCredential,
   GoogleAuthProvider,
   signOut as fbSignOut,
   sendPasswordResetEmail,
@@ -25,6 +26,7 @@ interface AuthContextType {
   isConfigured: boolean;
   signIn: (email: string, pass: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithGoogleCredential: (idToken: string) => Promise<User | null>;
   signUp: (email: string, pass: string, displayName?: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -108,6 +110,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithGoogleCredential = async (idToken: string): Promise<User | null> => {
+    if (!isConfigured || !auth) {
+      throw new Error('Firebase Authentication is not yet configured.');
+    }
+    const credential = GoogleAuthProvider.credential(idToken);
+    const result = await signInWithCredential(auth, credential);
+    if (result.user) {
+      await ensureUserProfile(
+        result.user.uid,
+        result.user.email || '',
+        result.user.displayName,
+        result.user.photoURL
+      );
+    }
+    return result.user;
+  };
+
   const signUp = async (email: string, pass: string, displayName?: string) => {
     if (!isConfigured || !auth) {
       throw new Error(
@@ -170,6 +189,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isConfigured,
         signIn,
         signInWithGoogle,
+        signInWithGoogleCredential,
         signUp,
         signOut,
         resetPassword,
