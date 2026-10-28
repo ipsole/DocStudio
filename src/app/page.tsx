@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getPublicApps } from '@/lib/firebase/db';
 import { DocApp } from '@/types';
 import { AppCard } from '@/components/apps/AppCard';
+import { IntroSplash } from '@/components/ui/IntroSplash';
 import {
   Loader2,
   Check,
@@ -109,6 +110,7 @@ export default function HomePage() {
 
   const [activeTab, setActiveTab] = useState<HomeTab>('softwares');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [replayIntro, setReplayIntro] = useState(false);
 
   useEffect(() => {
     async function loadCatalog() {
@@ -180,16 +182,40 @@ export default function HomePage() {
   });
 
   return (
-    <div className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center bg-white text-neutral-900 dark:bg-black dark:text-white px-4 sm:px-6 md:px-8 pt-0 sm:pt-1 pb-16 sm:pb-24 overflow-hidden transition-colors duration-200">
-      {/* Luxury Serif Typography - Natural Wide Proportions, Uncompressed */}
-      <div className="relative z-10 text-center select-none pt-0 pb-4 sm:pb-6">
-        <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[6.5rem] font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-tight select-none">
-          DocStudio
-        </h1>
-        <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 font-sans mt-2 max-w-md mx-auto">
-          The unified software ecosystem of Docdril
-        </p>
-      </div>
+    <>
+      {/* Cinematic First-Time Intro Splash (Active when logged out or replayed on demand) */}
+      {!user && (
+        <IntroSplash
+          forcePlay={replayIntro}
+          onComplete={() => setReplayIntro(false)}
+        />
+      )}
+
+      <div className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center bg-white text-neutral-900 dark:bg-black dark:text-white px-4 sm:px-6 md:px-8 pt-0 sm:pt-1 pb-16 sm:pb-24 overflow-hidden transition-colors duration-200">
+        {/* Luxury Serif Typography - Natural Wide Proportions, Uncompressed */}
+        <div className="relative z-10 text-center select-none pt-0 pb-4 sm:pb-6">
+          <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[6.5rem] font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-tight select-none">
+            DocStudio
+          </h1>
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 font-sans">
+              The unified software ecosystem of Docdril
+            </p>
+            {!user && (
+              <>
+                <span className="text-neutral-300 dark:text-neutral-700">•</span>
+                <button
+                  type="button"
+                  onClick={() => setReplayIntro(true)}
+                  className="text-[11px] font-mono text-neutral-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                  title="Replay intro animation"
+                >
+                  Play Film ↺
+                </button>
+              </>
+            )}
+          </div>
+        </div>
 
       {/* Tabs Selector Directly Below Login Screen */}
       <div id="ecosystem" className="relative z-10 w-full max-w-[1400px] mx-auto pt-2 space-y-6">
@@ -399,5 +425,6 @@ export default function HomePage() {
         )}
       </div>
     </div>
+    </>
   );
 }
