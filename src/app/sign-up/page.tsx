@@ -80,7 +80,11 @@ export default function SignUpPage() {
       router.push('/dashboard');
     } catch (err: unknown) {
       const fbErr = err as { code?: string; message?: string };
-      if (fbErr.code !== 'auth/popup-closed-by-user') {
+      if (fbErr.code === 'auth/operation-not-allowed') {
+        setError(
+          'Sign in with Apple requires configuration in Firebase Console. You must supply your Apple Developer Services ID, Team ID, Key ID, and Private Key (.p8) in Firebase Console > Authentication > Sign-in method > Apple.'
+        );
+      } else if (fbErr.code !== 'auth/popup-closed-by-user') {
         setError(fbErr.message || 'Apple sign up failed.');
       }
     } finally {

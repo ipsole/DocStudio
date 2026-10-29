@@ -157,6 +157,10 @@ export default function AccountPage() {
       const fbErr = err as { code?: string; message?: string };
       if (fbErr.code === 'auth/credential-already-in-use') {
         setProviderError('This Apple ID is already linked to another Docdril user profile.');
+      } else if (fbErr.code === 'auth/operation-not-allowed') {
+        setProviderError(
+          'Sign in with Apple requires configuration in Firebase Console. You must supply your Apple Developer Services ID, Team ID, Key ID, and Private Key (.p8) in Firebase Console > Authentication > Sign-in method > Apple.'
+        );
       } else if (fbErr.code !== 'auth/popup-closed-by-user') {
         setProviderError(fbErr.message || 'Failed to connect Apple ID.');
       }
