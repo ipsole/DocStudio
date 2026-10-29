@@ -14,6 +14,7 @@ import {
 } from '@/lib/firebase/db';
 import { DocApp, Entitlement, AppSubscription } from '@/types';
 import { AppCard } from '@/components/apps/AppCard';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 import {
   Settings,
   ArrowRight,
@@ -174,14 +175,32 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-10 sm:space-y-12">
         {/* 1. Cinematic Hero Header */}
         <div className="animate-fade-in-up flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-neutral-200/80 dark:border-neutral-900">
-          <div className="space-y-1.5">
-            <h1 className="text-3xl sm:text-5xl font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-tight">
-              Welcome, <span className="italic">{userName}</span>
-            </h1>
+          <div className="flex items-center gap-4 sm:gap-6">
+            <Link
+              href="/account"
+              title="Manage Profile & Avatar"
+              className="relative group shrink-0"
+            >
+              <UserAvatar
+                user={user}
+                profile={profile}
+                size="2xl"
+                className="ring-2 ring-neutral-200/80 dark:ring-neutral-800 group-hover:ring-neutral-400 dark:group-hover:ring-neutral-600 transition-all shadow-md group-hover:scale-105"
+              />
+              <span className="absolute -bottom-1 -right-1 p-1 bg-white dark:bg-neutral-900 rounded-full border border-neutral-200 dark:border-neutral-700 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                <Settings className="w-3 h-3 text-neutral-600 dark:text-neutral-300" />
+              </span>
+            </Link>
 
-            <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-sans max-w-xl">
-              Your single-sign-on identity is active across the Docdril software suite. Monitor generation credits, launch creative tools, and manage subscription quotas.
-            </p>
+            <div className="space-y-1.5">
+              <h1 className="text-3xl sm:text-5xl font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-tight">
+                Welcome, <span className="italic">{userName}</span>
+              </h1>
+
+              <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-sans max-w-xl">
+                Your single-sign-on identity is active across the Docdril software suite. Monitor generation credits, launch creative tools, and manage subscription quotas.
+              </p>
+            </div>
           </div>
 
           {/* Quick Action Navigation Pills */}

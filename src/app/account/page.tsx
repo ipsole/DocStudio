@@ -594,6 +594,21 @@ export default function AccountPage() {
                           <span>Change Avatar</span>
                         </button>
                       </div>
+
+                      {/* Bio in Profile Header */}
+                      {bio ? (
+                        <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 font-sans max-w-lg leading-relaxed pt-1 whitespace-pre-line line-clamp-2">
+                          {bio}
+                        </p>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsEditing(true)}
+                          className="text-xs text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 font-sans italic flex items-center gap-1 cursor-pointer pt-1 transition-colors group"
+                        >
+                          <span className="group-hover:underline">+ Add a bio to your profile</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -676,25 +691,8 @@ export default function AccountPage() {
                         </p>
                       </div>
 
-                      {/* Bio / Role */}
-                      <div className="p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 font-sans">
-                          <Briefcase className="w-3.5 h-3.5" />
-                          <span>Role / About</span>
-                        </div>
-                        <p
-                          className={`text-sm font-sans ${
-                            bio
-                              ? 'font-bold text-neutral-950 dark:text-white'
-                              : 'text-neutral-400 italic'
-                          }`}
-                        >
-                          {bio || 'Not specified'}
-                        </p>
-                      </div>
-
                       {/* Phone Number */}
-                      <div className="p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 space-y-1 sm:col-span-2">
+                      <div className="p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 space-y-1">
                         <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 font-sans">
                           <Phone className="w-3.5 h-3.5" />
                           <span>Phone Number</span>
@@ -708,6 +706,34 @@ export default function AccountPage() {
                         >
                           {phoneNumber || 'Not provided'}
                         </p>
+                      </div>
+
+                      {/* Bio / About Me (Dedicated Full Width Card) */}
+                      <div className="p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 space-y-2 sm:col-span-2">
+                        <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+                          <div className="flex items-center gap-1.5">
+                            <FileText className="w-3.5 h-3.5 text-neutral-500" />
+                            <span className="font-semibold text-neutral-800 dark:text-neutral-200">Bio / About Me</span>
+                          </div>
+                          {!bio && (
+                            <button
+                              type="button"
+                              onClick={() => setIsEditing(true)}
+                              className="text-[11px] font-semibold text-neutral-900 dark:text-neutral-100 hover:underline cursor-pointer"
+                            >
+                              + Add Bio
+                            </button>
+                          )}
+                        </div>
+                        {bio ? (
+                          <p className="text-sm font-normal text-neutral-800 dark:text-neutral-200 font-sans whitespace-pre-line leading-relaxed">
+                            {bio}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-neutral-400 dark:text-neutral-500 font-sans italic">
+                            No bio added yet. Tell creators and collaborators about yourself or your software workflows.
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -808,17 +834,26 @@ export default function AccountPage() {
                       />
                     </div>
 
-                    <div>
-                      <label className="block font-sans text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
-                        About You / Role
-                      </label>
-                      <input
-                        type="text"
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="block font-sans text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                          Bio / About Me
+                        </label>
+                        <span className={`text-[11px] font-mono ${bio.length >= 260 ? 'text-amber-500 font-bold' : 'text-neutral-400 dark:text-neutral-500'}`}>
+                          {bio.length} / 280
+                        </span>
+                      </div>
+                      <textarea
+                        rows={3}
+                        maxLength={280}
                         value={bio}
                         onChange={(e) => setBio(e.target.value)}
-                        placeholder="Founder, Creative Director, Developer..."
-                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 focus:border-neutral-950 dark:focus:border-white bg-white dark:bg-neutral-900/90 px-3.5 py-2.5 text-sm font-sans text-neutral-900 dark:text-white focus:outline-none transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+                        placeholder="Tell the community about your creative work, background, or what you build with Docdril..."
+                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 focus:border-neutral-950 dark:focus:border-white bg-white dark:bg-neutral-900/90 px-3.5 py-2.5 text-sm font-sans text-neutral-900 dark:text-white focus:outline-none transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-500 resize-none leading-relaxed"
                       />
+                      <p className="text-[11px] text-neutral-400 dark:text-neutral-500 font-sans">
+                        Displayed on your public profile header and workspace team cards.
+                      </p>
                     </div>
 
                     <div className="flex items-center gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-900">
