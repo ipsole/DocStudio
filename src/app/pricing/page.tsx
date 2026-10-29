@@ -33,10 +33,6 @@ export default function PricingPage() {
 
       {/* Hero Header */}
       <div className="max-w-3xl mx-auto text-center space-y-3">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-sans font-semibold uppercase tracking-wider bg-neutral-100 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border border-neutral-200/80 dark:border-neutral-800">
-          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-          <span>Unified Software Ecosystem</span>
-        </div>
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
           Simple, Transparent Pricing in INR
         </h1>
