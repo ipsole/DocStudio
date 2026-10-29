@@ -182,14 +182,28 @@ export async function ensureUserProfile(
 ): Promise<UserProfile | null> {
   const fallbackUsername = (email.split('@')[0] || 'user').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
 
+  // Check localStorage cache first for fallback
+  let localCache: Partial<UserProfile> | null = null;
+  if (typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(`docstudio_profile_${uid}`);
+      if (stored) localCache = JSON.parse(stored);
+    } catch {
+      // ignore
+    }
+  }
+
   if (!isFirebaseConfigured() || !db) {
     return {
       uid,
       email,
-      displayName: displayName || email.split('@')[0],
-      username: fallbackUsername,
-      usernameLower: fallbackUsername.toLowerCase(),
+      displayName: localCache?.displayName || displayName || email.split('@')[0],
+      username: localCache?.username || fallbackUsername,
+      usernameLower: (localCache?.username || fallbackUsername).toLowerCase(),
+      phoneNumber: localCache?.phoneNumber || null,
+      bio: localCache?.bio || null,
       photoURL: photoURL || null,
+      avatarIcon: localCache?.avatarIcon || (photoURL ? 'google' : null),
       isAdmin: false,
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -200,22 +214,26 @@ export async function ensureUserProfile(
   try {
     const snap = await getDoc(userDocRef);
     if (!snap.exists()) {
-      const newProfile: Omit<UserProfile, 'createdAt' | 'updatedAt'> & {
-        createdAt: unknown;
-        updatedAt: unknown;
-      } = {
+      const newProfile = {
         uid,
         email,
-        displayName: displayName || email.split('@')[0],
-        username: fallbackUsername,
-        usernameLower: fallbackUsername.toLowerCase(),
+        displayName: localCache?.displayName || displayName || email.split('@')[0],
+        username: localCache?.username || fallbackUsername,
+        usernameLower: (localCache?.username || fallbackUsername).toLowerCase(),
+        phoneNumber: localCache?.phoneNumber || null,
+        bio: localCache?.bio || null,
         photoURL: photoURL || null,
-        avatarIcon: photoURL ? 'google' : null,
+        avatarIcon: localCache?.avatarIcon || (photoURL ? 'google' : null),
         isAdmin: false,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
-      await setDoc(userDocRef, newProfile);
+      
+      try {
+        await setDoc(userDocRef, newProfile);
+      } catch (writeErr) {
+        console.warn('[DocStore DB] Could not write user profile to Firestore (check rules):', writeErr);
+      }
 
       // Register username index if available
       try {
@@ -228,66 +246,75 @@ export async function ensureUserProfile(
         console.warn('[DocStore DB] Could not claim username index:', uErr);
       }
 
-      return {
+      const returnedProfile: UserProfile = {
         uid,
         email,
-        displayName: displayName || email.split('@')[0],
-        username: fallbackUsername,
-        usernameLower: fallbackUsername.toLowerCase(),
+        displayName: newProfile.displayName,
+        username: newProfile.username,
+        usernameLower: newProfile.usernameLower,
+        phoneNumber: newProfile.phoneNumber,
+        bio: newProfile.bio,
         photoURL: photoURL || null,
-        avatarIcon: photoURL ? 'google' : null,
+        avatarIcon: newProfile.avatarIcon,
         isAdmin: false,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(`docstudio_profile_${uid}`, JSON.stringify(returnedProfile));
+        } catch {
+          // ignore
+        }
+      }
+
+      return returnedProfile;
     } else {
       const data = snap.data();
-      const currentUsername = data.username || fallbackUsername;
+      const currentUsername = data.username || localCache?.username || fallbackUsername;
 
-      // Sync Google photoURL or initial username if missing
-      const patch: Record<string, unknown> = {};
-      if (photoURL && !data.photoURL) {
-        patch.photoURL = photoURL;
-      }
-      if (!data.username) {
-        patch.username = fallbackUsername;
-        patch.usernameLower = fallbackUsername.toLowerCase();
-        try {
-          const uDocRef = doc(db, USERNAMES_COLLECTION, fallbackUsername);
-          const uSnap = await getDoc(uDocRef);
-          if (!uSnap.exists()) {
-            await setDoc(uDocRef, { uid, username: fallbackUsername, createdAt: serverTimestamp() });
-          }
-        } catch {
-          // ignore
-        }
-      }
-      if (Object.keys(patch).length > 0) {
-        try {
-          await updateDoc(userDocRef, patch);
-        } catch {
-          // ignore
-        }
-      }
-
-      return {
+      const profileResult: UserProfile = {
         uid,
         email: data.email || email,
-        displayName: data.displayName || null,
+        displayName: data.displayName || localCache?.displayName || null,
         username: currentUsername,
         usernameLower: currentUsername.toLowerCase(),
-        phoneNumber: data.phoneNumber || null,
-        bio: data.bio || null,
+        phoneNumber: data.phoneNumber || localCache?.phoneNumber || null,
+        bio: data.bio || localCache?.bio || null,
         photoURL: data.photoURL || photoURL || null,
-        avatarIcon: data.avatarIcon || (photoURL || data.photoURL ? 'google' : null),
+        avatarIcon: data.avatarIcon || localCache?.avatarIcon || (photoURL || data.photoURL ? 'google' : null),
         isAdmin: Boolean(data.isAdmin),
         createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : Date.now(),
         updatedAt: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : Date.now(),
       };
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(`docstudio_profile_${uid}`, JSON.stringify(profileResult));
+        } catch {
+          // ignore
+        }
+      }
+
+      return profileResult;
     }
   } catch (err) {
-    console.error('[DocStore DB] Error ensuring user profile:', err);
-    return null;
+    console.warn('[DocStore DB] Error accessing Firestore user profile (using local cache):', err);
+    return {
+      uid,
+      email,
+      displayName: localCache?.displayName || displayName || email.split('@')[0],
+      username: localCache?.username || fallbackUsername,
+      usernameLower: (localCache?.username || fallbackUsername).toLowerCase(),
+      phoneNumber: localCache?.phoneNumber || null,
+      bio: localCache?.bio || null,
+      photoURL: photoURL || null,
+      avatarIcon: localCache?.avatarIcon || (photoURL ? 'google' : null),
+      isAdmin: false,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
   }
 }
 
@@ -305,7 +332,21 @@ export async function updateUserProfile(
     photoURL?: string | null;
   }
 ): Promise<boolean> {
-  if (!isFirebaseConfigured() || !db) return false;
+  // Always update local cache immediately so edits are preserved
+  if (typeof window !== 'undefined') {
+    try {
+      const existing = localStorage.getItem(`docstudio_profile_${uid}`);
+      const parsed = existing ? JSON.parse(existing) : {};
+      localStorage.setItem(
+        `docstudio_profile_${uid}`,
+        JSON.stringify({ ...parsed, ...updates })
+      );
+    } catch {
+      // ignore
+    }
+  }
+
+  if (!isFirebaseConfigured() || !db) return true;
 
   try {
     const userDocRef = doc(db, USERS_COLLECTION, uid);
@@ -313,49 +354,63 @@ export async function updateUserProfile(
     // If username is being updated, handle username index
     if (updates.username) {
       const clean = updates.username.trim().toLowerCase();
-      const userSnap = await getDoc(userDocRef);
-      const oldUsername = userSnap.data()?.username?.toLowerCase();
 
-      if (oldUsername !== clean) {
-        const uCheck = await isUsernameAvailable(clean, uid);
-        if (!uCheck.available) {
-          throw new Error(uCheck.reason || 'Username is not available');
-        }
+      try {
+        const userSnap = await getDoc(userDocRef);
+        const oldUsername = userSnap.data()?.username?.toLowerCase();
 
-        // Claim new username index
-        const newUDocRef = doc(db, USERNAMES_COLLECTION, clean);
-        await setDoc(newUDocRef, {
-          uid,
-          username: clean,
-          updatedAt: serverTimestamp(),
-        });
-
-        // Delete old username index if existed
-        if (oldUsername) {
-          try {
-            await deleteDoc(doc(db, USERNAMES_COLLECTION, oldUsername));
-          } catch {
-            // ignore
+        if (oldUsername !== clean) {
+          const uCheck = await isUsernameAvailable(clean, uid);
+          if (!uCheck.available) {
+            throw new Error(uCheck.reason || 'Username is not available');
           }
+
+          // Try updating username index doc
+          try {
+            const newUDocRef = doc(db, USERNAMES_COLLECTION, clean);
+            await setDoc(newUDocRef, {
+              uid,
+              username: clean,
+              updatedAt: serverTimestamp(),
+            });
+
+            if (oldUsername) {
+              await deleteDoc(doc(db, USERNAMES_COLLECTION, oldUsername));
+            }
+          } catch (uErr) {
+            console.warn('[DocStore DB] Could not write to usernames index (check security rules):', uErr);
+          }
+        }
+      } catch (err: unknown) {
+        if (err instanceof Error && err.message.includes('already taken')) {
+          throw err;
         }
       }
 
-      await updateDoc(userDocRef, {
-        ...updates,
-        username: clean,
-        usernameLower: clean,
-        updatedAt: serverTimestamp(),
-      });
+      await setDoc(
+        userDocRef,
+        {
+          ...updates,
+          username: clean,
+          usernameLower: clean,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
       return true;
     }
 
-    await updateDoc(userDocRef, {
-      ...updates,
-      updatedAt: serverTimestamp(),
-    });
+    await setDoc(
+      userDocRef,
+      {
+        ...updates,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
     return true;
   } catch (err) {
-    console.error('[DocStore DB] Failed to update profile:', err);
+    console.error('[DocStore DB] Failed to update profile in Firestore:', err);
     throw err;
   }
 }
@@ -674,7 +729,21 @@ export async function ensureDefaultUserSubscriptions(
     }
   }
 
-  return initialized.length > 0 ? initialized : existing;
+  if (initialized.length > 0) return initialized;
+  if (existing.length > 0) return existing;
+
+  // Fallback if Firestore writes are rejected by security rules
+  return DEFAULT_APP_SUBSCRIPTIONS.map((starter) => ({
+    id: `${userId}_${starter.appId}`,
+    ...starter,
+    creditsRemaining: starter.creditsTotal,
+    status: 'active' as const,
+    userId,
+    userEmail,
+    creditsResetPeriod: 'monthly',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  }));
 }
 
 /**

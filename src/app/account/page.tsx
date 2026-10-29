@@ -225,7 +225,14 @@ export default function AccountPage() {
       setIsEditing(false);
       setTimeout(() => setProfileSuccess(false), 3000);
     } catch (err: unknown) {
-      setGeneralError(err instanceof Error ? err.message : 'Failed to update profile');
+      const msg = err instanceof Error ? err.message : 'Failed to update profile';
+      if (msg.toLowerCase().includes('permissions') || msg.includes('permission-denied')) {
+        setGeneralError(
+          'Cloud Firestore Security Rules are currently denying database writes in your Firebase Console. Your changes were safely cached locally, but you must publish the updated firestore.rules in Firebase Console to sync with the cloud database.'
+        );
+      } else {
+        setGeneralError(msg);
+      }
     } finally {
       setProfileSaving(false);
     }
