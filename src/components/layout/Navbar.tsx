@@ -25,9 +25,33 @@ const NAV_TABS = [
 
 export function Navbar() {
   const pathname = usePathname();
-  const { user, profile, isAdmin, signOut } = useAuth();
+  const { user, profile, isAdmin, signOut, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [hasSessionHint, setHasSessionHint] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        return Boolean(localStorage.getItem('docstudio_has_session'));
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  });
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        if (user) {
+          setHasSessionHint(true);
+        } else if (!loading) {
+          setHasSessionHint(false);
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, [user, loading]);
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-white/80 dark:bg-black/80 backdrop-blur-md text-neutral-900 dark:text-white select-none transition-colors duration-200">
@@ -87,7 +111,8 @@ export function Navbar() {
               </div>
             </button>
 
-            {user && (
+            {/* Dashboard shortcut (shown when user is confirmed or session is expected) */}
+            {(user || (loading && hasSessionHint)) && (
               <Link
                 href="/dashboard"
                 className={`hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl border transition-colors shadow-sm active:scale-[0.98] ${
@@ -101,6 +126,7 @@ export function Navbar() {
               </Link>
             )}
 
+            {/* Profile Avatar / Loading Skeleton / Sign In Button */}
             {user ? (
               <div className="relative">
                 <button
@@ -180,6 +206,8 @@ export function Navbar() {
                   </div>
                 )}
               </div>
+            ) : loading && hasSessionHint ? (
+              <div className="w-9 h-9 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 animate-pulse" />
             ) : (
               <Link href="/sign-in" title="Sign In">
                 <button

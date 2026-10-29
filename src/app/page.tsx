@@ -56,7 +56,7 @@ const TUTORIAL_GUIDES = [
 type HomeTab = 'softwares' | 'pricings' | 'tutorials';
 
 export default function HomePage() {
-  const { user, profile, signInWithGoogle, isConfigured } = useAuth();
+  const { user, profile, signInWithGoogle, isConfigured, loading: authLoading } = useAuth();
   const [apps, setApps] = useState<DocApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -140,7 +140,7 @@ export default function HomePage() {
   return (
     <>
       {/* Cinematic First-Time Intro Splash (Active when logged out or replayed on demand) */}
-      {!user && (
+      {!authLoading && !user && (
         <IntroSplash
           forcePlay={replayIntro}
           onComplete={() => setReplayIntro(false)}

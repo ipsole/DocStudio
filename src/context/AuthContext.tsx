@@ -103,6 +103,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('docstudio_has_session', 'true');
+          } catch {
+            // ignore
+          }
+        }
         try {
           // Check custom claims for admin role
           const tokenResult: IdTokenResult = await currentUser.getIdTokenResult();
@@ -123,6 +130,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.error('[AuthContext] Error syncing user profile:', error);
         }
       } else {
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.removeItem('docstudio_has_session');
+          } catch {
+            // ignore
+          }
+        }
         setProfile(null);
         setIsAdmin(false);
       }
@@ -317,6 +331,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('docstudio_has_session');
+      } catch {
+        // ignore
+      }
+    }
     if (auth) {
       await fbSignOut(auth);
     }
