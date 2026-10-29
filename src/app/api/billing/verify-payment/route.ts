@@ -27,6 +27,8 @@ export async function POST(request: NextRequest) {
       itemType,
       receiptNumber,
       userName,
+      gstin,
+      businessName,
     } = body;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -112,6 +114,8 @@ export async function POST(request: NextRequest) {
       creditsAdded,
       paymentMethod,
       receiptNumber: finalReceiptNumber,
+      gstin: gstin || (payment.notes?.gstin as string) || undefined,
+      businessName: businessName || (payment.notes?.businessName as string) || undefined,
       createdAt: Date.now(),
       paidAt: Date.now(),
     };

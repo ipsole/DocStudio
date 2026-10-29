@@ -55,7 +55,7 @@ export function generateReceiptHtml(order: OrderRecord, recipientName?: string):
     <div class="header">
       <div class="brand">DOCSTUDIO</div>
       <span class="badge">Payment Confirmed</span>
-      <h1 class="title">₹${order.amount.toFixed(2)} INR</h1>
+      <h1 class="title">₹ ${order.amount.toFixed(2)} INR</h1>
       <p class="subtitle">Receipt for ${order.itemName}</p>
     </div>
 
@@ -92,8 +92,8 @@ export function generateReceiptHtml(order: OrderRecord, recipientName?: string):
               <div style="font-weight: 600; color: #ffffff;">${order.itemName}</div>
               ${order.creditsAdded ? `<div style="font-size: 12px; color: #10b981; margin-top: 2px;">+${order.creditsAdded} Generation Credits added to vault</div>` : ''}
             </td>
-            <td style="text-align: right; font-weight: 600; color: #ffffff; font-family: monospace;">
-              ₹${order.amount.toFixed(2)}
+            <td style="text-align: right; font-weight: 700; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+              ₹ ${order.amount.toFixed(2)}
             </td>
           </tr>
         </tbody>
@@ -101,7 +101,7 @@ export function generateReceiptHtml(order: OrderRecord, recipientName?: string):
 
       <div style="display: flex; justify-content: space-between; align-items: baseline; padding-top: 12px; border-top: 1px solid #27272a;">
         <span style="font-size: 14px; font-weight: 700; color: #ffffff;">Total Paid</span>
-        <span style="font-size: 20px; font-weight: 800; color: #ffffff; font-family: monospace;">₹${order.amount.toFixed(2)} INR</span>
+        <span style="font-size: 20px; font-weight: 800; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">₹ ${order.amount.toFixed(2)} <span style="font-size: 13px; font-weight: 600; color: #a1a1aa;">INR</span></span>
       </div>
 
       <div class="btn-container">

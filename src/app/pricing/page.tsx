@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { PRICING_PLANS, CREDIT_PACKS, PRICING_FAQS, CreditPack, PricingPlan } from '@/lib/pricingData';
 import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
-import { openRazorpayCheckout } from '@/lib/checkout';
+import { CheckoutDetailsModal } from '@/components/pricing/CheckoutDetailsModal';
+import { getUserSubscriptions } from '@/lib/firebase/db';
+import { AppSubscription, SubscriptionPlan, OrderRecord } from '@/types';
 import { Check, Sparkles, ArrowRight, Zap, HelpCircle, ShieldCheck, Plus, Loader2 } from 'lucide-react';
 
 export default function PricingPage() {
@@ -15,7 +17,39 @@ export default function PricingPage() {
   const [selectedPack, setSelectedPack] = useState<CreditPack | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [successToast, setSuccessToast] = useState<string | null>(null);
-  const [purchasingPlan, setPurchasingPlan] = useState<string | null>(null);
+
+  // User subscriptions to detect current active plan
+  const [userSubs, setUserSubs] = useState<AppSubscription[]>([]);
+  const [selectedPlanForCheckout, setSelectedPlanForCheckout] = useState<PricingPlan | null>(null);
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (!user) {
+      setUserSubs([]);
+      return;
+    }
+
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem(`docstudio_subscriptions_${user.uid}`);
+        if (cached) setUserSubs(JSON.parse(cached));
+      } catch {}
+    }
+
+    getUserSubscriptions(user.uid).then((subs) => {
+      if (subs && subs.length > 0) setUserSubs(subs);
+    });
+  }, [user]);
+
+  // Determine current active plan
+  const activePlanId: SubscriptionPlan = useMemo(() => {
+    if (!userSubs || userSubs.length === 0) return 'free';
+    const hasEnterprise = userSubs.some((s) => s.plan === 'enterprise');
+    if (hasEnterprise) return 'enterprise';
+    const hasPro = userSubs.some((s) => s.plan === 'pro');
+    if (hasPro) return 'pro';
+    return 'free';
+  }, [userSubs]);
 
   const handleOpenTopUp = (pack: CreditPack) => {
     setSelectedPack(pack);
@@ -27,7 +61,7 @@ export default function PricingPage() {
     setTimeout(() => setSuccessToast(null), 4000);
   };
 
-  const handleSelectPlan = async (plan: PricingPlan) => {
+  const handleSelectPlan = (plan: PricingPlan) => {
     if (plan.rawPriceInr === 0) {
       if (!user) {
         router.push('/sign-up');
@@ -42,28 +76,32 @@ export default function PricingPage() {
       return;
     }
 
-    setPurchasingPlan(plan.id);
-    await openRazorpayCheckout({
-      itemId: plan.id,
-      itemType: 'subscription',
-      userId: user.uid,
-      userEmail: user.email || '',
-      userName: user.displayName || undefined,
-      onSuccess: (order) => {
-        setPurchasingPlan(null);
-        setSuccessToast(`Subscribed to ${plan.name}! Invoice #${order.receiptNumber}`);
-        setTimeout(() => {
-          router.push('/account#billing');
-        }, 1500);
-      },
-      onError: (err) => {
-        setPurchasingPlan(null);
-        alert(err);
-      },
-      onDismiss: () => {
-        setPurchasingPlan(null);
-      },
-    });
+    if (plan.id === activePlanId) {
+      router.push('/account#subscriptions');
+      return;
+    }
+
+    setSelectedPlanForCheckout(plan);
+    setCheckoutModalOpen(true);
+  };
+
+  const handlePlanCheckoutSuccess = (order: OrderRecord) => {
+    setSuccessToast(`Subscribed to ${order.itemName}! Invoice #${order.receiptNumber}`);
+    // Immediately reflect the updated plan in state
+    if (selectedPlanForCheckout) {
+      const target = selectedPlanForCheckout.id as SubscriptionPlan;
+      setUserSubs((prev) =>
+        prev.map((s) => ({
+          ...s,
+          plan: target,
+          creditsRemaining: (s.creditsRemaining || 0) + (selectedPlanForCheckout.creditsAllotment || 0),
+        }))
+      );
+    }
+    setTimeout(() => {
+      setCheckoutModalOpen(false);
+      router.push('/account#billing');
+    }, 2000);
   };
 
   return (
@@ -95,90 +133,108 @@ export default function PricingPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch">
-          {PRICING_PLANS.map((plan) => (
-            <div
-              key={plan.id}
-              className={`relative flex flex-col justify-between rounded-3xl border p-6 sm:p-8 transition-all ${
-                plan.popular
-                  ? 'border-neutral-950 dark:border-white bg-neutral-50/80 dark:bg-neutral-950 shadow-xl ring-1 ring-neutral-950/10 dark:ring-white/20'
-                  : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/60 shadow-sm hover:shadow-md'
-              }`}
-            >
-              {plan.badge && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-neutral-950 dark:bg-white text-white dark:text-black text-[11px] font-sans font-bold uppercase tracking-wider rounded-full flex items-center gap-1 shadow-md">
-                  <Sparkles className="w-3 h-3 text-amber-400 dark:text-amber-500" />
-                  {plan.badge}
-                </span>
-              )}
+          {PRICING_PLANS.map((plan) => {
+            const isCurrentPlan = activePlanId === plan.id;
+            const isIncluded = (activePlanId === 'pro' || activePlanId === 'enterprise') && plan.id === 'free';
+            const isDowngrade = activePlanId === 'enterprise' && plan.id === 'pro';
 
-              <div className="space-y-5">
-                <div>
-                  <h3 className="text-xl font-bold text-neutral-950 dark:text-white font-sans">
-                    {plan.name}
-                  </h3>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1 font-sans leading-relaxed">
-                    {plan.description}
-                  </p>
-                </div>
+            return (
+              <div
+                key={plan.id}
+                className={`relative flex flex-col justify-between rounded-3xl border p-6 sm:p-8 transition-all ${
+                  isCurrentPlan
+                    ? 'border-emerald-500/80 dark:border-emerald-500/80 bg-emerald-500/[0.03] dark:bg-emerald-950/20 shadow-xl ring-2 ring-emerald-500/20'
+                    : plan.popular
+                    ? 'border-neutral-950 dark:border-white bg-neutral-50/80 dark:bg-neutral-950 shadow-xl ring-1 ring-neutral-950/10 dark:ring-white/20'
+                    : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/60 shadow-sm hover:shadow-md'
+                }`}
+              >
+                {isCurrentPlan ? (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-600 text-white text-[11px] font-sans font-bold uppercase tracking-wider rounded-full flex items-center gap-1 shadow-md">
+                    <Check className="w-3 h-3" />
+                    Active Plan
+                  </span>
+                ) : plan.badge ? (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-neutral-950 dark:bg-white text-white dark:text-black text-[11px] font-sans font-bold uppercase tracking-wider rounded-full flex items-center gap-1 shadow-md">
+                    <Sparkles className="w-3 h-3 text-amber-400 dark:text-amber-500" />
+                    {plan.badge}
+                  </span>
+                ) : null}
 
-                <div className="flex items-baseline gap-2 pt-1 flex-wrap">
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-3xl sm:text-4xl lg:text-[2.65rem] font-extrabold text-neutral-950 dark:text-white font-sans tracking-tight">
-                      {plan.priceInr}
-                    </span>
-                    <span className="text-sm sm:text-base font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
-                      ({plan.priceUsd} USD)
+                <div className="space-y-5">
+                  <div>
+                    <h3 className="text-xl font-bold text-neutral-950 dark:text-white font-sans flex items-center gap-2">
+                      <span>{plan.name}</span>
+                    </h3>
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1 font-sans leading-relaxed">
+                      {plan.description}
+                    </p>
+                  </div>
+
+                  <div className="flex items-baseline gap-2 pt-1 flex-wrap">
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-3xl sm:text-4xl lg:text-[2.65rem] font-extrabold text-neutral-950 dark:text-white font-sans tracking-tight">
+                        {plan.priceInr}
+                      </span>
+                      <span className="text-sm sm:text-base font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
+                        ({plan.priceUsd} USD)
+                      </span>
+                    </div>
+                    <span className="text-xs text-neutral-500 font-sans ml-0.5">
+                      {plan.period}
                     </span>
                   </div>
-                  <span className="text-xs text-neutral-500 font-sans ml-0.5">
-                    {plan.period}
-                  </span>
+
+                  <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-xs font-sans">
+                    <span className="text-neutral-500 dark:text-neutral-400">Includes </span>
+                    <span className="font-bold text-neutral-950 dark:text-white font-sans">
+                      {plan.creditsAllotment} Monthly Credits
+                    </span>
+                    <span className="text-neutral-500 dark:text-neutral-400"> (Shared cross-app)</span>
+                  </div>
+
+                  <div className="border-t border-neutral-200 dark:border-neutral-800 pt-4 space-y-2.5">
+                    {plan.features.map((feat) => (
+                      <div key={feat} className="flex items-start gap-2.5 text-xs text-neutral-700 dark:text-neutral-300 font-sans">
+                        <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                        <span>{feat}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-xs font-sans">
-                  <span className="text-neutral-500 dark:text-neutral-400">Includes </span>
-                  <span className="font-bold text-neutral-950 dark:text-white font-sans">
-                    {plan.creditsAllotment} Monthly Credits
-                  </span>
-                  <span className="text-neutral-500 dark:text-neutral-400"> (Shared cross-app)</span>
-                </div>
-
-                <div className="border-t border-neutral-200 dark:border-neutral-800 pt-4 space-y-2.5">
-                  {plan.features.map((feat) => (
-                    <div key={feat} className="flex items-start gap-2.5 text-xs text-neutral-700 dark:text-neutral-300 font-sans">
-                      <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                      <span>{feat}</span>
-                    </div>
-                  ))}
+                <div className="pt-8">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectPlan(plan)}
+                    className={`w-full py-3 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                      isCurrentPlan
+                        ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25'
+                        : isIncluded || isDowngrade
+                        ? 'bg-neutral-100 dark:bg-neutral-900 text-neutral-500 border border-neutral-200 dark:border-neutral-800 cursor-default'
+                        : plan.popular
+                        ? 'bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-200 dark:text-black shadow-md'
+                        : 'border border-neutral-200 dark:border-neutral-800 hover:border-neutral-900 dark:hover:border-white text-neutral-900 dark:text-white bg-white dark:bg-neutral-900'
+                    }`}
+                  >
+                    {isCurrentPlan ? (
+                      <>
+                        <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        <span>Current Plan</span>
+                      </>
+                    ) : isIncluded || isDowngrade ? (
+                      <span>Included in your tier</span>
+                    ) : (
+                      <>
+                        <span>{plan.cta}</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
-
-              <div className="pt-8">
-                <button
-                  type="button"
-                  onClick={() => handleSelectPlan(plan)}
-                  disabled={purchasingPlan === plan.id}
-                  className={`w-full py-3 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                    plan.popular
-                      ? 'bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-200 dark:text-black shadow-md'
-                      : 'border border-neutral-200 dark:border-neutral-800 hover:border-neutral-900 dark:hover:border-white text-neutral-900 dark:text-white bg-white dark:bg-neutral-900'
-                  }`}
-                >
-                  {purchasingPlan === plan.id ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Opening Checkout...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>{plan.cta}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -313,6 +369,18 @@ export default function PricingPage() {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         onSuccess={handleTopUpSuccess}
+      />
+
+      {/* Pre-Checkout Billing & GST Details Modal */}
+      <CheckoutDetailsModal
+        isOpen={checkoutModalOpen}
+        onClose={() => setCheckoutModalOpen(false)}
+        item={selectedPlanForCheckout}
+        itemType="subscription"
+        userId={user?.uid || ''}
+        userEmail={user?.email || ''}
+        userName={user?.displayName || undefined}
+        onSuccess={handlePlanCheckoutSuccess}
       />
     </div>
   );

@@ -28,6 +28,9 @@ interface CheckoutOptions {
   userId: string;
   userEmail: string;
   userName?: string;
+  gstin?: string;
+  businessName?: string;
+  onVerifying?: () => void;
   onSuccess?: (order: OrderRecord) => void;
   onError?: (errorMessage: string) => void;
   onDismiss?: () => void;
@@ -39,6 +42,9 @@ export async function openRazorpayCheckout({
   userId,
   userEmail,
   userName,
+  gstin,
+  businessName,
+  onVerifying,
   onSuccess,
   onError,
   onDismiss,
@@ -54,7 +60,7 @@ export async function openRazorpayCheckout({
     const res = await fetch('/api/billing/create-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itemId, itemType, userId, userEmail }),
+      body: JSON.stringify({ itemId, itemType, userId, userEmail, userName, gstin, businessName }),
     });
 
     const data = await res.json();
@@ -84,17 +90,19 @@ export async function openRazorpayCheckout({
       key: data.keyId,
       amount: data.amount,
       currency: data.currency || 'INR',
-      name: 'Docdril Studio',
+      name: 'DocStudio',
       description: data.itemName,
       order_id: data.orderId,
       prefill: {
-        name: userName || '',
+        name: businessName || userName || '',
         email: userEmail || '',
       },
       notes: {
         itemId,
         itemType,
         receiptNumber: data.receiptNumber,
+        gstin: gstin || '',
+        businessName: businessName || '',
       },
       theme: {
         color: '#09090b',
@@ -108,6 +116,7 @@ export async function openRazorpayCheckout({
       },
       handler: async (paymentResponse: RazorpayResponse) => {
         try {
+          onVerifying?.();
           // 4. Verify payment on backend
           const verifyRes = await fetch('/api/billing/verify-payment', {
             method: 'POST',
@@ -121,7 +130,9 @@ export async function openRazorpayCheckout({
               itemId,
               itemType,
               receiptNumber: data.receiptNumber,
-              userName,
+              userName: businessName || userName,
+              gstin,
+              businessName,
             }),
           });
 

@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const { itemId, itemType } = body;
+    const { itemId, itemType, gstin, businessName } = body;
 
     if (!itemId || !itemType) {
       return NextResponse.json(
@@ -99,6 +99,8 @@ export async function POST(request: NextRequest) {
         itemType,
         itemName,
         creditsAllotment: String(creditsAllotment),
+        gstin: typeof gstin === 'string' ? gstin.trim().toUpperCase() : '',
+        businessName: typeof businessName === 'string' ? businessName.trim() : '',
       },
     });
 

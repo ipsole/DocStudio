@@ -131,6 +131,8 @@ export interface OrderRecord {
   creditsAdded?: number;
   paymentMethod?: PaymentMethodSummary;
   receiptNumber: string;
+  gstin?: string;
+  businessName?: string;
   createdAt: number;
   paidAt?: number;
 }

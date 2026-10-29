@@ -1,0 +1,355 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { PricingPlan, CreditPack } from '@/lib/pricingData';
+import { openRazorpayCheckout } from '@/lib/checkout';
+import { OrderRecord } from '@/types';
+import {
+  X,
+  ShieldCheck,
+  Building,
+  Mail,
+  User,
+  CreditCard,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  FileText,
+  Sparkles,
+} from 'lucide-react';
+
+interface CheckoutDetailsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  item: PricingPlan | CreditPack | null;
+  itemType: 'subscription' | 'credit_pack';
+  userId: string;
+  userEmail: string;
+  userName?: string;
+  onSuccess: (order: OrderRecord) => void;
+}
+
+export function CheckoutDetailsModal({
+  isOpen,
+  onClose,
+  item,
+  itemType,
+  userId,
+  userEmail,
+  userName,
+  onSuccess,
+}: CheckoutDetailsModalProps) {
+  const [billingName, setBillingName] = useState(userName || '');
+  const [billingEmail, setBillingEmail] = useState(userEmail || '');
+  const [businessName, setBusinessName] = useState('');
+  const [gstin, setGstin] = useState('');
+  const [saveDetails, setSaveDetails] = useState(true);
+
+  // Flow status
+  const [status, setStatus] = useState<'form' | 'opening' | 'verifying' | 'success' | 'error'>('form');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [confirmedOrder, setConfirmedOrder] = useState<OrderRecord | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setStatus('form');
+      setErrorMessage(null);
+      setBillingName(userName || '');
+      setBillingEmail(userEmail || '');
+
+      // Load remembered GSTIN
+      if (typeof window !== 'undefined' && userId) {
+        const savedGstin = localStorage.getItem(`docstudio_gstin_${userId}`);
+        if (savedGstin) setGstin(savedGstin);
+        const savedBusiness = localStorage.getItem(`docstudio_business_${userId}`);
+        if (savedBusiness) setBusinessName(savedBusiness);
+      }
+    }
+  }, [isOpen, userId, userEmail, userName]);
+
+  if (!isOpen || !item) return null;
+
+  const rawAmount = item.rawPriceInr;
+  const credits = 'creditsAllotment' in item ? item.creditsAllotment : item.credits;
+  const baseAmount = (rawAmount / 1.18).toFixed(2);
+  const gstAmount = (rawAmount - Number(baseAmount)).toFixed(2);
+
+  const handleStartPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+
+    // Save GSTIN & Business to local storage if requested
+    if (saveDetails && typeof window !== 'undefined' && userId) {
+      if (gstin) localStorage.setItem(`docstudio_gstin_${userId}`, gstin.trim().toUpperCase());
+      if (businessName) localStorage.setItem(`docstudio_business_${userId}`, businessName.trim());
+    }
+
+    setStatus('opening');
+
+    await openRazorpayCheckout({
+      itemId: item.id,
+      itemType,
+      userId,
+      userEmail: billingEmail.trim() || userEmail,
+      userName: billingName.trim() || userName,
+      businessName: businessName.trim() || undefined,
+      gstin: gstin.trim().toUpperCase() || undefined,
+      onVerifying: () => {
+        setStatus('verifying');
+      },
+      onSuccess: (order) => {
+        setStatus('success');
+        setConfirmedOrder(order);
+        onSuccess(order);
+      },
+      onError: (err) => {
+        setStatus('error');
+        setErrorMessage(err);
+      },
+      onDismiss: () => {
+        setStatus('form');
+      },
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+      <div
+        className="relative w-full max-w-lg bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-950/50">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-black flex items-center justify-center font-bold text-sm shadow-sm">
+              DS
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-neutral-900 dark:text-white font-sans">
+                Review & Billing Details
+              </h2>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+                Secure checkout powered by Razorpay
+              </p>
+            </div>
+          </div>
+          {status !== 'verifying' && (
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+
+        {/* Content Body */}
+        <div className="p-6 overflow-y-auto space-y-6">
+          {/* Order Summary Box */}
+          <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-neutral-900 dark:text-white font-sans">
+                  {item.name}
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-neutral-900 dark:bg-white text-white dark:text-black">
+                  {itemType === 'subscription' ? 'Plan' : 'Pack'}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>+{credits} Generation Credits included</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-xl font-extrabold text-neutral-900 dark:text-white font-sans">
+                ₹{rawAmount}
+              </div>
+              <div className="text-[11px] text-neutral-400 font-sans">Inclusive of 18% GST</div>
+            </div>
+          </div>
+
+          {/* Verification States */}
+          {status === 'verifying' && (
+            <div className="py-8 text-center space-y-4">
+              <div className="w-14 h-14 mx-auto rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <Loader2 className="w-7 h-7 animate-spin" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-neutral-900 dark:text-white font-sans">
+                  Verifying Payment...
+                </h3>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-xs mx-auto font-sans leading-relaxed">
+                  Cryptographically validating your transaction and allocating {credits} credits to your account.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {status === 'success' && (
+            <div className="py-8 text-center space-y-4 animate-fade-in">
+              <div className="w-14 h-14 mx-auto rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <CheckCircle2 className="w-8 h-8" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold text-neutral-900 dark:text-white font-sans">
+                  Payment Confirmed! 🎉
+                </h3>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400 max-w-xs mx-auto font-sans leading-relaxed">
+                  Your plan and credits have been unlocked! Official receipt #{confirmedOrder?.receiptNumber || ''} was sent to your email.
+                </p>
+              </div>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-6 py-2.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-200 dark:text-black font-semibold text-xs tracking-wider uppercase transition-colors"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          )}
+
+          {status === 'error' && (
+            <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <div className="font-bold">Payment could not be completed</div>
+                <div>{errorMessage}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Form State */}
+          {(status === 'form' || status === 'opening' || status === 'error') && (
+            <form onSubmit={handleStartPayment} className="space-y-4">
+              <div className="space-y-3">
+                <div className="text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                  Billing & Invoice Info
+                </div>
+
+                {/* Name */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-neutral-400" />
+                    <span>Billing Name</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={billingName}
+                    onChange={(e) => setBillingName(e.target.value)}
+                    placeholder="Full Name"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white transition-all"
+                  />
+                </div>
+
+                {/* Email */}
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-neutral-400" />
+                    <span>Receipt Email</span>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={billingEmail}
+                    onChange={(e) => setBillingEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white transition-all"
+                  />
+                </div>
+
+                {/* Optional Company & GSTIN */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                      <Building className="w-3.5 h-3.5 text-neutral-400" />
+                      <span>Company / Org <span className="text-[10px] text-neutral-400">(Optional)</span></span>
+                    </label>
+                    <input
+                      type="text"
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      placeholder="e.g. Docdril Softwares"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-neutral-400" />
+                      <span>GSTIN Number <span className="text-[10px] text-neutral-400">(Optional)</span></span>
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={15}
+                      value={gstin}
+                      onChange={(e) => setGstin(e.target.value.toUpperCase())}
+                      placeholder="e.g. 07AAAAA0000A1Z5"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-xs text-neutral-900 dark:text-white uppercase font-mono focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="saveDetails"
+                    checked={saveDetails}
+                    onChange={(e) => setSaveDetails(e.target.checked)}
+                    className="rounded text-neutral-900 focus:ring-neutral-900"
+                  />
+                  <label htmlFor="saveDetails" className="text-[11px] text-neutral-500 dark:text-neutral-400 select-none cursor-pointer">
+                    Save billing details for future invoices
+                  </label>
+                </div>
+              </div>
+
+              {/* Price Breakdown */}
+              <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800 space-y-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+                <div className="flex justify-between">
+                  <span>Net Price</span>
+                  <span className="font-mono">₹{baseAmount}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Integrated GST (18%)</span>
+                  <span className="font-mono">₹{gstAmount}</span>
+                </div>
+                <div className="flex justify-between pt-1.5 border-t border-neutral-200 dark:border-neutral-800 text-sm font-bold text-neutral-900 dark:text-white">
+                  <span>Total Amount</span>
+                  <span className="font-mono">₹{rawAmount}.00 INR</span>
+                </div>
+              </div>
+
+              {/* Submit CTA */}
+              <button
+                type="submit"
+                disabled={status === 'opening'}
+                className="w-full mt-2 py-3.5 px-4 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-200 dark:text-black text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer disabled:opacity-50"
+              >
+                {status === 'opening' ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Launching Razorpay...</span>
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="w-4 h-4" />
+                    <span>Proceed to Pay ₹{rawAmount}</span>
+                  </>
+                )}
+              </button>
+
+              <div className="flex items-center justify-center gap-1.5 text-[11px] text-neutral-400 pt-1">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                <span>256-Bit Encrypted Payment • UPI, Cards & NetBanking</span>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
