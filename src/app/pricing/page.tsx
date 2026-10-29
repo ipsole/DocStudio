@@ -20,8 +20,15 @@ export default function PricingPage() {
 
   // User subscriptions to detect current active plan
   const [userSubs, setUserSubs] = useState<AppSubscription[]>([]);
-  const [selectedPlanForCheckout, setSelectedPlanForCheckout] = useState<PricingPlan | null>(null);
+  const [checkoutItem, setCheckoutItem] = useState<PricingPlan | CreditPack | null>(null);
+  const [checkoutType, setCheckoutType] = useState<'subscription' | 'credit_pack'>('subscription');
+  const [checkoutQuantity, setCheckoutQuantity] = useState<number>(1);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [packQuantities, setPackQuantities] = useState<Record<string, number>>({
+    'mini-boost': 1,
+    'studio-boost': 1,
+    'power-vault': 1,
+  });
 
   useEffect(() => {
     if (!user) {
@@ -56,6 +63,18 @@ export default function PricingPage() {
     setModalOpen(true);
   };
 
+  const handleOpenPackCheckout = (pack: CreditPack) => {
+    if (!user) {
+      router.push('/sign-in?redirect=/pricing');
+      return;
+    }
+    const qty = packQuantities[pack.id] || 1;
+    setCheckoutItem(pack);
+    setCheckoutType('credit_pack');
+    setCheckoutQuantity(qty);
+    setCheckoutModalOpen(true);
+  };
+
   const handleTopUpSuccess = (added: number) => {
     setSuccessToast(`+${added} Credits added successfully to your DocStudio vault!`);
     setTimeout(() => setSuccessToast(null), 4000);
@@ -77,25 +96,30 @@ export default function PricingPage() {
     }
 
     if (plan.id === activePlanId) {
-      router.push('/account#subscriptions');
+      router.push('/account#billing');
       return;
     }
 
-    setSelectedPlanForCheckout(plan);
+    setCheckoutItem(plan);
+    setCheckoutType('subscription');
+    setCheckoutQuantity(1);
     setCheckoutModalOpen(true);
   };
 
   const handlePlanCheckoutSuccess = (order: OrderRecord) => {
     setSuccessToast(`Subscribed to ${order.itemName}! Invoice #${order.receiptNumber}`);
-    // Immediately reflect the updated plan in state
-    if (selectedPlanForCheckout) {
-      const target = selectedPlanForCheckout.id as SubscriptionPlan;
+    if (checkoutItem && checkoutType === 'subscription') {
+      const target = checkoutItem.id as SubscriptionPlan;
       setUserSubs((prev) =>
         prev.map((s) => ({
           ...s,
           plan: target,
-          creditsRemaining: (s.creditsRemaining || 0) + (selectedPlanForCheckout.creditsAllotment || 0),
+          creditsRemaining: (s.creditsRemaining || 0) + (('creditsAllotment' in checkoutItem ? checkoutItem.creditsAllotment : 0) || 0),
         }))
+      );
+    } else if (order.creditsAdded) {
+      setUserSubs((prev) =>
+        prev.map((s, idx) => (idx === 0 ? { ...s, creditsRemaining: (s.creditsRemaining || 0) + (order.creditsAdded || 0) } : s))
       );
     }
     setTimeout(() => {
@@ -315,10 +339,50 @@ export default function PricingPage() {
                 </div>
               </div>
 
-              <div className="pt-6">
+              <div className="pt-6 space-y-3">
+                {/* Quantity Stepper (1 to 7 Limit) */}
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-100/80 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+                  <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 font-sans">
+                    Quantity (Max 7):
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPackQuantities((prev) => ({
+                          ...prev,
+                          [pack.id]: Math.max(1, (prev[pack.id] || 1) - 1),
+                        }))
+                      }
+                      disabled={(packQuantities[pack.id] || 1) <= 1}
+                      className="w-7 h-7 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 flex items-center justify-center font-bold text-sm text-neutral-800 dark:text-neutral-200 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-all"
+                      aria-label="Decrease quantity"
+                    >
+                      -
+                    </button>
+                    <span className="w-5 text-center font-mono font-bold text-xs text-neutral-900 dark:text-white">
+                      {packQuantities[pack.id] || 1}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPackQuantities((prev) => ({
+                          ...prev,
+                          [pack.id]: Math.min(7, (prev[pack.id] || 1) + 1),
+                        }))
+                      }
+                      disabled={(packQuantities[pack.id] || 1) >= 7}
+                      className="w-7 h-7 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 flex items-center justify-center font-bold text-sm text-neutral-800 dark:text-neutral-200 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-all"
+                      aria-label="Increase quantity"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
                 <button
                   type="button"
-                  onClick={() => handleOpenTopUp(pack)}
+                  onClick={() => handleOpenPackCheckout(pack)}
                   className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
                     pack.popular
                       ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-md'
@@ -326,7 +390,12 @@ export default function PricingPage() {
                   }`}
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Purchase {pack.priceInr} ({pack.priceUsd})</span>
+                  <span>
+                    Purchase ₹{pack.rawPriceInr * (packQuantities[pack.id] || 1)}
+                    {(packQuantities[pack.id] || 1) > 1
+                      ? ` (+${pack.credits * (packQuantities[pack.id] || 1)} cr)`
+                      : ` (${pack.priceUsd})`}
+                  </span>
                 </button>
               </div>
             </div>
@@ -375,8 +444,9 @@ export default function PricingPage() {
       <CheckoutDetailsModal
         isOpen={checkoutModalOpen}
         onClose={() => setCheckoutModalOpen(false)}
-        item={selectedPlanForCheckout}
-        itemType="subscription"
+        item={checkoutItem}
+        itemType={checkoutType}
+        initialQuantity={checkoutQuantity}
         userId={user?.uid || ''}
         userEmail={user?.email || ''}
         userName={user?.displayName || undefined}

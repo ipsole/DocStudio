@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -16,7 +16,7 @@ import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
 import { LinkPhoneModal } from '@/components/ui/LinkPhoneModal';
 import { CREDIT_PACKS, CreditPack } from '@/lib/pricingData';
 import { ensureDefaultUserSubscriptions, isUsernameAvailable, getUserOrders } from '@/lib/firebase/db';
-import { AppSubscription, OrderRecord } from '@/types';
+import { AppSubscription, OrderRecord, SubscriptionPlan } from '@/types';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { InvoiceReceiptModal } from '@/components/billing/InvoiceReceiptModal';
 import {
@@ -58,6 +58,8 @@ import {
   Receipt,
   Printer,
   ArrowRight,
+  RefreshCw,
+  Calendar,
 } from 'lucide-react';
 
 type TabKey = 'profile' | 'subscriptions' | 'billing' | 'security' | 'settings' | 'legal';
@@ -327,7 +329,7 @@ export default function AccountPage() {
     if (!user) return;
     try {
       setOrdersLoading(true);
-      const userOrders = await getUserOrders(user.uid);
+      const userOrders = await getUserOrders(user.uid, user.email || '');
       setOrders(userOrders);
     } catch (err) {
       console.error('[Account] Error loading orders:', err);
@@ -500,6 +502,57 @@ export default function AccountPage() {
   );
   const totalCreditsPercentage =
     totalCreditsMax > 0 ? Math.min(100, Math.round((totalCreditsRemaining / totalCreditsMax) * 100)) : 0;
+
+  // Active Plan & Subscription Lifecycle computation
+  const activePlanTier: SubscriptionPlan = useMemo(() => {
+    const hasEnterprise =
+      subscriptions.some((s) => s.plan === 'enterprise') ||
+      orders.some(
+        (o) =>
+          o.itemType === 'subscription' &&
+          (o.itemId === 'enterprise' || o.itemName.toLowerCase().includes('ultra')) &&
+          o.status === 'paid'
+      );
+    if (hasEnterprise) return 'enterprise';
+
+    const hasPro =
+      subscriptions.some((s) => s.plan === 'pro') ||
+      orders.some(
+        (o) =>
+          o.itemType === 'subscription' &&
+          (o.itemId === 'pro' || o.itemName.toLowerCase().includes('pro')) &&
+          o.status === 'paid'
+      );
+    if (hasPro) return 'pro';
+
+    return 'starter';
+  }, [subscriptions, orders]);
+
+  const latestSubOrder = useMemo(() => {
+    return (
+      orders.find((o) => o.itemType === 'subscription' && o.status === 'paid') ||
+      orders.find((o) => o.status === 'paid')
+    );
+  }, [orders]);
+
+  const planTierDisplayName =
+    activePlanTier === 'enterprise'
+      ? 'DocStudio Ultra Pass'
+      : activePlanTier === 'pro'
+      ? 'DocStudio Pro Pass'
+      : 'Starter (Free)';
+
+  const planRenewalAmount =
+    activePlanTier === 'enterprise' ? 999 : activePlanTier === 'pro' ? 499 : 0;
+
+  const cycleStartMs = latestSubOrder ? latestSubOrder.paidAt || latestSubOrder.createdAt : Date.now();
+  const nextRenewalDateMs = cycleStartMs + 30 * 24 * 60 * 60 * 1000;
+  const nextRenewalDateFormatted = new Date(nextRenewalDateMs).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+  const daysUntilRenewal = Math.max(0, Math.ceil((nextRenewalDateMs - Date.now()) / (24 * 60 * 60 * 1000)));
 
   // Sidebar navigation items
   const navItems: { key: TabKey; label: string; icon: React.ElementType; badge?: string }[] = [
@@ -1301,8 +1354,112 @@ export default function AccountPage() {
                   </Link>
                 </div>
 
-                {/* Section 1: Active Payment Channel */}
+                {/* Section 1: Plan Renewal & Subscription Cycle */}
                 <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <RefreshCw className="w-5 h-5 text-neutral-800 dark:text-neutral-200 shrink-0" />
+                      <div>
+                        <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                          Plan Renewal & Subscription Cycle
+                        </h3>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+                          Active subscription tier, automated renewal schedule, and recurring entitlement status.
+                        </p>
+                      </div>
+                    </div>
+                    <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      {activePlanTier === 'starter' ? 'Free Tier Active' : 'Auto-Renew Active'}
+                    </span>
+                  </div>
+
+                  <div className="p-5 sm:p-6 rounded-2xl bg-neutral-50/70 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 space-y-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-200/80 dark:border-neutral-800">
+                      <div>
+                        <div className="flex items-center gap-2.5">
+                          <h4 className="text-base sm:text-lg font-bold font-sans text-neutral-950 dark:text-white">
+                            {planTierDisplayName}
+                          </h4>
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-900">
+                            {activePlanTier === 'enterprise'
+                              ? 'Team / Ultra'
+                              : activePlanTier === 'pro'
+                              ? 'Creator Pro'
+                              : 'Free Forever'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-0.5">
+                          {activePlanTier === 'starter'
+                            ? 'Access to starter artboards and 50 monthly credits. Upgrade anytime to unlock all software suites.'
+                            : 'Unlimited access to all creative suites, 4K exports, priority cloud rendering, and 500 monthly generation credits.'}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Link
+                          href="/pricing"
+                          className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-neutral-950 dark:bg-white text-white dark:text-black hover:opacity-90 transition-opacity shadow-sm"
+                        >
+                          {activePlanTier === 'starter' ? 'Upgrade to Pro' : 'Change Plan'}
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedPack(CREDIT_PACKS[1]);
+                            setIsTopUpOpen(true);
+                          }}
+                          className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-800 dark:text-neutral-200 transition-colors cursor-pointer"
+                        >
+                          + Buy Credits
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Renewal Metrics Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-neutral-950 border border-neutral-200/80 dark:border-neutral-800">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 font-sans block">
+                          Billing Frequency
+                        </span>
+                        <span className="text-sm font-bold text-neutral-900 dark:text-white font-sans mt-1 block">
+                          Monthly
+                        </span>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-neutral-950 border border-neutral-200/80 dark:border-neutral-800">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 font-sans block">
+                          Renewal Amount
+                        </span>
+                        <span className="text-sm font-bold text-neutral-900 dark:text-white font-sans mt-1 block">
+                          ₹{planRenewalAmount}.00{' '}
+                          <span className="text-xs text-neutral-400 font-normal">/ mo</span>
+                        </span>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-neutral-950 border border-neutral-200/80 dark:border-neutral-800">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 font-sans block">
+                          Next Billing Date
+                        </span>
+                        <span className="text-sm font-bold text-neutral-900 dark:text-white font-sans mt-1 block font-mono">
+                          {activePlanTier === 'starter' ? 'N/A' : nextRenewalDateFormatted}
+                        </span>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl bg-white dark:bg-neutral-950 border border-neutral-200/80 dark:border-neutral-800">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-neutral-400 font-sans block">
+                          Cycle Status
+                        </span>
+                        <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 font-sans mt-1 block">
+                          {activePlanTier === 'starter' ? 'Active' : `${daysUntilRenewal} Days Remaining`}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Active Payment Channel */}
+                <div className="space-y-4 pt-4 border-t border-neutral-200 dark:border-neutral-900">
                   <div className="flex items-center gap-2">
                     <CreditCard className="w-5 h-5 text-neutral-800 dark:text-neutral-200 shrink-0" />
                     <div>
@@ -1359,7 +1516,7 @@ export default function AccountPage() {
                   </div>
                 </div>
 
-                {/* Section 2: Invoices & Transaction History */}
+                {/* Section 3: Invoices & Transaction History */}
                 <div className="space-y-4 pt-4 border-t border-neutral-200 dark:border-neutral-900">
                   <div className="flex items-center justify-between">
                     <div>
@@ -1426,7 +1583,14 @@ export default function AccountPage() {
                                     {dateStr}
                                   </td>
                                   <td className="py-3.5 px-4 font-semibold text-neutral-900 dark:text-white">
-                                    {order.itemName}
+                                    <div className="flex items-center gap-2">
+                                      <span>{order.itemName}</span>
+                                      {order.quantity && order.quantity > 1 ? (
+                                        <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+                                          ×{order.quantity}
+                                        </span>
+                                      ) : null}
+                                    </div>
                                     {order.creditsAdded ? (
                                       <span className="block text-[11px] font-normal text-emerald-600 dark:text-emerald-400">
                                         +{order.creditsAdded} credits
@@ -1468,7 +1632,7 @@ export default function AccountPage() {
                   )}
                 </div>
 
-                {/* Section 3: Billing & Tax Info (GSTIN) */}
+                {/* Section 4: Billing & Tax Info (GSTIN) */}
                 <div className="space-y-4 pt-4 border-t border-neutral-200 dark:border-neutral-900">
                   <div>
                     <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">

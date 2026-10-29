@@ -29,6 +29,7 @@ export async function POST(request: NextRequest) {
       userName,
       gstin,
       businessName,
+      quantity: rawQty,
     } = body;
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -76,8 +77,9 @@ export async function POST(request: NextRequest) {
       wallet: payment.wallet || undefined,
     };
 
-    // 3. Resolve item details and credits
-    let itemName = 'Docdril Software Service';
+    // 3. Resolve item details and credits (with quantity support 1-7)
+    const quantity = Math.max(1, Math.min(7, Math.floor(Number(rawQty || payment.notes?.quantity) || 1)));
+    let itemName = 'DocStudio Software Service';
     let creditsAdded = 0;
     const amountInr = Number(payment.amount) / 100;
 
@@ -90,8 +92,8 @@ export async function POST(request: NextRequest) {
     } else if (itemType === 'credit_pack') {
       const pack = CREDIT_PACKS.find((p) => p.id === itemId);
       if (pack) {
-        itemName = pack.name;
-        creditsAdded = pack.credits;
+        creditsAdded = pack.credits * quantity;
+        itemName = quantity > 1 ? `${pack.name} (Qty: ${quantity} • +${creditsAdded} Credits)` : pack.name;
       }
     }
 
@@ -112,6 +114,7 @@ export async function POST(request: NextRequest) {
       itemId: itemId || 'custom',
       itemName,
       creditsAdded,
+      quantity,
       paymentMethod,
       receiptNumber: finalReceiptNumber,
       gstin: gstin || (payment.notes?.gstin as string) || undefined,

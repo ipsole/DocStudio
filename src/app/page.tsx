@@ -72,8 +72,15 @@ export default function HomePage() {
 
   // Active user subscription detection
   const [userSubs, setUserSubs] = useState<AppSubscription[]>([]);
-  const [selectedPlanForCheckout, setSelectedPlanForCheckout] = useState<PricingPlan | null>(null);
+  const [checkoutItem, setCheckoutItem] = useState<PricingPlan | CreditPack | null>(null);
+  const [checkoutType, setCheckoutType] = useState<'subscription' | 'credit_pack'>('subscription');
+  const [checkoutQuantity, setCheckoutQuantity] = useState<number>(1);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [packQuantities, setPackQuantities] = useState<Record<string, number>>({
+    'mini-boost': 1,
+    'studio-boost': 1,
+    'power-vault': 1,
+  });
 
   useEffect(() => {
     if (!user) {
@@ -118,11 +125,25 @@ export default function HomePage() {
     }
 
     if (plan.id === activePlanId) {
-      window.location.href = '/account#subscriptions';
+      window.location.href = '/account#billing';
       return;
     }
 
-    setSelectedPlanForCheckout(plan);
+    setCheckoutItem(plan);
+    setCheckoutType('subscription');
+    setCheckoutQuantity(1);
+    setCheckoutModalOpen(true);
+  };
+
+  const handleOpenPackCheckout = (pack: CreditPack) => {
+    if (!user) {
+      window.location.href = '/sign-in?redirect=/';
+      return;
+    }
+    const qty = packQuantities[pack.id] || 1;
+    setCheckoutItem(pack);
+    setCheckoutType('credit_pack');
+    setCheckoutQuantity(qty);
     setCheckoutModalOpen(true);
   };
 
@@ -473,17 +494,61 @@ export default function HomePage() {
                       </p>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedPack(pack);
-                        setModalOpen(true);
-                      }}
-                      className="w-full py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-950 hover:text-white dark:hover:bg-white dark:hover:text-black transition-all cursor-pointer"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>Purchase {pack.priceInr} ({pack.priceUsd})</span>
-                    </button>
+                    <div className="pt-2 space-y-2.5">
+                      {/* Quantity Stepper (1 to 7 Limit) */}
+                      <div className="flex items-center justify-between p-2 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+                        <span className="text-[11px] font-semibold text-neutral-600 dark:text-neutral-400 font-sans">
+                          Quantity (Max 7):
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPackQuantities((prev) => ({
+                                ...prev,
+                                [pack.id]: Math.max(1, (prev[pack.id] || 1) - 1),
+                              }))
+                            }
+                            disabled={(packQuantities[pack.id] || 1) <= 1}
+                            className="w-6 h-6 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 flex items-center justify-center font-bold text-xs text-neutral-800 dark:text-neutral-200 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-all"
+                            aria-label="Decrease quantity"
+                          >
+                            -
+                          </button>
+                          <span className="w-4 text-center font-mono font-bold text-xs text-neutral-900 dark:text-white">
+                            {packQuantities[pack.id] || 1}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setPackQuantities((prev) => ({
+                                ...prev,
+                                [pack.id]: Math.min(7, (prev[pack.id] || 1) + 1),
+                              }))
+                            }
+                            disabled={(packQuantities[pack.id] || 1) >= 7}
+                            className="w-6 h-6 rounded-lg bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 flex items-center justify-center font-bold text-xs text-neutral-800 dark:text-neutral-200 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-all"
+                            aria-label="Increase quantity"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenPackCheckout(pack)}
+                        className="w-full py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-950 hover:text-white dark:hover:bg-white dark:hover:text-black transition-all cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>
+                          Purchase ₹{pack.rawPriceInr * (packQuantities[pack.id] || 1)}
+                          {(packQuantities[pack.id] || 1) > 1
+                            ? ` (+${pack.credits * (packQuantities[pack.id] || 1)} cr)`
+                            : ` (${pack.priceUsd})`}
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -561,20 +626,25 @@ export default function HomePage() {
     <CheckoutDetailsModal
       isOpen={checkoutModalOpen}
       onClose={() => setCheckoutModalOpen(false)}
-      item={selectedPlanForCheckout}
-      itemType="subscription"
+      item={checkoutItem}
+      itemType={checkoutType}
+      initialQuantity={checkoutQuantity}
       userId={user?.uid || ''}
       userEmail={user?.email || ''}
       userName={user?.displayName || undefined}
       onSuccess={(order) => {
-        if (selectedPlanForCheckout) {
-          const target = selectedPlanForCheckout.id as SubscriptionPlan;
+        if (checkoutItem && checkoutType === 'subscription') {
+          const target = checkoutItem.id as SubscriptionPlan;
           setUserSubs((prev) =>
             prev.map((s) => ({
               ...s,
               plan: target,
-              creditsRemaining: (s.creditsRemaining || 0) + (selectedPlanForCheckout.creditsAllotment || 0),
+              creditsRemaining: (s.creditsRemaining || 0) + (('creditsAllotment' in checkoutItem ? checkoutItem.creditsAllotment : 0) || 0),
             }))
+          );
+        } else if (order.creditsAdded) {
+          setUserSubs((prev) =>
+            prev.map((s, idx) => (idx === 0 ? { ...s, creditsRemaining: (s.creditsRemaining || 0) + (order.creditsAdded || 0) } : s))
           );
         }
         setTimeout(() => {

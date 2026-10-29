@@ -9,6 +9,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const { itemId, itemType, gstin, businessName } = body;
+    const rawQuantity = Number(body.quantity) || 1;
+    const quantity = Math.max(1, Math.min(7, Math.floor(rawQuantity)));
 
     if (!itemId || !itemType) {
       return NextResponse.json(
@@ -66,9 +68,9 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      amountInInr = pack.rawPriceInr;
-      itemName = pack.name;
-      creditsAllotment = pack.credits;
+      amountInInr = pack.rawPriceInr * quantity;
+      creditsAllotment = pack.credits * quantity;
+      itemName = quantity > 1 ? `${pack.name} (Qty: ${quantity} • +${creditsAllotment} Credits)` : pack.name;
     } else {
       return NextResponse.json(
         { success: false, error: 'INVALID_TYPE', message: 'itemType must be "subscription" or "credit_pack".' },
@@ -99,6 +101,7 @@ export async function POST(request: NextRequest) {
         itemType,
         itemName,
         creditsAllotment: String(creditsAllotment),
+        quantity: String(quantity),
         gstin: typeof gstin === 'string' ? gstin.trim().toUpperCase() : '',
         businessName: typeof businessName === 'string' ? businessName.trim() : '',
       },

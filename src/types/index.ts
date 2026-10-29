@@ -129,6 +129,7 @@ export interface OrderRecord {
   itemId: string;
   itemName: string;
   creditsAdded?: number;
+  quantity?: number;
   paymentMethod?: PaymentMethodSummary;
   receiptNumber: string;
   gstin?: string;

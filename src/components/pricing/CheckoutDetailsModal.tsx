@@ -26,6 +26,7 @@ interface CheckoutDetailsModalProps {
   userId: string;
   userEmail: string;
   userName?: string;
+  initialQuantity?: number;
   onSuccess: (order: OrderRecord) => void;
 }
 
@@ -37,6 +38,7 @@ export function CheckoutDetailsModal({
   userId,
   userEmail,
   userName,
+  initialQuantity = 1,
   onSuccess,
 }: CheckoutDetailsModalProps) {
   const [billingName, setBillingName] = useState(userName || '');
@@ -44,6 +46,7 @@ export function CheckoutDetailsModal({
   const [businessName, setBusinessName] = useState('');
   const [gstin, setGstin] = useState('');
   const [saveDetails, setSaveDetails] = useState(true);
+  const [quantity, setQuantity] = useState(Math.max(1, Math.min(7, initialQuantity)));
 
   // Flow status
   const [status, setStatus] = useState<'form' | 'opening' | 'verifying' | 'success' | 'error'>('form');
@@ -56,6 +59,7 @@ export function CheckoutDetailsModal({
       setErrorMessage(null);
       setBillingName(userName || '');
       setBillingEmail(userEmail || '');
+      setQuantity(Math.max(1, Math.min(7, initialQuantity)));
 
       // Load remembered GSTIN
       if (typeof window !== 'undefined' && userId) {
@@ -65,12 +69,15 @@ export function CheckoutDetailsModal({
         if (savedBusiness) setBusinessName(savedBusiness);
       }
     }
-  }, [isOpen, userId, userEmail, userName]);
+  }, [isOpen, userId, userEmail, userName, initialQuantity]);
 
   if (!isOpen || !item) return null;
 
-  const rawAmount = item.rawPriceInr;
-  const credits = 'creditsAllotment' in item ? item.creditsAllotment : item.credits;
+  const isCreditPack = itemType === 'credit_pack';
+  const effectiveQty = isCreditPack ? Math.max(1, Math.min(7, quantity)) : 1;
+  const rawAmount = item.rawPriceInr * effectiveQty;
+  const unitCredits = 'creditsAllotment' in item ? item.creditsAllotment : item.credits;
+  const credits = unitCredits * effectiveQty;
   const baseAmount = (rawAmount / 1.18).toFixed(2);
   const gstAmount = (rawAmount - Number(baseAmount)).toFixed(2);
 
@@ -92,6 +99,7 @@ export function CheckoutDetailsModal({
       userId,
       userEmail: billingEmail.trim() || userEmail,
       userName: billingName.trim() || userName,
+      quantity: effectiveQty,
       businessName: businessName.trim() || undefined,
       gstin: gstin.trim().toUpperCase() || undefined,
       onVerifying: () => {
@@ -153,7 +161,7 @@ export function CheckoutDetailsModal({
                   {item.name}
                 </span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-neutral-900 dark:bg-white text-white dark:text-black">
-                  {itemType === 'subscription' ? 'Plan' : 'Pack'}
+                  {itemType === 'subscription' ? 'Plan' : effectiveQty > 1 ? `Pack × ${effectiveQty}` : 'Pack'}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
@@ -165,9 +173,48 @@ export function CheckoutDetailsModal({
               <div className="text-xl font-extrabold text-neutral-900 dark:text-white font-sans">
                 ₹{rawAmount}
               </div>
-              <div className="text-[11px] text-neutral-400 font-sans">Inclusive of 18% GST</div>
+              <div className="text-[11px] text-neutral-400 font-sans">
+                {effectiveQty > 1 ? `₹${item.rawPriceInr} × ${effectiveQty} (Incl. GST)` : 'Inclusive of 18% GST'}
+              </div>
             </div>
           </div>
+
+          {/* Quantity Selector (1 to 7 Limit) for Credit Top-Up Packs */}
+          {isCreditPack && (
+            <div className="p-3.5 rounded-2xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-neutral-900 dark:text-white font-sans block">
+                  Purchase Quantity
+                </span>
+                <span className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
+                  Single purchase limit: 1 to 7 packs (+{credits} Credits)
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  disabled={effectiveQty <= 1}
+                  className="w-8 h-8 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 flex items-center justify-center font-bold text-base text-neutral-800 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-all"
+                  aria-label="Decrease quantity"
+                >
+                  -
+                </button>
+                <span className="w-6 text-center font-bold text-sm text-neutral-950 dark:text-white font-mono">
+                  {effectiveQty}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.min(7, q + 1))}
+                  disabled={effectiveQty >= 7}
+                  className="w-8 h-8 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 flex items-center justify-center font-bold text-base text-neutral-800 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-all"
+                  aria-label="Increase quantity"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Verification States */}
           {status === 'verifying' && (
@@ -337,7 +384,7 @@ export function CheckoutDetailsModal({
                 ) : (
                   <>
                     <CreditCard className="w-4 h-4" />
-                    <span>Proceed to Pay ₹{rawAmount}</span>
+                    <span>Proceed to Pay ₹{rawAmount} {isCreditPack ? `(+${credits} Credits)` : ''}</span>
                   </>
                 )}
               </button>

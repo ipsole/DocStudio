@@ -35,8 +35,20 @@ export function CreditTopUpModal({
   const [loading, setLoading] = useState(false);
   const [purchased, setPurchased] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState(1);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setQuantity(1);
+      setError(null);
+      setPurchased(false);
+    }
+  }, [isOpen, pack]);
 
   if (!isOpen || !pack) return null;
+
+  const totalCredits = pack.credits * quantity;
+  const totalAmountInr = pack.rawPriceInr * quantity;
 
   const handlePurchase = async () => {
     if (!user) return;
@@ -49,9 +61,10 @@ export function CreditTopUpModal({
       userId: user.uid,
       userEmail: user.email || '',
       userName: user.displayName || undefined,
+      quantity,
       onSuccess: () => {
         setPurchased(true);
-        onSuccess?.(pack.credits);
+        onSuccess?.(totalCredits);
         setTimeout(() => {
           setPurchased(false);
           onClose();
@@ -93,10 +106,10 @@ export function CreditTopUpModal({
             </div>
             <div className="space-y-1">
               <h3 className="text-xl font-bold font-sans">
-                +{pack.credits} Credits Added!
+                +{totalCredits} Credits Added!
               </h3>
               <p className="text-xs text-neutral-600 dark:text-neutral-400 font-sans">
-                Your credits are active immediately across all Docdril creative and document suites.
+                Added {quantity > 1 ? `${quantity} × ${pack.name}` : pack.name} (+{totalCredits} credits) to your central DocStudio vault.
               </p>
             </div>
           </div>
@@ -116,22 +129,57 @@ export function CreditTopUpModal({
               </p>
             </div>
 
+            {/* Quantity Selector: 1 to 7 Limit */}
+            <div className="p-3.5 rounded-2xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-neutral-900 dark:text-white font-sans block">
+                  Purchase Quantity
+                </span>
+                <span className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
+                  Purchase up to 7 packs in a single checkout
+                </span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  disabled={quantity <= 1}
+                  className="w-8 h-8 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 flex items-center justify-center font-bold text-base text-neutral-800 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-all"
+                  aria-label="Decrease quantity"
+                >
+                  -
+                </button>
+                <span className="w-6 text-center font-bold text-sm text-neutral-950 dark:text-white font-mono">
+                  {quantity}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setQuantity((q) => Math.min(7, q + 1))}
+                  disabled={quantity >= 7}
+                  className="w-8 h-8 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 flex items-center justify-center font-bold text-base text-neutral-800 dark:text-neutral-200 hover:bg-neutral-200 dark:hover:bg-neutral-700 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-all"
+                  aria-label="Increase quantity"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
             {/* Price & Credit Summary Box */}
             <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 space-y-3">
               <div className="flex items-baseline justify-between flex-wrap gap-2">
                 <div className="flex items-baseline gap-1.5 flex-wrap">
                   <span className="text-2xl sm:text-3xl font-extrabold font-sans tracking-tight text-neutral-950 dark:text-white">
-                    {pack.priceInr}
+                    ₹{totalAmountInr}
                   </span>
                   <span className="text-xs sm:text-sm font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
-                    ({pack.priceUsd} USD)
+                    (${pack.rawPriceUsd * quantity} USD)
                   </span>
                   <span className="text-xs text-neutral-500 font-sans ml-1">
-                    one-time payment
+                    {quantity > 1 ? `(${quantity} × ₹${pack.rawPriceInr})` : 'one-time payment'}
                   </span>
                 </div>
                 <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-sans text-xs font-semibold">
-                  +{pack.credits} Credits
+                  +{totalCredits} Credits
                 </span>
               </div>
 
@@ -174,11 +222,11 @@ export function CreditTopUpModal({
                   isLoading={loading}
                 >
                   <CreditCard className="w-4 h-4" />
-                  <span>Purchase & Top Up {pack.priceInr} ({pack.priceUsd})</span>
+                  <span>Proceed to Pay ₹{totalAmountInr} (+{totalCredits} Credits)</span>
                 </Button>
                 <div className="flex items-center justify-center gap-1.5 text-[11px] text-neutral-500 font-sans">
                   <ShieldCheck className="w-3.5 h-3.5 text-neutral-400" />
-                  <span>Instant UPI & Card checkout simulation</span>
+                  <span>Instant UPI & Card checkout via Razorpay</span>
                 </div>
               </div>
             ) : (

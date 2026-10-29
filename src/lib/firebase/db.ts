@@ -926,33 +926,63 @@ export async function saveOrderRecord(order: OrderRecord): Promise<void> {
 /**
  * Fetch all orders/invoices for a given user.
  */
-export async function getUserOrders(userId: string): Promise<OrderRecord[]> {
+export async function getUserOrders(userId: string, userEmail?: string): Promise<OrderRecord[]> {
   let cachedOrders: OrderRecord[] = [];
   if (typeof window !== 'undefined') {
     try {
-      const key = `docstudio_orders_${userId}`;
-      const existing = localStorage.getItem(key);
-      if (existing) cachedOrders = JSON.parse(existing);
+      const keyId = `docstudio_orders_${userId}`;
+      const existingId = localStorage.getItem(keyId);
+      if (existingId) {
+        cachedOrders = JSON.parse(existingId);
+      } else if (userEmail) {
+        const keyEmail = `docstudio_orders_${userEmail}`;
+        const existingEmail = localStorage.getItem(keyEmail);
+        if (existingEmail) cachedOrders = JSON.parse(existingEmail);
+      }
     } catch {
       // ignore
     }
   }
 
+  // 1. Fetch via privileged server API endpoint (bypasses client security rules & missing indexes)
+  if (typeof window !== 'undefined') {
+    try {
+      const emailParam = userEmail ? `&email=${encodeURIComponent(userEmail)}` : '';
+      const res = await fetch(`/api/billing/orders?userId=${encodeURIComponent(userId)}${emailParam}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.orders)) {
+          if (data.orders.length > 0) {
+            localStorage.setItem(`docstudio_orders_${userId}`, JSON.stringify(data.orders));
+            if (userEmail) {
+              localStorage.setItem(`docstudio_orders_${userEmail}`, JSON.stringify(data.orders));
+            }
+            return data.orders;
+          }
+        }
+      }
+    } catch (apiErr) {
+      console.warn('[DocStore DB] Server API orders fetch warning, falling back to direct db:', apiErr);
+    }
+  }
+
   if (isFirebaseConfigured() && db) {
     try {
-      const q = query(
+      const orderDocsMap = new Map<string, OrderRecord>();
+
+      const qUser = query(
         collection(db, ORDERS_COLLECTION),
         where('userId', '==', userId)
       );
-      const snap = await getDocs(q);
-      const remoteOrders: OrderRecord[] = snap.docs.map((d) => {
+      const snapUser = await getDocs(qUser);
+      snapUser.docs.forEach((d) => {
         const data = d.data();
-        return {
+        orderDocsMap.set(d.id, {
           id: d.id,
           razorpayOrderId: data.razorpayOrderId || d.id,
           razorpayPaymentId: data.razorpayPaymentId || '',
           userId: data.userId || userId,
-          userEmail: data.userEmail || '',
+          userEmail: data.userEmail || userEmail || '',
           amount: data.amount || 0,
           amountPaise: data.amountPaise || 0,
           currency: 'INR',
@@ -961,13 +991,56 @@ export async function getUserOrders(userId: string): Promise<OrderRecord[]> {
           itemId: data.itemId || '',
           itemName: data.itemName || 'Docdril Software Service',
           creditsAdded: data.creditsAdded || 0,
+          quantity: data.quantity || 1,
           paymentMethod: data.paymentMethod,
           receiptNumber: data.receiptNumber || `INV-${d.id.slice(-6).toUpperCase()}`,
+          gstin: data.gstin || undefined,
+          businessName: data.businessName || undefined,
           createdAt: typeof data.createdAt?.toMillis === 'function' ? data.createdAt.toMillis() : (data.createdAt || Date.now()),
           paidAt: typeof data.paidAt?.toMillis === 'function' ? data.paidAt.toMillis() : (data.paidAt || data.createdAt || Date.now()),
-        };
+        });
       });
 
+      if (userEmail) {
+        try {
+          const qEmail = query(
+            collection(db, ORDERS_COLLECTION),
+            where('userEmail', '==', userEmail)
+          );
+          const snapEmail = await getDocs(qEmail);
+          snapEmail.docs.forEach((d) => {
+            if (!orderDocsMap.has(d.id)) {
+              const data = d.data();
+              orderDocsMap.set(d.id, {
+                id: d.id,
+                razorpayOrderId: data.razorpayOrderId || d.id,
+                razorpayPaymentId: data.razorpayPaymentId || '',
+                userId: data.userId || userId,
+                userEmail: data.userEmail || userEmail,
+                amount: data.amount || 0,
+                amountPaise: data.amountPaise || 0,
+                currency: 'INR',
+                status: data.status || 'paid',
+                itemType: data.itemType || 'subscription',
+                itemId: data.itemId || '',
+                itemName: data.itemName || 'Docdril Software Service',
+                creditsAdded: data.creditsAdded || 0,
+                quantity: data.quantity || 1,
+                paymentMethod: data.paymentMethod,
+                receiptNumber: data.receiptNumber || `INV-${d.id.slice(-6).toUpperCase()}`,
+                gstin: data.gstin || undefined,
+                businessName: data.businessName || undefined,
+                createdAt: typeof data.createdAt?.toMillis === 'function' ? data.createdAt.toMillis() : (data.createdAt || Date.now()),
+                paidAt: typeof data.paidAt?.toMillis === 'function' ? data.paidAt.toMillis() : (data.paidAt || data.createdAt || Date.now()),
+              });
+            }
+          });
+        } catch {
+          // ignore
+        }
+      }
+
+      const remoteOrders = Array.from(orderDocsMap.values());
       if (remoteOrders.length > 0) {
         remoteOrders.sort((a, b) => b.createdAt - a.createdAt);
         if (typeof window !== 'undefined') {
