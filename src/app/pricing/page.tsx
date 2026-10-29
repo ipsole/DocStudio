@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { PRICING_PLANS, CREDIT_PACKS, PRICING_FAQS, CreditPack, PricingPlan } from '@/lib/pricingData';
+import { PRICING_PLANS, YEARLY_PRICING_PLANS, CREDIT_PACKS, PRICING_FAQS, CreditPack, PricingPlan } from '@/lib/pricingData';
 import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
 import { CheckoutDetailsModal } from '@/components/pricing/CheckoutDetailsModal';
 import { getUserSubscriptions } from '@/lib/firebase/db';
@@ -24,6 +24,7 @@ export default function PricingPage() {
   const [checkoutType, setCheckoutType] = useState<'subscription' | 'credit_pack'>('subscription');
   const [checkoutQuantity, setCheckoutQuantity] = useState<number>(1);
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [packQuantities, setPackQuantities] = useState<Record<string, number>>({
     'mini-boost': 1,
     'studio-boost': 1,
@@ -150,17 +151,55 @@ export default function PricingPage() {
 
       {/* 1. Subscription Plans Section */}
       <div className="space-y-6">
-        <div className="text-center">
-          <h2 className="text-xs uppercase font-sans font-semibold tracking-wider text-neutral-400">
-            Monthly Subscriptions
-          </h2>
+        <div className="flex flex-col items-center justify-center gap-3">
+          <div className="inline-flex items-center p-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+            <button
+              type="button"
+              onClick={() => setBillingCycle('monthly')}
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                billingCycle === 'monthly'
+                  ? 'bg-neutral-950 text-white dark:bg-white dark:text-black shadow-sm'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              Monthly Billing
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingCycle('yearly')}
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                billingCycle === 'yearly'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              <span>Yearly Billing</span>
+              <span
+                className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full ${
+                  billingCycle === 'yearly'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800'
+                }`}
+              >
+                Save 20%
+              </span>
+            </button>
+          </div>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+            {billingCycle === 'yearly'
+              ? '✨ Annual plans include 2 months free + massive yearly generation credit allotment!'
+              : 'Flexible monthly billing • cancel or switch tiers anytime.'}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch">
-          {PRICING_PLANS.map((plan) => {
-            const isCurrentPlan = activePlanId === plan.id;
+          {(billingCycle === 'yearly' ? YEARLY_PRICING_PLANS : PRICING_PLANS).map((plan) => {
+            const isCurrentPlan =
+              activePlanId === plan.id ||
+              (activePlanId === 'pro' && (plan.id === 'pro' || plan.id === 'pro-yearly')) ||
+              (activePlanId === 'enterprise' && (plan.id === 'ultra' || plan.id === 'ultra-yearly'));
             const isIncluded = (activePlanId === 'pro' || activePlanId === 'enterprise') && plan.id === 'free';
-            const isDowngrade = activePlanId === 'enterprise' && plan.id === 'pro';
+            const isDowngrade = activePlanId === 'enterprise' && (plan.id === 'pro' || plan.id === 'pro-yearly');
 
             return (
               <div

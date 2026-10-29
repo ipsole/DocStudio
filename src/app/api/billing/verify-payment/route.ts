@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { getRazorpayClient } from '@/lib/razorpay';
-import { PRICING_PLANS, CREDIT_PACKS } from '@/lib/pricingData';
+import { PRICING_PLANS, CREDIT_PACKS, ALL_PRICING_PLANS } from '@/lib/pricingData';
+import { getFirebaseAdmin } from '@/lib/firebase/admin';
+import * as admin from 'firebase-admin';
 import { saveOrderRecord, upgradeUserPlan, addSharedCredits } from '@/lib/firebase/db';
 import {
   recordOrderAdmin,
@@ -84,7 +86,7 @@ export async function POST(request: NextRequest) {
     const amountInr = Number(payment.amount) / 100;
 
     if (itemType === 'subscription') {
-      const plan = PRICING_PLANS.find((p) => p.id === itemId);
+      const plan = ALL_PRICING_PLANS.find((p) => p.id === itemId) || PRICING_PLANS.find((p) => p.id === itemId);
       if (plan) {
         itemName = plan.name;
         creditsAdded = plan.creditsAllotment;
@@ -137,8 +139,18 @@ export async function POST(request: NextRequest) {
     // 6. Provision user account entitlements / credits via Admin SDK
     if (userId) {
       if (itemType === 'subscription') {
-        const targetPlan: SubscriptionPlan = (itemId === 'enterprise' ? 'enterprise' : 'pro') as SubscriptionPlan;
-        const upgraded = await upgradeUserPlanAdmin(userId, userEmail || '', targetPlan);
+        const isUltra = itemId === 'enterprise' || itemId === 'ultra' || itemId === 'ultra-yearly';
+        const targetPlan: SubscriptionPlan = (isUltra ? 'enterprise' : 'pro') as SubscriptionPlan;
+        const isYearly = itemId.includes('yearly');
+        const periodDurationDays = isYearly ? 365 : 30;
+
+        const upgraded = await upgradeUserPlanAdmin(
+          userId,
+          userEmail || '',
+          targetPlan,
+          creditsAdded,
+          periodDurationDays
+        );
         if (!upgraded) {
           try {
             await upgradeUserPlan(userId, userEmail || '', targetPlan);
@@ -154,6 +166,24 @@ export async function POST(request: NextRequest) {
           } catch (creditErr) {
             console.warn('[Billing API] Client db credits addition skipped:', creditErr);
           }
+        }
+      }
+
+      // 6b. Automatically persist/secure tokenized payment method if available
+      if (paymentMethod && paymentMethod.type !== 'other') {
+        try {
+          const { firestore } = getFirebaseAdmin();
+          if (firestore) {
+            await firestore.collection('users').doc(userId).set(
+              {
+                savedPaymentMethod: paymentMethod,
+                updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              },
+              { merge: true }
+            );
+          }
+        } catch (savePmErr) {
+          console.warn('[Billing API] Saved payment method write warning:', savePmErr);
         }
       }
     }

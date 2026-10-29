@@ -7,6 +7,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
+import { getUserSubscriptions } from '@/lib/firebase/db';
+import { AppSubscription } from '@/types';
 import {
   LogOut,
   LayoutDashboard,
@@ -15,6 +17,8 @@ import {
   User as UserIcon,
   Sun,
   Moon,
+  Zap,
+  Sparkles,
 } from 'lucide-react';
 
 const NAV_TABS = [
@@ -31,6 +35,7 @@ export function Navbar() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [hasSessionHint, setHasSessionHint] = useState(false);
+  const [subscriptions, setSubscriptions] = useState<AppSubscription[]>([]);
 
   useEffect(() => {
     setMounted(true);
@@ -46,14 +51,38 @@ export function Navbar() {
       try {
         if (user) {
           setHasSessionHint(true);
+          const cached = localStorage.getItem(`docstudio_subscriptions_${user.uid}`);
+          if (cached) setSubscriptions(JSON.parse(cached));
+          getUserSubscriptions(user.uid).then((subs) => {
+            if (subs && subs.length > 0) setSubscriptions(subs);
+          });
         } else if (!loading) {
           setHasSessionHint(false);
+          setSubscriptions([]);
         }
       } catch {
         // ignore
       }
     }
   }, [user, loading]);
+
+  const totalCreditsRemaining = subscriptions.reduce(
+    (acc, s) => acc + (s.creditsRemaining || 0),
+    0
+  );
+  const totalCreditsMax = subscriptions.reduce(
+    (acc, s) => acc + (s.creditsTotal || 0),
+    0
+  );
+  const creditsPercentage =
+    totalCreditsMax > 0
+      ? Math.min(100, Math.round((totalCreditsRemaining / totalCreditsMax) * 100))
+      : totalCreditsRemaining > 0
+      ? 100
+      : 0;
+  const hasProOrHigher = subscriptions.some(
+    (s) => s.plan === 'pro' || s.plan === 'enterprise'
+  );
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-white/80 dark:bg-black/80 backdrop-blur-md text-neutral-900 dark:text-white select-none transition-colors duration-200">
@@ -163,6 +192,42 @@ export function Navbar() {
                           <span>@{profile?.username || user.email?.split('@')[0] || 'creator'}</span>
                           <VerifiedBadge size="sm" />
                         </p>
+                      </div>
+                    </div>
+
+                    {/* Monthly Credits Left Status Card */}
+                    <div className="mx-2 my-2 p-2.5 rounded-xl bg-neutral-100/90 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-sans">
+                        <span className="font-semibold text-neutral-600 dark:text-neutral-400 flex items-center gap-1.5">
+                          <Zap className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />
+                          Monthly Credits Left
+                        </span>
+                        <span className="font-bold text-neutral-900 dark:text-white font-mono text-xs">
+                          {totalCreditsRemaining.toLocaleString()} pts
+                        </span>
+                      </div>
+
+                      {/* Progress bar */}
+                      <div className="w-full h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                          style={{ width: `${Math.max(6, creditsPercentage)}%` }}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between pt-0.5 text-[10px] font-sans">
+                        <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                          {hasProOrHigher ? 'Pro Pass Active' : 'Starter Quota'}
+                        </span>
+                        <Link
+                          href="/pricing"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="font-bold text-neutral-900 dark:text-white hover:underline flex items-center gap-0.5"
+                        >
+                          <span>Top Up</span>
+                          <Sparkles className="w-2.5 h-2.5 text-amber-500" />
+                        </Link>
                       </div>
                     </div>
 

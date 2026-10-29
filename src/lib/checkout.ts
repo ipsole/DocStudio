@@ -31,6 +31,7 @@ interface CheckoutOptions {
   quantity?: number;
   gstin?: string;
   businessName?: string;
+  preferredMethod?: 'card' | 'upi' | 'netbanking' | 'wallet';
   onVerifying?: () => void;
   onSuccess?: (order: OrderRecord) => void;
   onError?: (errorMessage: string) => void;
@@ -46,6 +47,7 @@ export async function openRazorpayCheckout({
   quantity = 1,
   gstin,
   businessName,
+  preferredMethod,
   onVerifying,
   onSuccess,
   onError,
@@ -98,6 +100,7 @@ export async function openRazorpayCheckout({
       prefill: {
         name: businessName || userName || '',
         email: userEmail || '',
+        method: preferredMethod || undefined,
       },
       notes: {
         itemId,

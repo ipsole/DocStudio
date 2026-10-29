@@ -53,7 +53,9 @@ export async function recordOrderAdmin(order: OrderRecord): Promise<boolean> {
 export async function upgradeUserPlanAdmin(
   userId: string,
   userEmail: string,
-  plan: SubscriptionPlan
+  plan: SubscriptionPlan,
+  customCredits?: number,
+  periodDurationDays = 30
 ): Promise<boolean> {
   const { firestore } = getFirebaseAdmin();
   if (!firestore) {
@@ -62,8 +64,15 @@ export async function upgradeUserPlanAdmin(
   }
 
   const now = Date.now();
-  const nextMonth = now + 30 * 24 * 60 * 60 * 1000;
-  const planCredits = plan === 'pro' ? 500 : plan === 'enterprise' ? 2500 : 50;
+  const nextPeriodEnd = now + periodDurationDays * 24 * 60 * 60 * 1000;
+  const planCredits =
+    typeof customCredits === 'number'
+      ? customCredits
+      : plan === 'pro'
+      ? 500
+      : plan === 'enterprise'
+      ? 2500
+      : 50;
 
   try {
     const subsRef = firestore.collection(SUBSCRIPTIONS_COLLECTION);
@@ -81,7 +90,8 @@ export async function upgradeUserPlanAdmin(
           status: 'active',
           creditsTotal: currentTotal + planCredits,
           creditsRemaining: currentRemaining + planCredits,
-          currentPeriodEnd: nextMonth,
+          currentPeriodEnd: nextPeriodEnd,
+          validUntil: nextPeriodEnd,
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
       });
@@ -107,7 +117,7 @@ export async function upgradeUserPlanAdmin(
             creditsUsed: 0,
             creditsResetPeriod: 'monthly',
             features: starter.features,
-            currentPeriodEnd: nextMonth,
+            currentPeriodEnd: nextPeriodEnd,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
           },
@@ -127,7 +137,7 @@ export async function upgradeUserPlanAdmin(
         plan,
         status: 'active',
         source: 'razorpay',
-        validUntil: nextMonth,
+        validUntil: nextPeriodEnd,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       },

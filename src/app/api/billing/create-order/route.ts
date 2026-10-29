@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getRazorpayClient } from '@/lib/razorpay';
-import { PRICING_PLANS, CREDIT_PACKS } from '@/lib/pricingData';
+import { PRICING_PLANS, CREDIT_PACKS, ALL_PRICING_PLANS } from '@/lib/pricingData';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     let creditsAllotment = 0;
 
     if (itemType === 'subscription') {
-      const plan = PRICING_PLANS.find((p) => p.id === itemId);
+      const plan = ALL_PRICING_PLANS.find((p) => p.id === itemId);
       if (!plan) {
         return NextResponse.json(
           { success: false, error: 'INVALID_PLAN', message: `Subscription plan "${itemId}" does not exist.` },

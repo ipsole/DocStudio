@@ -103,6 +103,83 @@ export const PRICING_PLANS: PricingPlan[] = [
   },
 ];
 
+export const YEARLY_PRICING_PLANS: PricingPlan[] = [
+  {
+    id: 'starter',
+    name: 'Starter',
+    tagline: 'Ideal for trying out Docdril creative and document tools.',
+    priceInr: '₹0',
+    priceUsd: '$0',
+    rawPriceInr: 0,
+    rawPriceUsd: 0,
+    period: '/ year',
+    creditsAllotment: 50,
+    description: 'Ideal for trying out Docdril creative and document tools.',
+    features: [
+      '50 Monthly generation credits (600 / year)',
+      'Access to free tier tools & artboards',
+      'Standard 1080p export resolution',
+      'Community support & documentation',
+      'Unified single sign-on across suites',
+    ],
+    cta: 'Get Started Free',
+    href: '/sign-up',
+    popular: false,
+  },
+  {
+    id: 'pro-yearly',
+    name: 'DocStudio Pro Annual',
+    tagline: 'Full unlimited access for founders, designers, and creators with 2 months free.',
+    priceInr: '₹4,790',
+    priceUsd: '$58',
+    rawPriceInr: 4790,
+    rawPriceUsd: 58,
+    period: '/ year',
+    creditsAllotment: 6000,
+    description: 'Full unlimited access to all creative & document suites with annual savings.',
+    features: [
+      '6,000 Annual generation credits (500/mo guaranteed)',
+      '2 Months Free (Save 20% compared to monthly)',
+      'Unlimited access to all software suites',
+      '4K & vector export pipelines',
+      'Shared cross-app credits (Canvas, Motion, Flow)',
+      'Priority cloud rendering & GPU processing',
+      'Early access to newly released tools',
+    ],
+    cta: 'Upgrade to Pro Annual',
+    href: '/sign-up',
+    popular: true,
+    badge: 'Save 20% • 2 Months Free',
+  },
+  {
+    id: 'ultra-yearly',
+    name: 'DocStudio Ultra Annual',
+    tagline: 'Maximum generation capacity, team seats, and 60 FPS ProRes export with 2 months free.',
+    priceInr: '₹9,590',
+    priceUsd: '$115',
+    rawPriceInr: 9590,
+    rawPriceUsd: 115,
+    period: '/ year',
+    creditsAllotment: 18000,
+    description: 'For power creators and teams scaling multi-app production with maximum annual savings.',
+    features: [
+      '18,000 Annual generation credits (1,500/mo guaranteed)',
+      '2 Months Free (Save 20% compared to monthly)',
+      'Everything in Pro for up to 5 seats',
+      '60 FPS ProRes animations & lossless vector engines',
+      'Automated high-throughput batch document pipelines',
+      'Fastest VIP render queue',
+      'Dedicated 24/7 priority support & custom domain',
+    ],
+    cta: 'Upgrade to Ultra Annual',
+    href: '/sign-up',
+    popular: false,
+    badge: 'Save 20% • Best Value',
+  },
+];
+
+export const ALL_PRICING_PLANS: PricingPlan[] = [...PRICING_PLANS, ...YEARLY_PRICING_PLANS];
+
 export const CREDIT_PACKS: CreditPack[] = [
   {
     id: 'pack-mini',

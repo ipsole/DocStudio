@@ -36,6 +36,7 @@ export interface UserProfile {
   photoURL?: string | null;
   avatarIcon?: string | null;
   isAdmin?: boolean;
+  savedPaymentMethod?: PaymentMethodSummary | null;
   createdAt: string | number;
   updatedAt: string | number;
 }

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { PricingPlan, CreditPack } from '@/lib/pricingData';
 import { openRazorpayCheckout } from '@/lib/checkout';
-import { OrderRecord } from '@/types';
+import { OrderRecord, PaymentMethodSummary } from '@/types';
 import {
   X,
   ShieldCheck,
@@ -47,6 +47,9 @@ export function CheckoutDetailsModal({
   const [gstin, setGstin] = useState('');
   const [saveDetails, setSaveDetails] = useState(true);
   const [quantity, setQuantity] = useState(Math.max(1, Math.min(7, initialQuantity)));
+  const [savedMethod, setSavedMethod] = useState<PaymentMethodSummary | null>(null);
+  const [useSavedMethod, setUseSavedMethod] = useState(true);
+  const [saveCardPreference, setSaveCardPreference] = useState(true);
 
   // Flow status
   const [status, setStatus] = useState<'form' | 'opening' | 'verifying' | 'success' | 'error'>('form');
@@ -61,12 +64,25 @@ export function CheckoutDetailsModal({
       setBillingEmail(userEmail || '');
       setQuantity(Math.max(1, Math.min(7, initialQuantity)));
 
-      // Load remembered GSTIN
+      // Load remembered GSTIN and Saved Payment Method
       if (typeof window !== 'undefined' && userId) {
         const savedGstin = localStorage.getItem(`docstudio_gstin_${userId}`);
         if (savedGstin) setGstin(savedGstin);
         const savedBusiness = localStorage.getItem(`docstudio_business_${userId}`);
         if (savedBusiness) setBusinessName(savedBusiness);
+
+        try {
+          const rawMethod = localStorage.getItem(`docstudio_saved_payment_method_${userId}`);
+          if (rawMethod) {
+            setSavedMethod(JSON.parse(rawMethod));
+            setUseSavedMethod(true);
+          } else {
+            setSavedMethod(null);
+            setUseSavedMethod(false);
+          }
+        } catch {
+          setSavedMethod(null);
+        }
       }
     }
   }, [isOpen, userId, userEmail, userName, initialQuantity]);
@@ -93,6 +109,11 @@ export function CheckoutDetailsModal({
 
     setStatus('opening');
 
+    const preferredMethod =
+      useSavedMethod && savedMethod
+        ? (savedMethod.type as 'card' | 'upi' | 'netbanking' | 'wallet')
+        : undefined;
+
     await openRazorpayCheckout({
       itemId: item.id,
       itemType,
@@ -102,12 +123,33 @@ export function CheckoutDetailsModal({
       quantity: effectiveQty,
       businessName: businessName.trim() || undefined,
       gstin: gstin.trim().toUpperCase() || undefined,
+      preferredMethod,
       onVerifying: () => {
         setStatus('verifying');
       },
-      onSuccess: (order) => {
+      onSuccess: async (order) => {
         setStatus('success');
         setConfirmedOrder(order);
+
+        // Store payment method if preference is checked
+        if (saveCardPreference && order.paymentMethod && order.paymentMethod.type !== 'other') {
+          if (typeof window !== 'undefined' && userId) {
+            try {
+              localStorage.setItem(
+                `docstudio_saved_payment_method_${userId}`,
+                JSON.stringify(order.paymentMethod)
+              );
+              await fetch('/api/billing/payment-method', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, paymentMethod: order.paymentMethod }),
+              });
+            } catch {
+              // ignore
+            }
+          }
+        }
+
         onSuccess(order);
       },
       onError: (err) => {
@@ -352,6 +394,67 @@ export function CheckoutDetailsModal({
                     Save billing details for future invoices
                   </label>
                 </div>
+
+                <div className="flex items-center gap-2 pt-0.5">
+                  <input
+                    type="checkbox"
+                    id="saveCardPreference"
+                    checked={saveCardPreference}
+                    onChange={(e) => setSaveCardPreference(e.target.checked)}
+                    className="rounded text-neutral-900 focus:ring-neutral-900"
+                  />
+                  <label htmlFor="saveCardPreference" className="text-[11px] text-neutral-500 dark:text-neutral-400 select-none cursor-pointer">
+                    Remember & store payment method securely for 1-click checkout (RBI compliant)
+                  </label>
+                </div>
+
+                {/* Stored / Saved Payment Method Choice */}
+                {savedMethod && (
+                  <div className="p-3.5 rounded-2xl bg-neutral-100/90 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 space-y-2 mt-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-600 dark:text-neutral-400 font-sans block">
+                      Saved Payment Method Detected
+                    </span>
+                    <div className="space-y-1.5">
+                      <label className="flex items-center gap-2.5 p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-950 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="paymentChoice"
+                          checked={useSavedMethod}
+                          onChange={() => setUseSavedMethod(true)}
+                          className="text-neutral-900 focus:ring-neutral-900"
+                        />
+                        <div className="flex-1 flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            <span className="font-semibold text-neutral-900 dark:text-white">
+                              {savedMethod.type === 'card'
+                                ? `${savedMethod.brand || 'Card'} •••• ${savedMethod.last4 || '****'}`
+                                : savedMethod.type === 'upi'
+                                ? `UPI • ${savedMethod.vpa || 'Verified VPA'}`
+                                : '1-Click Saved Method'}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800">
+                            1-Click
+                          </span>
+                        </div>
+                      </label>
+
+                      <label className="flex items-center gap-2.5 p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="paymentChoice"
+                          checked={!useSavedMethod}
+                          onChange={() => setUseSavedMethod(false)}
+                          className="text-neutral-900 focus:ring-neutral-900"
+                        />
+                        <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                          Use a different card, UPI or NetBanking in Razorpay
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Price Breakdown */}
