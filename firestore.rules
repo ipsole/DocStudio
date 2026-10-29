@@ -77,5 +77,11 @@ service cloud.firestore {
       allow read: if isAuthenticated() && request.auth.uid == adminId;
       allow write: if false;
     }
+
+    // 9. Orders & Invoices Collection (Billing History)
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow write: if isAuthenticated() && (request.resource.data.userId == request.auth.uid || isAdmin());
+    }
   }
 }

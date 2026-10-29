@@ -106,6 +106,35 @@ export interface ApiResponse<T = unknown> {
   message?: string;
 }
 
+export interface PaymentMethodSummary {
+  type: 'card' | 'upi' | 'netbanking' | 'wallet' | 'other';
+  brand?: string;
+  last4?: string;
+  vpa?: string;
+  bank?: string;
+  wallet?: string;
+}
+
+export interface OrderRecord {
+  id: string;
+  razorpayOrderId: string;
+  razorpayPaymentId?: string;
+  userId: string;
+  userEmail: string;
+  amount: number;
+  amountPaise: number;
+  currency: 'INR';
+  status: 'created' | 'paid' | 'failed';
+  itemType: 'subscription' | 'credit_pack';
+  itemId: string;
+  itemName: string;
+  creditsAdded?: number;
+  paymentMethod?: PaymentMethodSummary;
+  receiptNumber: string;
+  createdAt: number;
+  paidAt?: number;
+}
+
 export interface SubdomainVerifyResponse {
   valid: boolean;
   user: {

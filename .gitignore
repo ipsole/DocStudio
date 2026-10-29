@@ -20,6 +20,8 @@
 *.pem
 *firebase-adminsdk*.json
 service-account*.json
+rzp-key*.csv
+*.csv
 
 # debug
 npm-debug.log*

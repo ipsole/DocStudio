@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { CreditPack } from '@/lib/pricingData';
 import { addCredits, getUserSubscriptions } from '@/lib/firebase/db';
+import { openRazorpayCheckout } from '@/lib/checkout';
 import { Button } from '@/components/ui/Button';
 import {
   Sparkles,
@@ -42,39 +43,28 @@ export function CreditTopUpModal({
     setLoading(true);
     setError(null);
 
-    try {
-      // Find the user's primary or canvas subscription to add credits to
-      const subs = await getUserSubscriptions(user.uid);
-      const targetAppId = subs.length > 0 ? subs[0].appId : 'demo-canvas';
-
-      const res = await addCredits(user.uid, targetAppId, pack.credits);
-      if (res.success) {
+    await openRazorpayCheckout({
+      itemId: pack.id,
+      itemType: 'credit_pack',
+      userId: user.uid,
+      userEmail: user.email || '',
+      userName: user.displayName || undefined,
+      onSuccess: () => {
         setPurchased(true);
         onSuccess?.(pack.credits);
         setTimeout(() => {
           setPurchased(false);
           onClose();
         }, 2200);
-      } else {
-        // Even if DB is demo or offline, provide graceful success feedback
-        setPurchased(true);
-        onSuccess?.(pack.credits);
-        setTimeout(() => {
-          setPurchased(false);
-          onClose();
-        }, 2200);
-      }
-    } catch {
-      // Fallback graceful success simulation for demo/local environment
-      setPurchased(true);
-      onSuccess?.(pack.credits);
-      setTimeout(() => {
-        setPurchased(false);
-        onClose();
-      }, 2200);
-    } finally {
-      setLoading(false);
-    }
+      },
+      onError: (errMsg) => {
+        setError(errMsg);
+        setLoading(false);
+      },
+      onDismiss: () => {
+        setLoading(false);
+      },
+    });
   };
 
   return (

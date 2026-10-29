@@ -22,6 +22,7 @@ import {
   CreditUsageRecord,
   SubscriptionPlan,
   SubscriptionStatus,
+  OrderRecord,
 } from '@/types';
 import { DEMO_APPS } from '../seedData';
 
@@ -32,6 +33,7 @@ const ENTITLEMENTS_COLLECTION = 'entitlements';
 const SUBSCRIPTIONS_COLLECTION = 'subscriptions';
 const CREDIT_LOGS_COLLECTION = 'credit_logs';
 const TOMBSTONES_COLLECTION = 'account_tombstones';
+const ORDERS_COLLECTION = 'orders';
 
 /**
  * Fetch public catalog apps (active and coming_soon products).
@@ -888,5 +890,191 @@ export async function addCredits(
     return { success: true, creditsRemaining: result.remaining };
   } catch (err: unknown) {
     return { success: false, creditsRemaining: 0, error: (err as Error).message };
+  }
+}
+
+/**
+ * Save an order record (transaction receipt) to Firestore and local cache.
+ */
+export async function saveOrderRecord(order: OrderRecord): Promise<void> {
+  if (typeof window !== 'undefined') {
+    try {
+      const key = `docstudio_orders_${order.userId}`;
+      const existing = localStorage.getItem(key);
+      const list: OrderRecord[] = existing ? JSON.parse(existing) : [];
+      const updated = [order, ...list.filter((o) => o.id !== order.id && o.razorpayOrderId !== order.razorpayOrderId)];
+      localStorage.setItem(key, JSON.stringify(updated));
+    } catch {
+      // ignore
+    }
+  }
+
+  if (isFirebaseConfigured() && db) {
+    try {
+      const orderRef = doc(db, ORDERS_COLLECTION, order.id);
+      await setDoc(orderRef, {
+        ...order,
+        createdAt: order.createdAt || Date.now(),
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+    } catch (err) {
+      console.warn('[DocStore DB] Could not write order record to Firestore:', err);
+    }
+  }
+}
+
+/**
+ * Fetch all orders/invoices for a given user.
+ */
+export async function getUserOrders(userId: string): Promise<OrderRecord[]> {
+  let cachedOrders: OrderRecord[] = [];
+  if (typeof window !== 'undefined') {
+    try {
+      const key = `docstudio_orders_${userId}`;
+      const existing = localStorage.getItem(key);
+      if (existing) cachedOrders = JSON.parse(existing);
+    } catch {
+      // ignore
+    }
+  }
+
+  if (isFirebaseConfigured() && db) {
+    try {
+      const q = query(
+        collection(db, ORDERS_COLLECTION),
+        where('userId', '==', userId)
+      );
+      const snap = await getDocs(q);
+      const remoteOrders: OrderRecord[] = snap.docs.map((d) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          razorpayOrderId: data.razorpayOrderId || d.id,
+          razorpayPaymentId: data.razorpayPaymentId || '',
+          userId: data.userId || userId,
+          userEmail: data.userEmail || '',
+          amount: data.amount || 0,
+          amountPaise: data.amountPaise || 0,
+          currency: 'INR',
+          status: data.status || 'paid',
+          itemType: data.itemType || 'subscription',
+          itemId: data.itemId || '',
+          itemName: data.itemName || 'Docdril Software Service',
+          creditsAdded: data.creditsAdded || 0,
+          paymentMethod: data.paymentMethod,
+          receiptNumber: data.receiptNumber || `INV-${d.id.slice(-6).toUpperCase()}`,
+          createdAt: typeof data.createdAt?.toMillis === 'function' ? data.createdAt.toMillis() : (data.createdAt || Date.now()),
+          paidAt: typeof data.paidAt?.toMillis === 'function' ? data.paidAt.toMillis() : (data.paidAt || data.createdAt || Date.now()),
+        };
+      });
+
+      if (remoteOrders.length > 0) {
+        remoteOrders.sort((a, b) => b.createdAt - a.createdAt);
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(`docstudio_orders_${userId}`, JSON.stringify(remoteOrders));
+          } catch {
+            // ignore
+          }
+        }
+        return remoteOrders;
+      }
+    } catch (err) {
+      console.warn('[DocStore DB] Could not fetch remote orders:', err);
+    }
+  }
+
+  return cachedOrders;
+}
+
+/**
+ * Upgrade user subscriptions to a new plan across all active apps.
+ */
+export async function upgradeUserPlan(
+  userId: string,
+  userEmail: string,
+  plan: SubscriptionPlan
+): Promise<void> {
+  const currentSubs = await ensureDefaultUserSubscriptions(userId, userEmail);
+  const now = Date.now();
+  const nextMonth = now + 30 * 24 * 60 * 60 * 1000;
+  const planCredits = plan === 'pro' ? 500 : plan === 'enterprise' ? 2500 : 50;
+
+  const updatedSubs = currentSubs.map((sub) => ({
+    ...sub,
+    plan,
+    status: 'active' as SubscriptionStatus,
+    creditsTotal: (sub.creditsTotal || 0) + planCredits,
+    creditsRemaining: (sub.creditsRemaining || 0) + planCredits,
+    currentPeriodEnd: nextMonth,
+    updatedAt: now,
+  }));
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(`docstudio_subscriptions_${userId}`, JSON.stringify(updatedSubs));
+    } catch {
+      // ignore
+    }
+  }
+
+  if (isFirebaseConfigured() && db) {
+    try {
+      for (const sub of updatedSubs) {
+        const subDocRef = doc(db, SUBSCRIPTIONS_COLLECTION, `${userId}_${sub.appId}`);
+        await setDoc(subDocRef, {
+          ...sub,
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+      }
+    } catch (err) {
+      console.warn('[DocStore DB] Could not write updated subscriptions to Firestore:', err);
+    }
+  }
+}
+
+/**
+ * Add credits across user subscriptions (to primary suite).
+ */
+export async function addSharedCredits(
+  userId: string,
+  userEmail: string,
+  amount: number
+): Promise<void> {
+  const currentSubs = await ensureDefaultUserSubscriptions(userId, userEmail);
+  if (!currentSubs || currentSubs.length === 0) return;
+
+  const primary = currentSubs[0];
+  const updatedSubs = currentSubs.map((sub, index) => {
+    if (index === 0) {
+      return {
+        ...sub,
+        creditsRemaining: (sub.creditsRemaining || 0) + amount,
+        creditsTotal: (sub.creditsTotal || 0) + amount,
+        updatedAt: Date.now(),
+      };
+    }
+    return sub;
+  });
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(`docstudio_subscriptions_${userId}`, JSON.stringify(updatedSubs));
+    } catch {
+      // ignore
+    }
+  }
+
+  if (isFirebaseConfigured() && db) {
+    try {
+      const subDocRef = doc(db, SUBSCRIPTIONS_COLLECTION, `${userId}_${primary.appId}`);
+      await setDoc(subDocRef, {
+        creditsRemaining: (primary.creditsRemaining || 0) + amount,
+        creditsTotal: (primary.creditsTotal || 0) + amount,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+    } catch (err) {
+      console.warn('[DocStore DB] Could not update shared credits in Firestore:', err);
+    }
   }
 }

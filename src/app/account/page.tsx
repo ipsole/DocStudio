@@ -15,9 +15,10 @@ import { UserAvatar } from '@/components/ui/UserAvatar';
 import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
 import { LinkPhoneModal } from '@/components/ui/LinkPhoneModal';
 import { CREDIT_PACKS, CreditPack } from '@/lib/pricingData';
-import { ensureDefaultUserSubscriptions, isUsernameAvailable } from '@/lib/firebase/db';
-import { AppSubscription } from '@/types';
+import { ensureDefaultUserSubscriptions, isUsernameAvailable, getUserOrders } from '@/lib/firebase/db';
+import { AppSubscription, OrderRecord } from '@/types';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
+import { InvoiceReceiptModal } from '@/components/billing/InvoiceReceiptModal';
 import {
   User as UserIconLucide,
   AtSign,
@@ -53,9 +54,13 @@ import {
   Link2,
   Unlink,
   Smartphone,
+  CreditCard,
+  Receipt,
+  Printer,
+  ArrowRight,
 } from 'lucide-react';
 
-type TabKey = 'profile' | 'subscriptions' | 'security' | 'settings' | 'legal';
+type TabKey = 'profile' | 'subscriptions' | 'billing' | 'security' | 'settings' | 'legal';
 
 export default function AccountPage() {
   const router = useRouter();
@@ -98,6 +103,14 @@ export default function AccountPage() {
   const [selectedPack, setSelectedPack] = useState<CreditPack | null>(null);
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [creditTopUpSuccess, setCreditTopUpSuccess] = useState<string | null>(null);
+
+  // Billing & Invoices state
+  const [orders, setOrders] = useState<OrderRecord[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<OrderRecord | null>(null);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [gstin, setGstin] = useState('');
+  const [gstinSaved, setGstinSaved] = useState(false);
 
   // Password change state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -203,7 +216,7 @@ export default function AccountPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '') as TabKey;
-      if (['profile', 'subscriptions', 'security', 'settings', 'legal'].includes(hash)) {
+      if (['profile', 'subscriptions', 'billing', 'security', 'settings', 'legal'].includes(hash)) {
         setActiveTab(hash);
       }
     }
@@ -309,8 +322,27 @@ export default function AccountPage() {
     }
   };
 
+  // Load user order receipts / invoices
+  const loadOrders = async () => {
+    if (!user) return;
+    try {
+      setOrdersLoading(true);
+      const userOrders = await getUserOrders(user.uid);
+      setOrders(userOrders);
+    } catch (err) {
+      console.error('[Account] Error loading orders:', err);
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadSubscriptions();
+    loadOrders();
+    if (typeof window !== 'undefined' && user?.uid) {
+      const savedGstin = localStorage.getItem(`docstudio_gstin_${user.uid}`);
+      if (savedGstin) setGstin(savedGstin);
+    }
   }, [user]);
 
   // Copy Username Handle helper
@@ -473,6 +505,7 @@ export default function AccountPage() {
   const navItems: { key: TabKey; label: string; icon: React.ElementType; badge?: string }[] = [
     { key: 'profile', label: 'Account', icon: UserIconLucide },
     { key: 'subscriptions', label: 'Subscriptions', icon: Layers, badge: `${totalCreditsRemaining} pts` },
+    { key: 'billing', label: 'Billing', icon: CreditCard, badge: orders.length > 0 ? `${orders.length}` : undefined },
     { key: 'security', label: 'Security', icon: KeyRound },
     { key: 'settings', label: 'Preferences', icon: Sliders },
     { key: 'legal', label: 'Terms', icon: FileText },
@@ -1244,6 +1277,265 @@ export default function AccountPage() {
               </div>
             )}
 
+            {/* TAB: Billing & Invoices */}
+            {activeTab === 'billing' && (
+              <div className="w-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
+                
+                {/* Header Row */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-200 dark:border-neutral-900">
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+                      Billing & Invoices
+                    </h2>
+                    <p className="mt-1 text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 font-sans">
+                      Manage payment methods, view official tax receipts, and access your Razorpay transaction history.
+                    </p>
+                  </div>
+
+                  <Link
+                    href="/pricing"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-neutral-950 dark:bg-white text-white dark:text-black text-xs font-semibold self-start sm:self-auto hover:opacity-90 transition-opacity shadow-sm"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <span>View Pricing Plans</span>
+                  </Link>
+                </div>
+
+                {/* Section 1: Active Payment Channel */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-neutral-800 dark:text-neutral-200 shrink-0" />
+                    <div>
+                      <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                        Active Payment Channel
+                      </h3>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+                        Tokenized and securely processed through Razorpay. Compliant with RBI guidelines.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-neutral-50/70 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-12 h-12 rounded-2xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shrink-0 shadow-sm">
+                        <CreditCard className="w-6 h-6 text-neutral-700 dark:text-neutral-300" />
+                      </div>
+                      <div>
+                        {orders.length > 0 && orders[0].paymentMethod ? (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-bold font-sans text-neutral-900 dark:text-white">
+                                {orders[0].paymentMethod.type === 'card'
+                                  ? `${orders[0].paymentMethod.brand || 'Card'} •••• ${orders[0].paymentMethod.last4 || '****'}`
+                                  : orders[0].paymentMethod.type === 'upi'
+                                  ? `UPI • ${orders[0].paymentMethod.vpa || 'Verified VPA'}`
+                                  : 'Razorpay Auto-Checkout'}
+                              </p>
+                              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                                Active
+                              </span>
+                            </div>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-0.5">
+                              Last used on {new Date(orders[0].paidAt || orders[0].createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-sm font-bold font-sans text-neutral-900 dark:text-white">
+                              Razorpay Standard Checkout
+                            </p>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-0.5">
+                              UPI (GPay, PhonePe, Paytm), Visa, Mastercard, RuPay, and NetBanking supported.
+                            </p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>256-Bit SSL Encrypted</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Invoices & Transaction History */}
+                <div className="space-y-4 pt-4 border-t border-neutral-200 dark:border-neutral-900">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                        Invoices & Transaction History
+                      </h3>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-0.5">
+                        Download and review official electronic receipts for subscriptions and extra credit purchases.
+                      </p>
+                    </div>
+                  </div>
+
+                  {ordersLoading ? (
+                    <div className="p-8 text-center text-xs text-neutral-500 font-sans flex items-center justify-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Loading transaction receipts...</span>
+                    </div>
+                  ) : orders.length === 0 ? (
+                    <div className="p-10 rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-800 text-center space-y-3 bg-neutral-50/50 dark:bg-neutral-950/40">
+                      <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center mx-auto text-neutral-400">
+                        <Receipt className="w-6 h-6" />
+                      </div>
+                      <div className="max-w-sm mx-auto space-y-1">
+                        <p className="text-sm font-bold text-neutral-900 dark:text-white font-sans">
+                          No transactions yet
+                        </p>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+                          When you upgrade to DocStudio Pro or purchase credit packs, your electronic receipts and invoices will be stored here.
+                        </p>
+                      </div>
+                      <Link
+                        href="/pricing"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-900 dark:text-white underline underline-offset-4 hover:opacity-80 pt-1"
+                      >
+                        <span>Explore Subscriptions</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden bg-white dark:bg-neutral-950">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse text-xs font-sans">
+                          <thead>
+                            <tr className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/60 text-neutral-500 dark:text-neutral-400 font-bold uppercase tracking-wider text-[10px]">
+                              <th className="py-3 px-4">Date</th>
+                              <th className="py-3 px-4">Description</th>
+                              <th className="py-3 px-4">Invoice ID</th>
+                              <th className="py-3 px-4">Amount</th>
+                              <th className="py-3 px-4">Status</th>
+                              <th className="py-3 px-4 text-right">Receipt</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-neutral-200/80 dark:divide-neutral-800/80">
+                            {orders.map((order) => {
+                              const dateStr = new Date(order.paidAt || order.createdAt).toLocaleDateString('en-IN', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              });
+
+                              return (
+                                <tr key={order.id} className="hover:bg-neutral-50/60 dark:hover:bg-neutral-900/40 transition-colors">
+                                  <td className="py-3.5 px-4 font-mono text-neutral-600 dark:text-neutral-400">
+                                    {dateStr}
+                                  </td>
+                                  <td className="py-3.5 px-4 font-semibold text-neutral-900 dark:text-white">
+                                    {order.itemName}
+                                    {order.creditsAdded ? (
+                                      <span className="block text-[11px] font-normal text-emerald-600 dark:text-emerald-400">
+                                        +{order.creditsAdded} credits
+                                      </span>
+                                    ) : null}
+                                  </td>
+                                  <td className="py-3.5 px-4 font-mono text-neutral-500 dark:text-neutral-400 text-[11px]">
+                                    {order.receiptNumber}
+                                  </td>
+                                  <td className="py-3.5 px-4 font-mono font-bold text-neutral-950 dark:text-white">
+                                    ₹{order.amount.toFixed(2)}
+                                  </td>
+                                  <td className="py-3.5 px-4">
+                                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                                      <CheckCircle className="w-3 h-3 text-emerald-500" />
+                                      Paid
+                                    </span>
+                                  </td>
+                                  <td className="py-3.5 px-4 text-right">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedOrder(order);
+                                        setIsInvoiceModalOpen(true);
+                                      }}
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-900 text-neutral-700 dark:text-neutral-300 transition-colors font-medium text-[11px]"
+                                    >
+                                      <span>View</span>
+                                      <ExternalLink className="w-3 h-3" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Section 3: Billing & Tax Info (GSTIN) */}
+                <div className="space-y-4 pt-4 border-t border-neutral-200 dark:border-neutral-900">
+                  <div>
+                    <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                      Tax & Invoicing Details
+                    </h3>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-0.5">
+                      Enter your organization's GSTIN to include tax identification on your Razorpay receipts.
+                    </p>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-neutral-50/70 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 font-sans mb-1.5">
+                          Billing Email
+                        </label>
+                        <input
+                          type="text"
+                          value={user?.email || ''}
+                          disabled
+                          className="w-full rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900/80 px-3.5 py-2 text-xs font-mono text-neutral-500 select-all cursor-not-allowed"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 font-sans mb-1.5">
+                          GSTIN / Business Tax ID (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={gstin}
+                          onChange={(e) => setGstin(e.target.value.toUpperCase())}
+                          placeholder="22AAAAA0000A1Z5"
+                          maxLength={15}
+                          className="w-full rounded-xl border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-3.5 py-2 text-xs font-mono text-neutral-900 dark:text-white focus:outline-none focus:border-neutral-950 dark:focus:border-white transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      {gstinSaved ? (
+                        <span className="text-xs text-emerald-600 dark:text-emerald-400 font-sans flex items-center gap-1 animate-fadeIn">
+                          <CheckCircle className="w-3.5 h-3.5" />
+                          <span>Billing information saved.</span>
+                        </span>
+                      ) : <span />}
+
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          if (typeof window !== 'undefined' && user?.uid) {
+                            localStorage.setItem(`docstudio_gstin_${user.uid}`, gstin);
+                            setGstinSaved(true);
+                            setTimeout(() => setGstinSaved(false), 3000);
+                          }
+                        }}
+                        className="text-xs"
+                      >
+                        Save Billing Details
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* TAB 3: Security */}
             {activeTab === 'security' && (
               <div className="w-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
@@ -1975,7 +2267,17 @@ export default function AccountPage() {
           pack={selectedPack}
           isOpen={isTopUpOpen}
           onClose={() => setIsTopUpOpen(false)}
-          onSuccess={handleTopUpSuccess}
+          onSuccess={async (addedCredits) => {
+            await handleTopUpSuccess(addedCredits);
+            await loadOrders();
+          }}
+        />
+
+        {/* Invoice Receipt Modal */}
+        <InvoiceReceiptModal
+          order={selectedOrder}
+          isOpen={isInvoiceModalOpen}
+          onClose={() => setIsInvoiceModalOpen(false)}
         />
 
         {/* Link Phone Modal */}

@@ -2,14 +2,20 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { PRICING_PLANS, CREDIT_PACKS, PRICING_FAQS, CreditPack } from '@/lib/pricingData';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { PRICING_PLANS, CREDIT_PACKS, PRICING_FAQS, CreditPack, PricingPlan } from '@/lib/pricingData';
 import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
-import { Check, Sparkles, ArrowRight, Zap, HelpCircle, ShieldCheck, Plus } from 'lucide-react';
+import { openRazorpayCheckout } from '@/lib/checkout';
+import { Check, Sparkles, ArrowRight, Zap, HelpCircle, ShieldCheck, Plus, Loader2 } from 'lucide-react';
 
 export default function PricingPage() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [selectedPack, setSelectedPack] = useState<CreditPack | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [purchasingPlan, setPurchasingPlan] = useState<string | null>(null);
 
   const handleOpenTopUp = (pack: CreditPack) => {
     setSelectedPack(pack);
@@ -19,6 +25,45 @@ export default function PricingPage() {
   const handleTopUpSuccess = (added: number) => {
     setSuccessToast(`+${added} Credits added successfully to your DocStudio vault!`);
     setTimeout(() => setSuccessToast(null), 4000);
+  };
+
+  const handleSelectPlan = async (plan: PricingPlan) => {
+    if (plan.rawPriceInr === 0) {
+      if (!user) {
+        router.push('/sign-up');
+      } else {
+        router.push('/dashboard');
+      }
+      return;
+    }
+
+    if (!user) {
+      router.push('/sign-in?redirect=/pricing');
+      return;
+    }
+
+    setPurchasingPlan(plan.id);
+    await openRazorpayCheckout({
+      itemId: plan.id,
+      itemType: 'subscription',
+      userId: user.uid,
+      userEmail: user.email || '',
+      userName: user.displayName || undefined,
+      onSuccess: (order) => {
+        setPurchasingPlan(null);
+        setSuccessToast(`Subscribed to ${plan.name}! Invoice #${order.receiptNumber}`);
+        setTimeout(() => {
+          router.push('/account#billing');
+        }, 1500);
+      },
+      onError: (err) => {
+        setPurchasingPlan(null);
+        alert(err);
+      },
+      onDismiss: () => {
+        setPurchasingPlan(null);
+      },
+    });
   };
 
   return (
@@ -109,17 +154,28 @@ export default function PricingPage() {
               </div>
 
               <div className="pt-8">
-                <Link
-                  href={plan.href}
+                <button
+                  type="button"
+                  onClick={() => handleSelectPlan(plan)}
+                  disabled={purchasingPlan === plan.id}
                   className={`w-full py-3 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
                     plan.popular
                       ? 'bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-200 dark:text-black shadow-md'
                       : 'border border-neutral-200 dark:border-neutral-800 hover:border-neutral-900 dark:hover:border-white text-neutral-900 dark:text-white bg-white dark:bg-neutral-900'
                   }`}
                 >
-                  <span>{plan.cta}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                  {purchasingPlan === plan.id ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Opening Checkout...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{plan.cta}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           ))}
