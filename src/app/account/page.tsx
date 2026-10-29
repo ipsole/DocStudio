@@ -283,11 +283,11 @@ export default function AccountPage() {
 
   // Sidebar navigation items
   const navItems: { key: TabKey; label: string; icon: React.ElementType; badge?: string }[] = [
-    { key: 'profile', label: 'Profile & Identity', icon: UserIconLucide },
-    { key: 'subscriptions', label: 'Subscriptions & Quota', icon: Layers, badge: `${totalCreditsRemaining} pts` },
-    { key: 'security', label: 'Security & Password', icon: KeyRound },
-    { key: 'settings', label: 'Preferences & Theme', icon: Sliders },
-    { key: 'legal', label: 'Terms & Policies', icon: FileText },
+    { key: 'profile', label: 'Account', icon: UserIconLucide },
+    { key: 'subscriptions', label: 'Subscriptions', icon: Layers, badge: `${totalCreditsRemaining} pts` },
+    { key: 'security', label: 'Security', icon: KeyRound },
+    { key: 'settings', label: 'Preferences', icon: Sliders },
+    { key: 'legal', label: 'Terms', icon: FileText },
   ];
 
   return (
@@ -352,10 +352,6 @@ export default function AccountPage() {
           {/* Left Navigation Sidebar */}
           <aside className="hidden md:block w-64 shrink-0 space-y-6 sticky top-24">
             <nav className="p-2 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white/70 dark:bg-neutral-950/70 backdrop-blur-xl space-y-1 shadow-sm">
-              <div className="px-3 py-2 text-[10px] font-sans font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-                Navigation
-              </div>
-
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.key;
@@ -1177,45 +1173,36 @@ export default function AccountPage() {
                   </div>
                 </div>
 
-                {/* Danger Zone: Complete Account Deletion (Inside Security & Password) */}
-                <div className="p-6 sm:p-8 rounded-3xl border border-red-300 dark:border-red-950/80 bg-red-50/40 dark:bg-red-950/20 backdrop-blur-xl space-y-6">
-                  <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
-                    <ShieldAlert className="w-5 h-5 shrink-0" />
-                    <div>
-                      <h3 className="text-base font-bold uppercase tracking-wider font-sans">
-                        Danger Zone • Complete Account Deletion
+                {/* Account Deletion */}
+                <div className="p-6 sm:p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm dark:shadow-none space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                        Delete Account
                       </h3>
-                      <p className="text-xs text-neutral-600 dark:text-neutral-400 font-sans mt-0.5">
-                        Permanent, irreversible deletion of your DocStudio user records and assets.
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans max-w-xl leading-relaxed">
+                        Permanently delete your profile, credentials, and active software subscriptions across the Docdril ecosystem.
                       </p>
                     </div>
-                  </div>
 
-                  <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900/70 border border-red-200 dark:border-red-900/50 space-y-3 text-xs font-sans text-neutral-700 dark:text-neutral-300 leading-relaxed">
-                    <p className="font-bold text-red-600 dark:text-red-400 uppercase tracking-wider text-[11px]">
-                      Please read carefully before proceeding:
-                    </p>
-                    <ul className="list-disc list-inside space-y-1 text-neutral-600 dark:text-neutral-400">
-                      <li>Your user profile, name, phone, bio, and avatar preferences will be purged immediately.</li>
-                      <li>Active subscriptions for Docdril Canvas, Motion, and Flow will be terminated.</li>
-                      <li>Any remaining balance of generation credits will be forfeited immediately.</li>
-                      <li>
-                        A GDPR-compliant irreversible SHA-256 fingerprint is recorded in the anti-abuse tombstone registry. If you re-register with this email later, initial free welcome credits cannot be re-claimed.
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="pt-2">
                     <Button
                       type="button"
                       variant="danger"
-                      size="md"
+                      size="sm"
                       onClick={() => setIsDeleteModalOpen(true)}
-                      className="gap-2"
+                      className="shrink-0"
                     >
-                      <Trash2 className="w-4 h-4" />
-                      <span>Delete Account & Wipe All Data</span>
+                      Delete Account
                     </Button>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 text-xs font-sans text-neutral-600 dark:text-neutral-400 space-y-1.5">
+                    <p className="font-semibold text-neutral-800 dark:text-neutral-200">
+                      Data Governance & Permanent Erasure
+                    </p>
+                    <p className="leading-relaxed">
+                      Once initiated, all account data, avatars, and generation credit pools are permanently expunged under GDPR Right to Erasure. This action cannot be reversed.
+                    </p>
                   </div>
                 </div>
               </div>
