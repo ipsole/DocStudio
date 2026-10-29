@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
 import { LoginWelcomeWriter } from '@/components/ui/LoginWelcomeWriter';
 import { GuidedTour } from '@/components/ui/GuidedTour';
 import {
@@ -149,23 +148,16 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
       />
 
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-12 space-y-10 sm:space-y-12">
-        {/* 1. Cinematic Hero Header with Clean Logo & Luxury Typography */}
+        {/* 1. Cinematic Hero Header */}
         <div className="animate-fade-in-up flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-neutral-200/80 dark:border-neutral-900">
-          <div className="flex items-start sm:items-center gap-4 sm:gap-5">
-            {/* Pure, clean vector logo mark */}
-            <div className="relative shrink-0 pt-0.5">
-              <DocdrilLogo size={42} className="text-neutral-950 dark:text-white transition-transform hover:scale-105" />
-            </div>
+          <div className="space-y-1.5">
+            <h1 className="text-3xl sm:text-5xl font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-tight">
+              Welcome, <span className="italic">{userName}</span>
+            </h1>
 
-            <div className="space-y-1.5">
-              <h1 className="text-3xl sm:text-5xl font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-tight">
-                Welcome, <span className="italic">{userName}</span>
-              </h1>
-
-              <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-sans max-w-xl">
-                Your single-sign-on identity is active across the Docdril software suite. Monitor generation credits, launch creative tools, and manage subscription quotas.
-              </p>
-            </div>
+            <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-sans max-w-xl">
+              Your single-sign-on identity is active across the Docdril software suite. Monitor generation credits, launch creative tools, and manage subscription quotas.
+            </p>
           </div>
 
           {/* Quick Action Navigation Pills */}
