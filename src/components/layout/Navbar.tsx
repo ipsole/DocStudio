@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -28,18 +28,19 @@ export function Navbar() {
   const { user, profile, isAdmin, signOut, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [hasSessionHint, setHasSessionHint] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        return Boolean(localStorage.getItem('docstudio_has_session'));
-      } catch {
-        return false;
-      }
-    }
-    return false;
-  });
+  const [mounted, setMounted] = useState(false);
+  const [hasSessionHint, setHasSessionHint] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    setMounted(true);
+    try {
+      setHasSessionHint(Boolean(localStorage.getItem('docstudio_has_session')));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
         if (user) {
@@ -111,8 +112,8 @@ export function Navbar() {
               </div>
             </button>
 
-            {/* Dashboard shortcut (shown when user is confirmed or session is expected) */}
-            {(user || (loading && hasSessionHint)) && (
+            {/* Dashboard shortcut (shown when user is confirmed or session is expected, only after client hydration) */}
+            {mounted && (user || (loading && hasSessionHint)) && (
               <Link
                 href="/dashboard"
                 className={`hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-2xl border transition-colors shadow-sm active:scale-[0.98] ${
@@ -127,7 +128,9 @@ export function Navbar() {
             )}
 
             {/* Profile Avatar / Loading Skeleton / Sign In Button */}
-            {user ? (
+            {!mounted ? (
+              <div className="w-9 h-9" />
+            ) : user ? (
               <div className="relative">
                 <button
                   type="button"
