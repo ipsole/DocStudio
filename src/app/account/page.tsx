@@ -287,7 +287,7 @@ export default function AccountPage() {
 
   return (
     <ProtectedRoute>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8 text-neutral-900 dark:text-white transition-colors duration-200">
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8 text-neutral-900 dark:text-white transition-colors duration-200">
         
         {/* Top Header - Pure clean typography without dividing line */}
         <div>
@@ -342,7 +342,7 @@ export default function AccountPage() {
         </div>
 
         {/* 2-Column Desktop Layout */}
-        <div className="flex flex-col md:flex-row gap-8 items-start">
+        <div className="w-full flex flex-col md:flex-row gap-8 items-start">
           
           {/* Left Navigation Sidebar */}
           <aside className="hidden md:block w-64 shrink-0 space-y-4 sticky top-24">
@@ -421,11 +421,11 @@ export default function AccountPage() {
           </aside>
 
           {/* Right Main Content Pane */}
-          <main className="flex-1 min-w-0 w-full">
+          <main className="w-full flex-1 min-w-0">
 
             {/* TAB 1: Account */}
             {activeTab === 'profile' && (
-              <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
+              <div className="w-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
                 
                 {/* Header Row: Live Avatar Hero + Identity */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-neutral-200 dark:border-neutral-900">
@@ -684,7 +684,7 @@ export default function AccountPage() {
 
             {/* TAB 2: Subscriptions */}
             {activeTab === 'subscriptions' && (
-              <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
+              <div className="w-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
                 
                 {/* Header Row */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-200 dark:border-neutral-900">
@@ -765,9 +765,9 @@ export default function AccountPage() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {/* Canvas */}
-                    <div className="p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/40 dark:bg-neutral-900/30 flex flex-col justify-between space-y-4">
+                    <div className="p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/40 dark:bg-neutral-900/30 flex flex-col justify-between space-y-4 min-w-0">
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] font-bold uppercase font-mono px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400">
@@ -792,7 +792,7 @@ export default function AccountPage() {
                     </div>
 
                     {/* Motion */}
-                    <div className="p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/40 dark:bg-neutral-900/30 flex flex-col justify-between space-y-4">
+                    <div className="p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/40 dark:bg-neutral-900/30 flex flex-col justify-between space-y-4 min-w-0">
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] font-bold uppercase font-mono px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-400">
@@ -815,7 +815,7 @@ export default function AccountPage() {
                     </div>
 
                     {/* Flow */}
-                    <div className="p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/40 dark:bg-neutral-900/30 flex flex-col justify-between space-y-4">
+                    <div className="p-5 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/40 dark:bg-neutral-900/30 flex flex-col justify-between space-y-4 min-w-0">
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] font-bold uppercase font-mono px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-400">
@@ -852,11 +852,11 @@ export default function AccountPage() {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {CREDIT_PACKS.map((pack) => (
                       <div
                         key={pack.id}
-                        className={`p-5 rounded-2xl border transition-all flex flex-col justify-between space-y-4 ${
+                        className={`p-5 rounded-2xl border transition-all flex flex-col justify-between space-y-4 min-w-0 ${
                           pack.popular
                             ? 'border-neutral-950 dark:border-white bg-neutral-50 dark:bg-neutral-900/90 shadow-md ring-1 ring-neutral-950/10 dark:ring-white/20'
                             : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 hover:border-neutral-300 dark:hover:border-neutral-700'
@@ -907,7 +907,7 @@ export default function AccountPage() {
 
             {/* TAB 3: Security */}
             {activeTab === 'security' && (
-              <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
+              <div className="w-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
                 
                 {/* Header Row */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-200 dark:border-neutral-900">
@@ -1214,7 +1214,7 @@ export default function AccountPage() {
 
             {/* TAB 4: Preferences */}
             {activeTab === 'settings' && (
-              <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
+              <div className="w-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
                 
                 {/* Header Row */}
                 <div className="pb-6 border-b border-neutral-200 dark:border-neutral-900">
@@ -1378,7 +1378,7 @@ export default function AccountPage() {
 
             {/* TAB 5: Terms */}
             {activeTab === 'legal' && (
-              <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
+              <div className="w-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
                 
                 {/* Header Row */}
                 <div className="pb-6 border-b border-neutral-200 dark:border-neutral-900">
