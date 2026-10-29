@@ -137,7 +137,7 @@ export function Navbar() {
                       className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900 hover:text-black dark:hover:text-white transition-colors"
                     >
                       <LayoutDashboard className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400" />
-                      Dashboard & Subscriptions
+                      Dashboard
                     </Link>
 
                     <Link
@@ -146,7 +146,7 @@ export function Navbar() {
                       className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900 hover:text-black dark:hover:text-white transition-colors"
                     >
                       <Settings className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400" />
-                      Account & Avatar
+                      Settings
                     </Link>
 
                     {isAdmin && (

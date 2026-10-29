@@ -167,7 +167,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 hover:bg-neutral-100 dark:hover:bg-neutral-900 text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition-all shadow-sm active:scale-[0.98]"
             >
               <Settings className="w-3.5 h-3.5 text-neutral-500" />
-              <span>Settings & Avatar</span>
+              <span>Settings</span>
             </Link>
 
             <Link
