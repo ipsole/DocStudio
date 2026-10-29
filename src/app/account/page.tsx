@@ -13,6 +13,7 @@ import { AvatarEditModal } from '@/components/ui/AvatarEditModal';
 import { DeleteAccountModal } from '@/components/ui/DeleteAccountModal';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
+import { LinkPhoneModal } from '@/components/ui/LinkPhoneModal';
 import { CREDIT_PACKS, CreditPack } from '@/lib/pricingData';
 import { ensureDefaultUserSubscriptions, isUsernameAvailable } from '@/lib/firebase/db';
 import { AppSubscription } from '@/types';
@@ -24,6 +25,7 @@ import {
   Briefcase,
   Lock,
   Shield,
+  ShieldCheck,
   KeyRound,
   Layers,
   FileText,
@@ -45,6 +47,9 @@ import {
   ChevronRight,
   Zap,
   Globe,
+  Link2,
+  Unlink,
+  Smartphone,
 } from 'lucide-react';
 
 type TabKey = 'profile' | 'subscriptions' | 'security' | 'settings' | 'legal';
@@ -61,6 +66,9 @@ export default function AccountPage() {
     signOut,
     deleteAccount,
     isAdmin,
+    linkGoogle,
+    linkApple,
+    unlinkProvider,
   } = useAuth();
 
   // Active tab state (with hash support)
@@ -109,6 +117,72 @@ export default function AccountPage() {
   // Detect SSO vs Email provider
   const isGoogleUser = user?.providerData?.some((p) => p.providerId === 'google.com');
   const hasPasswordProvider = user?.providerData?.some((p) => p.providerId === 'password');
+  const hasAppleProvider = user?.providerData?.some((p) => p.providerId === 'apple.com');
+  const hasPhoneProvider = user?.providerData?.some((p) => p.providerId === 'phone') || Boolean(user?.phoneNumber);
+  const linkedProvidersCount = user?.providerData?.length || 1;
+
+  // Linked Providers & Identity state
+  const [isPhoneModalOpen, setIsPhoneModalOpen] = useState(false);
+  const [providerActionLoading, setProviderActionLoading] = useState<string | null>(null);
+  const [providerSuccess, setProviderSuccess] = useState<string | null>(null);
+  const [providerError, setProviderError] = useState<string | null>(null);
+
+  const handleLinkGoogle = async () => {
+    setProviderError(null);
+    setProviderActionLoading('google.com');
+    try {
+      await linkGoogle();
+      setProviderSuccess('Google Single Sign-On successfully linked to your account.');
+      setTimeout(() => setProviderSuccess(null), 4000);
+    } catch (err: unknown) {
+      const fbErr = err as { code?: string; message?: string };
+      if (fbErr.code === 'auth/credential-already-in-use') {
+        setProviderError('This Google account is already linked to another Docdril user profile.');
+      } else if (fbErr.code !== 'auth/popup-closed-by-user') {
+        setProviderError(fbErr.message || 'Failed to connect Google account.');
+      }
+    } finally {
+      setProviderActionLoading(null);
+    }
+  };
+
+  const handleLinkApple = async () => {
+    setProviderError(null);
+    setProviderActionLoading('apple.com');
+    try {
+      await linkApple();
+      setProviderSuccess('Apple ID successfully linked to your account.');
+      setTimeout(() => setProviderSuccess(null), 4000);
+    } catch (err: unknown) {
+      const fbErr = err as { code?: string; message?: string };
+      if (fbErr.code === 'auth/credential-already-in-use') {
+        setProviderError('This Apple ID is already linked to another Docdril user profile.');
+      } else if (fbErr.code !== 'auth/popup-closed-by-user') {
+        setProviderError(fbErr.message || 'Failed to connect Apple ID.');
+      }
+    } finally {
+      setProviderActionLoading(null);
+    }
+  };
+
+  const handleUnlinkProvider = async (providerId: string) => {
+    if ((user?.providerData?.length || 0) <= 1) {
+      setProviderError('You cannot disconnect your only login method. Connect another login method first.');
+      return;
+    }
+    setProviderError(null);
+    setProviderActionLoading(providerId);
+    try {
+      await unlinkProvider(providerId);
+      setProviderSuccess(`Disconnected ${providerId} from your account.`);
+      setTimeout(() => setProviderSuccess(null), 4000);
+    } catch (err: unknown) {
+      const fbErr = err as { message?: string };
+      setProviderError(fbErr.message || 'Failed to disconnect login provider.');
+    } finally {
+      setProviderActionLoading(null);
+    }
+  };
 
   // Username fallback derivation
   const defaultUsername = (user?.email?.split('@')[0] || 'creator').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
@@ -1005,73 +1079,281 @@ export default function AccountPage() {
                   </span>
                 </div>
 
-                {/* Section 1: Authentication Provider Status */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-emerald-500" />
-                    <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
-                      Active Provider
-                    </h3>
+                {/* Section 1: Connected Authentication & Identity Logins */}
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0" />
+                      <div>
+                        <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                          Connected Authentication Methods
+                        </h3>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+                          Every credential linked here is permanently tied to your Unified Account ID.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 self-start sm:self-center bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 px-3 py-1 rounded-xl text-xs font-mono text-neutral-600 dark:text-neutral-400">
+                      <span>UID:</span>
+                      <strong className="text-neutral-950 dark:text-white">{user?.uid?.slice(0, 10)}...</strong>
+                    </div>
                   </div>
 
-                  {isGoogleUser ? (
-                    <div className="p-4 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shadow-sm shrink-0">
-                          <svg className="w-5 h-5" viewBox="0 0 24 24">
-                            <path
-                              fill="#4285F4"
-                              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                            />
-                            <path
-                              fill="#34A853"
-                              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                            />
-                            <path
-                              fill="#FBBC05"
-                              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                            />
-                            <path
-                              fill="#EA4335"
-                              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                            />
-                          </svg>
+                  {providerSuccess && (
+                    <div className="p-3.5 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 text-xs font-sans flex items-center gap-2 animate-fadeIn">
+                      <CheckCircle className="w-4 h-4 shrink-0" />
+                      <span>{providerSuccess}</span>
+                    </div>
+                  )}
+
+                  {providerError && (
+                    <div className="p-3.5 rounded-xl border border-red-300 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300 text-xs font-sans flex items-center gap-2 animate-fadeIn">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>{providerError}</span>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Provider 1: Email & Password */}
+                    <div className="p-4 rounded-2xl bg-neutral-50/60 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex flex-col justify-between space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shrink-0">
+                            <Mail className="w-5 h-5 text-neutral-700 dark:text-neutral-300" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs font-bold text-neutral-950 dark:text-white font-sans">
+                                Email & Password
+                              </p>
+                              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                                Primary
+                              </span>
+                            </div>
+                            <p className="text-xs font-mono font-medium text-neutral-900 dark:text-neutral-100 mt-0.5 truncate max-w-[200px]">
+                              {user?.email || 'SSO Account'}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-xs font-bold text-neutral-950 dark:text-white font-sans">
-                            Signed in via Google Single Sign-On
-                          </p>
-                          <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
-                            Your password and 2-step verification are encrypted and managed directly by Google.
-                          </p>
+                      </div>
+                      <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans leading-relaxed">
+                        Primary recovery anchor. Security notifications and password recovery links are routed here.
+                      </p>
+                    </div>
+
+                    {/* Provider 2: Phone Number & SMS OTP */}
+                    <div className="p-4 rounded-2xl bg-neutral-50/60 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex flex-col justify-between space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shrink-0">
+                            <Phone className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs font-bold text-neutral-950 dark:text-white font-sans">
+                                Phone Number (SMS OTP)
+                              </p>
+                              {hasPhoneProvider ? (
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                                  Linked
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400">
+                                  Not Linked
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs font-mono font-bold text-neutral-900 dark:text-neutral-100 mt-0.5">
+                              {user?.phoneNumber || profile?.phoneNumber || 'No mobile linked yet'}
+                            </p>
+                          </div>
                         </div>
                       </div>
 
-                      <a
-                        href="https://myaccount.google.com/security"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-800 dark:text-neutral-200 transition-colors shrink-0"
-                      >
-                        <span>Manage Google Security</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  ) : (
-                    <div className="p-4 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shadow-sm shrink-0">
-                        <Mail className="w-5 h-5 text-neutral-600 dark:text-neutral-300" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-neutral-950 dark:text-white font-sans">
-                          Standard Email & Password
-                        </p>
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-neutral-200/60 dark:border-neutral-800">
                         <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
-                          Primary credentials anchored to {user?.email} with custom password encryption.
+                          {hasPhoneProvider
+                            ? 'Sign in directly via 6-digit SMS OTP.'
+                            : 'Link your phone for passwordless SMS OTP login.'}
                         </p>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Button
+                            type="button"
+                            variant={hasPhoneProvider ? 'secondary' : 'primary'}
+                            size="sm"
+                            onClick={() => setIsPhoneModalOpen(true)}
+                            className="cursor-pointer text-[11px] h-8"
+                          >
+                            {hasPhoneProvider ? 'Update Phone' : '+ Link Phone'}
+                          </Button>
+                          {hasPhoneProvider && linkedProvidersCount > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleUnlinkProvider('phone')}
+                              isLoading={providerActionLoading === 'phone'}
+                              className="text-neutral-400 hover:text-red-600 dark:hover:text-red-400 text-[11px] h-8 px-2"
+                              title="Unlink Phone"
+                            >
+                              Disconnect
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  )}
+
+                    {/* Provider 3: Google Single Sign-On */}
+                    <div className="p-4 rounded-2xl bg-neutral-50/60 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex flex-col justify-between space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shrink-0">
+                            <svg className="w-5 h-5" viewBox="0 0 24 24">
+                              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+                              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs font-bold text-neutral-950 dark:text-white font-sans">
+                                Google SSO
+                              </p>
+                              {isGoogleUser ? (
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                                  Linked
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                                  Not Linked
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs font-mono text-neutral-900 dark:text-neutral-100 mt-0.5 truncate max-w-[200px]">
+                              {isGoogleUser ? user?.email : 'Not connected'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-neutral-200/60 dark:border-neutral-800">
+                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
+                          {isGoogleUser ? '1-tap sign-in active.' : 'Connect to log in with Google.'}
+                        </p>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {isGoogleUser ? (
+                            <a
+                              href="https://myaccount.google.com/security"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border border-neutral-300 dark:border-neutral-700 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-300 transition-colors"
+                            >
+                              <span>Manage</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleLinkGoogle}
+                              isLoading={providerActionLoading === 'google.com'}
+                              className="text-[11px] h-8"
+                            >
+                              Connect
+                            </Button>
+                          )}
+                          {isGoogleUser && linkedProvidersCount > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleUnlinkProvider('google.com')}
+                              isLoading={providerActionLoading === 'google.com'}
+                              className="text-neutral-400 hover:text-red-600 dark:hover:text-red-400 text-[11px] h-8 px-2"
+                              title="Unlink Google"
+                            >
+                              Disconnect
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Provider 4: Sign in with Apple */}
+                    <div className="p-4 rounded-2xl bg-neutral-50/60 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex flex-col justify-between space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shrink-0">
+                            <svg className="w-5 h-5 fill-current text-neutral-900 dark:text-white" viewBox="0 0 24 24">
+                              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 0.92-2.87-.93.04-2.02.63-2.66 1.38-.56.65-1.06 1.71-.93 2.74 1.04.08 2.06-.5 2.67-1.25z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs font-bold text-neutral-950 dark:text-white font-sans">
+                                Apple ID
+                              </p>
+                              {hasAppleProvider ? (
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                                  Linked
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
+                                  Not Linked
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs font-mono text-neutral-900 dark:text-neutral-100 mt-0.5">
+                              {hasAppleProvider ? 'Connected via Apple' : 'Not connected'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-neutral-200/60 dark:border-neutral-800">
+                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
+                          {hasAppleProvider ? 'Face ID / Touch ID active.' : 'Connect to sign in via Apple.'}
+                        </p>
+
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {hasAppleProvider ? (
+                            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                              Active
+                            </span>
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleLinkApple}
+                              isLoading={providerActionLoading === 'apple.com'}
+                              className="text-[11px] h-8"
+                            >
+                              Connect
+                            </Button>
+                          )}
+                          {hasAppleProvider && linkedProvidersCount > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleUnlinkProvider('apple.com')}
+                              isLoading={providerActionLoading === 'apple.com'}
+                              className="text-neutral-400 hover:text-red-600 dark:hover:text-red-400 text-[11px] h-8 px-2"
+                              title="Unlink Apple"
+                            >
+                              Disconnect
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Section 2: In-App Password Change */}
@@ -1552,6 +1834,17 @@ export default function AccountPage() {
           isOpen={isTopUpOpen}
           onClose={() => setIsTopUpOpen(false)}
           onSuccess={handleTopUpSuccess}
+        />
+
+        {/* Link Phone Modal */}
+        <LinkPhoneModal
+          isOpen={isPhoneModalOpen}
+          onClose={() => setIsPhoneModalOpen(false)}
+          onSuccess={(newPhone) => {
+            setPhoneNumber(newPhone);
+            setProviderSuccess(`Phone number ${newPhone} successfully linked to your unified account!`);
+            setTimeout(() => setProviderSuccess(null), 4000);
+          }}
         />
 
       </div>

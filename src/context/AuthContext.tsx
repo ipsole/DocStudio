@@ -23,6 +23,9 @@ import {
   signInWithPhoneNumber,
   ConfirmationResult,
   OAuthProvider,
+  linkWithPopup,
+  linkWithPhoneNumber,
+  unlink,
 } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '@/lib/firebase/client';
 import {
@@ -46,6 +49,11 @@ interface AuthContextType {
   sendPhoneOtp: (phoneNumber: string, verifier: RecaptchaVerifier) => Promise<ConfirmationResult>;
   confirmPhoneOtp: (confirmationResult: ConfirmationResult, code: string) => Promise<User | null>;
   signUp: (email: string, pass: string, displayName?: string) => Promise<void>;
+  linkGoogle: () => Promise<User>;
+  linkApple: () => Promise<User>;
+  startPhoneLink: (phoneNumber: string, verifier: RecaptchaVerifier) => Promise<ConfirmationResult>;
+  confirmPhoneLink: (confirmationResult: ConfirmationResult, code: string) => Promise<User>;
+  unlinkProvider: (providerId: string) => Promise<User>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   changePassword: (currentPass: string, newPass: string) => Promise<void>;
@@ -214,6 +222,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return credential.user;
   };
 
+  const linkGoogle = async (): Promise<User> => {
+    if (!auth?.currentUser) throw new Error('Not authenticated');
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    const result = await linkWithPopup(auth.currentUser, provider);
+    setUser(result.user);
+    return result.user;
+  };
+
+  const linkApple = async (): Promise<User> => {
+    if (!auth?.currentUser) throw new Error('Not authenticated');
+    const provider = new OAuthProvider('apple.com');
+    provider.addScope('email');
+    provider.addScope('name');
+    const result = await linkWithPopup(auth.currentUser, provider);
+    setUser(result.user);
+    return result.user;
+  };
+
+  const startPhoneLink = async (
+    phoneNumber: string,
+    verifier: RecaptchaVerifier
+  ): Promise<ConfirmationResult> => {
+    if (!auth?.currentUser) throw new Error('Not authenticated');
+    return await linkWithPhoneNumber(auth.currentUser, phoneNumber, verifier);
+  };
+
+  const confirmPhoneLink = async (
+    confirmationResult: ConfirmationResult,
+    code: string
+  ): Promise<User> => {
+    if (!auth?.currentUser) throw new Error('Not authenticated');
+    const result = await confirmationResult.confirm(code);
+    if (result.user) {
+      setUser(result.user);
+      if (result.user.phoneNumber) {
+        await dbUpdateUserProfile(result.user.uid, { phoneNumber: result.user.phoneNumber });
+        setProfile((prev) => (prev ? { ...prev, phoneNumber: result.user.phoneNumber } : null));
+      }
+    }
+    return result.user;
+  };
+
+  const unlinkProvider = async (providerId: string): Promise<User> => {
+    if (!auth?.currentUser) throw new Error('Not authenticated');
+    if ((auth.currentUser.providerData?.length || 0) <= 1) {
+      throw new Error('You cannot disconnect your only login method. Connect another login method first.');
+    }
+    const updatedUser = await unlink(auth.currentUser, providerId);
+    setUser(updatedUser);
+    if (providerId === 'phone') {
+      await dbUpdateUserProfile(updatedUser.uid, { phoneNumber: '' });
+      setProfile((prev) => (prev ? { ...prev, phoneNumber: '' } : null));
+    }
+    return updatedUser;
+  };
+
   const signUp = async (email: string, pass: string, displayName?: string) => {
     if (!isConfigured || !auth) {
       throw new Error(
@@ -345,6 +410,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sendPhoneOtp,
         confirmPhoneOtp,
         signUp,
+        linkGoogle,
+        linkApple,
+        startPhoneLink,
+        confirmPhoneLink,
+        unlinkProvider,
         signOut,
         resetPassword,
         changePassword,
