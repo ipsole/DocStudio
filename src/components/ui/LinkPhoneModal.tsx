@@ -61,6 +61,13 @@ export function LinkPhoneModal({ isOpen, onClose, onSuccess }: LinkPhoneModalPro
         setError('This phone number is already linked to another Docdril account. Please use a different phone number.');
       } else if (fbErr.code === 'auth/invalid-phone-number') {
         setError(`Please enter a valid phone number for country code ${countryCode}.`);
+      } else if (
+        fbErr.code === 'auth/operation-not-allowed' ||
+        fbErr.message?.toLowerCase().includes('region')
+      ) {
+        setError(
+          `SMS delivery for ${countryCode} is currently disabled in your Firebase Console. Please enable region ${countryCode} in Firebase Console > Authentication > Settings > SMS region policy.`
+        );
       } else if (fbErr.code === 'auth/too-many-requests' || fbErr.code === 'auth/quota-exceeded') {
         setError('SMS quota limit reached. Please try again later.');
       } else {

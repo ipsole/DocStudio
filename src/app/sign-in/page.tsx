@@ -137,6 +137,13 @@ function SignInForm() {
       const fbErr = err as { code?: string; message?: string };
       if (fbErr.code === 'auth/invalid-phone-number') {
         setError(`Please enter a valid phone number for country code ${countryCode}.`);
+      } else if (
+        fbErr.code === 'auth/operation-not-allowed' ||
+        fbErr.message?.toLowerCase().includes('region')
+      ) {
+        setError(
+          `SMS delivery for ${countryCode} is currently disabled in your Firebase Console. Please enable region ${countryCode} in Firebase Console > Authentication > Settings > SMS region policy.`
+        );
       } else if (fbErr.code === 'auth/too-many-requests' || fbErr.code === 'auth/quota-exceeded') {
         setError('SMS quota limit reached. Please sign in using Google, Apple, or Email.');
       } else {
