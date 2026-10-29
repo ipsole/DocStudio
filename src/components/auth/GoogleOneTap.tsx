@@ -80,7 +80,7 @@ function loadGsiScript(onLoad: () => void) {
  */
 export function GoogleOneTap({
   context = 'signin',
-  onSuccessRedirect = '/dashboard',
+  onSuccessRedirect = '/',
 }: GoogleOneTapProps) {
   const { user, loading, signInWithGoogleCredential } = useAuth();
   const router = useRouter();
@@ -164,7 +164,7 @@ export function GoogleOneTap({
  * Renders the official Google button directly inside the page without popup windows.
  */
 export function GoogleSignInButton({
-  onSuccessRedirect = '/dashboard',
+  onSuccessRedirect = '/',
   className = '',
   fallback,
 }: {

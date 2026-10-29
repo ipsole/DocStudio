@@ -21,7 +21,7 @@ export default function SignUpPage() {
 
   useEffect(() => {
     if (user && !authLoading) {
-      router.push('/dashboard');
+      router.push('/');
     }
   }, [user, authLoading, router]);
 
@@ -39,7 +39,7 @@ export default function SignUpPage() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      router.push('/dashboard');
+      router.push('/');
     } catch (err: unknown) {
       const fbErr = err as { code?: string; message?: string };
       if (fbErr.code === 'auth/account-exists-with-different-credential') {
@@ -72,7 +72,7 @@ export default function SignUpPage() {
 
     try {
       await signUp(email.trim(), password, displayName.trim());
-      router.push('/dashboard');
+      router.push('/');
     } catch (err: unknown) {
       const fbErr = err as { code?: string; message?: string };
       if (fbErr.code === 'auth/email-already-in-use') {

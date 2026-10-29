@@ -46,7 +46,7 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col bg-white text-neutral-900 dark:bg-black dark:text-white selection:bg-neutral-900 selection:text-white dark:selection:bg-white dark:selection:text-black antialiased transition-colors duration-200">
         <ThemeProvider>
           <AuthProvider>
-            <GoogleOneTap context="signin" onSuccessRedirect="/dashboard" />
+            <GoogleOneTap context="signin" onSuccessRedirect="/" />
             <Navbar />
             <main className="flex-1 flex flex-col">{children}</main>
             <Footer />

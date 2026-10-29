@@ -12,7 +12,7 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams.get('redirect') || '/dashboard';
+  const redirectPath = searchParams.get('redirect') || '/';
   const {
     user,
     loading: authLoading,
