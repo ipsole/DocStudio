@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -11,8 +11,6 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 
 function SignInForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectPath = searchParams.get('redirect') || '/';
   const {
     user,
     loading: authLoading,
@@ -23,9 +21,9 @@ function SignInForm() {
 
   useEffect(() => {
     if (user && !authLoading) {
-      router.push(redirectPath);
+      router.push('/');
     }
-  }, [user, authLoading, router, redirectPath]);
+  }, [user, authLoading, router]);
 
   // Email form state
   const [email, setEmail] = useState('');
@@ -43,7 +41,7 @@ function SignInForm() {
 
     try {
       await signIn(email.trim(), password);
-      router.push(redirectPath);
+      router.push('/');
     } catch (err: unknown) {
       const fbErr = err as { code?: string; message?: string };
       if (
@@ -67,7 +65,7 @@ function SignInForm() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      router.push(redirectPath);
+      router.push('/');
     } catch (err: unknown) {
       const fbErr = err as { code?: string; message?: string };
       if (fbErr.code === 'auth/account-exists-with-different-credential') {

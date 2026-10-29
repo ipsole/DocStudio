@@ -19,7 +19,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
 
   useEffect(() => {
     if (!loading && !user && isConfigured) {
-      router.push(`/sign-in?redirect=${encodeURIComponent(pathname)}`);
+      router.push('/sign-in');
     }
   }, [user, loading, router, pathname, isConfigured]);
 
