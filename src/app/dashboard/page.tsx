@@ -42,6 +42,23 @@ export default function DashboardPage() {
   const [copiedSnippet, setCopiedSnippet] = useState(false);
   const [showTour, setShowTour] = useState(false);
 
+  // Synchronously hydrate cached subscriptions to prevent numbers jumping on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user?.uid) {
+      try {
+        const cached = localStorage.getItem(`docstudio_subscriptions_${user.uid}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSubscriptions(parsed);
+          }
+        }
+      } catch {
+        // ignore
+      }
+    }
+  }, [user?.uid]);
+
   useEffect(() => {
     async function loadData() {
       if (!user) return;
@@ -54,6 +71,13 @@ export default function DashboardPage() {
         setApps(catalogApps);
         setEntitlements(userEnts);
         setSubscriptions(userSubs);
+        if (typeof window !== 'undefined' && user?.uid) {
+          try {
+            localStorage.setItem(`docstudio_subscriptions_${user.uid}`, JSON.stringify(userSubs));
+          } catch {
+            // ignore
+          }
+        }
       } catch (err) {
         console.error('Error loading dashboard data:', err);
       } finally {
@@ -242,14 +266,14 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
               <div className="flex items-baseline justify-between">
                 <div className="flex items-baseline gap-2">
                   <span className="text-3xl sm:text-4xl font-extrabold font-sans text-neutral-950 dark:text-white">
-                    {subscriptions.length > 0 ? totalCreditsRemaining : 100}
+                    {subscriptions.length > 0 ? totalCreditsRemaining : 175}
                   </span>
                   <span className="text-xs font-sans text-neutral-500">
-                    / {subscriptions.length > 0 ? totalCreditsMax : 100} Monthly
+                    / {subscriptions.length > 0 ? totalCreditsMax : 175} Monthly
                   </span>
                 </div>
                 <span className="text-xs font-sans font-semibold text-emerald-600 dark:text-emerald-400">
-                  {Math.round(((subscriptions.length > 0 ? totalCreditsRemaining : 100) / (subscriptions.length > 0 ? totalCreditsMax : 100)) * 100)}% Available
+                  {Math.round(((subscriptions.length > 0 ? totalCreditsRemaining : 175) / (subscriptions.length > 0 ? totalCreditsMax : 175)) * 100)}% Available
                 </span>
               </div>
 
@@ -258,7 +282,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
                 <div
                   className="h-full bg-emerald-500 dark:bg-emerald-400 rounded-full transition-all duration-500"
                   style={{
-                    width: `${Math.min(100, Math.max(0, ((subscriptions.length > 0 ? totalCreditsRemaining : 100) / (subscriptions.length > 0 ? totalCreditsMax : 100)) * 100))}%`,
+                    width: `${Math.min(100, Math.max(0, ((subscriptions.length > 0 ? totalCreditsRemaining : 175) / (subscriptions.length > 0 ? totalCreditsMax : 175)) * 100))}%`,
                   }}
                 />
               </div>
