@@ -14,10 +14,11 @@ import { DeleteAccountModal } from '@/components/ui/DeleteAccountModal';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
 import { CREDIT_PACKS, CreditPack } from '@/lib/pricingData';
-import { ensureDefaultUserSubscriptions } from '@/lib/firebase/db';
+import { ensureDefaultUserSubscriptions, isUsernameAvailable } from '@/lib/firebase/db';
 import { AppSubscription } from '@/types';
 import {
   User as UserIconLucide,
+  AtSign,
   Mail,
   Phone,
   Briefcase,
@@ -67,13 +68,14 @@ export default function AccountPage() {
 
   // Profile fields state
   const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [bio, setBio] = useState('');
   const [avatarIcon, setAvatarIcon] = useState<string | null>('User');
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [copiedUid, setCopiedUid] = useState(false);
+  const [copiedUsername, setCopiedUsername] = useState(false);
 
   // Subscriptions state
   const [subscriptions, setSubscriptions] = useState<AppSubscription[]>([]);
@@ -108,6 +110,10 @@ export default function AccountPage() {
   const isGoogleUser = user?.providerData?.some((p) => p.providerId === 'google.com');
   const hasPasswordProvider = user?.providerData?.some((p) => p.providerId === 'password');
 
+  // Username fallback derivation
+  const defaultUsername = (user?.email?.split('@')[0] || 'creator').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
+  const currentUsername = profile?.username || defaultUsername;
+
   // Load URL hash on initial mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -130,6 +136,8 @@ export default function AccountPage() {
   useEffect(() => {
     if (profile || user) {
       setDisplayName(profile?.displayName || user?.displayName || '');
+      const userDefault = (user?.email?.split('@')[0] || 'creator').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
+      setUsername(profile?.username || userDefault);
       setPhoneNumber(profile?.phoneNumber || '');
       setBio(profile?.bio || '');
       const hasGooglePhoto = Boolean(user?.photoURL || profile?.photoURL);
@@ -156,12 +164,12 @@ export default function AccountPage() {
     loadSubscriptions();
   }, [user]);
 
-  // Copy UID helper
-  const handleCopyUid = () => {
-    if (!user?.uid) return;
-    navigator.clipboard.writeText(user.uid);
-    setCopiedUid(true);
-    setTimeout(() => setCopiedUid(false), 2000);
+  // Copy Username Handle helper
+  const handleCopyUsername = () => {
+    if (!currentUsername) return;
+    navigator.clipboard.writeText(`@${currentUsername}`);
+    setCopiedUsername(true);
+    setTimeout(() => setCopiedUsername(false), 2000);
   };
 
   // Avatar save handler
@@ -175,6 +183,7 @@ export default function AccountPage() {
   // Cancel edit handler
   const handleCancelEdit = () => {
     setDisplayName(profile?.displayName || user?.displayName || '');
+    setUsername(profile?.username || defaultUsername);
     setPhoneNumber(profile?.phoneNumber || '');
     setBio(profile?.bio || '');
     setIsEditing(false);
@@ -186,10 +195,28 @@ export default function AccountPage() {
     e.preventDefault();
     setProfileSaving(true);
     setGeneralError(null);
+
+    const cleanUsername = username.trim().toLowerCase();
+    if (!/^[a-z0-9_]{3,20}$/.test(cleanUsername)) {
+      setGeneralError('Username must be 3-20 characters long and contain only lowercase letters, numbers, or underscores.');
+      setProfileSaving(false);
+      return;
+    }
+
+    if (cleanUsername !== (profile?.username || '').toLowerCase()) {
+      const check = await isUsernameAvailable(cleanUsername, user?.uid);
+      if (!check.available) {
+        setGeneralError(check.reason || 'This username is already taken by another creator.');
+        setProfileSaving(false);
+        return;
+      }
+    }
+
     try {
       const hasGooglePhoto = Boolean(user?.photoURL || profile?.photoURL);
       await updateProfileDetails({
         displayName: displayName.trim(),
+        username: cleanUsername,
         phoneNumber: phoneNumber.trim(),
         bio: bio.trim(),
         avatarIcon: avatarIcon || (hasGooglePhoto ? 'google' : 'User'),
@@ -392,7 +419,7 @@ export default function AccountPage() {
               })}
             </nav>
 
-            {/* Quick Session Card in Sidebar */}
+            {/* Quick Account Card in Sidebar */}
             <div className="p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white/50 dark:bg-neutral-950/50 backdrop-blur-xl space-y-3">
               <div className="flex items-center gap-3">
                 <UserAvatar user={user} profile={profile} avatarIcon={avatarIcon} size="sm" />
@@ -401,17 +428,16 @@ export default function AccountPage() {
                     {displayName || 'DocStudio User'}
                   </div>
                   <div className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate font-mono">
-                    {user?.email}
+                    @{currentUsername}
                   </div>
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-neutral-200 dark:border-neutral-900 flex items-center justify-between">
-                <span className="text-[10px] text-neutral-400 uppercase font-sans">Session Active</span>
+              <div className="pt-2 border-t border-neutral-200 dark:border-neutral-900 flex items-center justify-end">
                 <button
                   type="button"
                   onClick={signOut}
-                  className="text-[11px] font-sans text-neutral-600 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 flex items-center gap-1 transition-colors cursor-pointer"
+                  className="text-[11px] font-sans text-neutral-600 dark:text-neutral-400 hover:text-red-600 dark:hover:text-red-400 flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <LogOut className="w-3 h-3" />
                   <span>Sign Out</span>
@@ -461,16 +487,16 @@ export default function AccountPage() {
                       </div>
 
                       <div className="text-xs text-neutral-500 dark:text-neutral-400 flex items-center gap-2 font-sans flex-wrap">
-                        <span className="uppercase text-[10px] font-bold text-neutral-400 dark:text-neutral-500">UID:</span>
-                        <span className="bg-neutral-100 dark:bg-neutral-900 px-2 py-0.5 border border-neutral-200 dark:border-neutral-800 font-mono text-[11px] text-neutral-700 dark:text-neutral-300 rounded flex items-center gap-1.5">
-                          <span>{user?.uid}</span>
+                        <span className="bg-neutral-100 dark:bg-neutral-900 px-2.5 py-1 border border-neutral-200 dark:border-neutral-800 font-mono text-xs text-neutral-800 dark:text-neutral-200 rounded-lg flex items-center gap-1.5 font-medium">
+                          <span className="text-neutral-400 dark:text-neutral-500">@</span>
+                          <span>{currentUsername}</span>
                           <button
                             type="button"
-                            onClick={handleCopyUid}
-                            className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors"
-                            title="Copy UID"
+                            onClick={handleCopyUsername}
+                            className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors ml-0.5"
+                            title="Copy handle"
                           >
-                            {copiedUid ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3 text-neutral-400" />}
+                            {copiedUsername ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                           </button>
                         </span>
                         <span className="text-neutral-300 dark:text-neutral-700">•</span>
@@ -503,7 +529,7 @@ export default function AccountPage() {
                           Personal Information
                         </h3>
                         <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-0.5">
-                          Your public profile information and contact anchors.
+                          Your unique public identity handle and registered credentials.
                         </p>
                       </div>
 
@@ -529,6 +555,22 @@ export default function AccountPage() {
                         </p>
                       </div>
 
+                      {/* Unique Username Handle */}
+                      <div className="p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 space-y-1">
+                        <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+                          <div className="flex items-center gap-1.5">
+                            <AtSign className="w-3.5 h-3.5" />
+                            <span>Username</span>
+                          </div>
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                            Unique Handle
+                          </span>
+                        </div>
+                        <p className="text-sm font-bold font-mono text-neutral-950 dark:text-white">
+                          @{currentUsername}
+                        </p>
+                      </div>
+
                       {/* Email Address (Immutable) */}
                       <div className="p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 space-y-1">
                         <div className="flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400 font-sans">
@@ -549,23 +591,6 @@ export default function AccountPage() {
                         </p>
                       </div>
 
-                      {/* Phone Number */}
-                      <div className="p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 font-sans">
-                          <Phone className="w-3.5 h-3.5" />
-                          <span>Phone Number</span>
-                        </div>
-                        <p
-                          className={`text-sm font-sans ${
-                            phoneNumber
-                              ? 'font-bold text-neutral-950 dark:text-white font-mono'
-                              : 'text-neutral-400 italic'
-                          }`}
-                        >
-                          {phoneNumber || 'Not provided'}
-                        </p>
-                      </div>
-
                       {/* Bio / Role */}
                       <div className="p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 space-y-1">
                         <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 font-sans">
@@ -582,6 +607,23 @@ export default function AccountPage() {
                           {bio || 'Not specified'}
                         </p>
                       </div>
+
+                      {/* Phone Number */}
+                      <div className="p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 space-y-1 sm:col-span-2">
+                        <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+                          <Phone className="w-3.5 h-3.5" />
+                          <span>Phone Number</span>
+                        </div>
+                        <p
+                          className={`text-sm font-sans ${
+                            phoneNumber
+                              ? 'font-bold text-neutral-950 dark:text-white font-mono'
+                              : 'text-neutral-400 italic'
+                          }`}
+                        >
+                          {phoneNumber || 'Not provided'}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -593,7 +635,7 @@ export default function AccountPage() {
                           Edit Profile Details
                         </h3>
                         <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-0.5">
-                          Update your personal information below.
+                          Update your public name, unique handle, and personal details.
                         </p>
                       </div>
 
@@ -619,6 +661,39 @@ export default function AccountPage() {
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
                           <label className="block font-sans text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                            Username / Handle
+                          </label>
+                          <span className="text-[10px] text-neutral-400 dark:text-neutral-500 font-sans">
+                            Always unique
+                          </span>
+                        </div>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-400 font-mono text-sm">
+                            @
+                          </div>
+                          <input
+                            type="text"
+                            value={username}
+                            onChange={(e) => {
+                              const val = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+                              setUsername(val);
+                            }}
+                            placeholder="username"
+                            maxLength={20}
+                            required
+                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 focus:border-neutral-950 dark:focus:border-white bg-white dark:bg-neutral-900/90 pl-8 pr-3.5 py-2.5 text-sm font-mono text-neutral-900 dark:text-white focus:outline-none transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+                          />
+                        </div>
+                        <p className="text-[11px] text-neutral-400 dark:text-neutral-500 font-sans">
+                          3-20 characters (lowercase letters, numbers, underscores).
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <label className="block font-sans text-xs font-medium text-neutral-700 dark:text-neutral-300">
                             Email Address
                           </label>
                           <span className="text-[10px] text-neutral-400 dark:text-neutral-500 font-sans flex items-center gap-1 bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded">
@@ -637,9 +712,7 @@ export default function AccountPage() {
                           Email cannot be edited as it is the permanent security identifier for your account.
                         </p>
                       </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <Input
                         label="Phone Number"
                         type="tel"
@@ -648,19 +721,19 @@ export default function AccountPage() {
                         placeholder="+91 98765 43210"
                         helperText="Optional for notifications and security recovery"
                       />
+                    </div>
 
-                      <div>
-                        <label className="block font-sans text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
-                          About You / Role
-                        </label>
-                        <input
-                          type="text"
-                          value={bio}
-                          onChange={(e) => setBio(e.target.value)}
-                          placeholder="Founder, Creative Director, Developer..."
-                          className="w-full rounded-lg border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 focus:border-neutral-950 dark:focus:border-white bg-white dark:bg-neutral-900/90 px-3.5 py-2.5 text-sm font-sans text-neutral-900 dark:text-white focus:outline-none transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
-                        />
-                      </div>
+                    <div>
+                      <label className="block font-sans text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
+                        About You / Role
+                      </label>
+                      <input
+                        type="text"
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
+                        placeholder="Founder, Creative Director, Developer..."
+                        className="w-full rounded-lg border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 focus:border-neutral-950 dark:focus:border-white bg-white dark:bg-neutral-900/90 px-3.5 py-2.5 text-sm font-sans text-neutral-900 dark:text-white focus:outline-none transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+                      />
                     </div>
 
                     <div className="flex items-center gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-900">

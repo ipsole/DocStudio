@@ -44,6 +44,7 @@ interface AuthContextType {
   updateName: (newName: string) => Promise<void>;
   updateProfileDetails: (updates: {
     displayName?: string;
+    username?: string;
     phoneNumber?: string;
     bio?: string;
     avatarIcon?: string | null;
@@ -239,6 +240,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfileDetails = async (updates: {
     displayName?: string;
+    username?: string;
     phoneNumber?: string;
     bio?: string;
     avatarIcon?: string | null;
