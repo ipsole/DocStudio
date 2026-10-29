@@ -178,9 +178,11 @@ export async function ensureUserProfile(
   uid: string,
   email: string,
   displayName?: string | null,
-  photoURL?: string | null
+  photoURL?: string | null,
+  phoneNumber?: string | null
 ): Promise<UserProfile | null> {
-  const fallbackUsername = (email.split('@')[0] || 'user').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
+  const baseName = email ? email.split('@')[0] : (phoneNumber ? `creator_${phoneNumber.replace(/[^0-9]/g, '').slice(-4)}` : `creator_${uid.slice(0, 5)}`);
+  const fallbackUsername = (baseName || 'creator').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
 
   // Check localStorage cache first for fallback
   let localCache: Partial<UserProfile> | null = null;
@@ -220,7 +222,7 @@ export async function ensureUserProfile(
         displayName: localCache?.displayName || displayName || email.split('@')[0],
         username: localCache?.username || fallbackUsername,
         usernameLower: (localCache?.username || fallbackUsername).toLowerCase(),
-        phoneNumber: localCache?.phoneNumber || null,
+        phoneNumber: localCache?.phoneNumber || phoneNumber || null,
         bio: localCache?.bio || null,
         photoURL: photoURL || null,
         avatarIcon: localCache?.avatarIcon || (photoURL ? 'google' : null),
@@ -280,7 +282,7 @@ export async function ensureUserProfile(
         displayName: data.displayName || localCache?.displayName || null,
         username: currentUsername,
         usernameLower: currentUsername.toLowerCase(),
-        phoneNumber: data.phoneNumber || localCache?.phoneNumber || null,
+        phoneNumber: data.phoneNumber || localCache?.phoneNumber || phoneNumber || null,
         bio: data.bio || localCache?.bio || null,
         photoURL: data.photoURL || photoURL || null,
         avatarIcon: data.avatarIcon || localCache?.avatarIcon || (photoURL || data.photoURL ? 'google' : null),

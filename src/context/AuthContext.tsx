@@ -19,6 +19,10 @@ import {
   reauthenticateWithCredential,
   updatePassword as fbUpdatePassword,
   IdTokenResult,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  ConfirmationResult,
+  OAuthProvider,
 } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '@/lib/firebase/client';
 import {
@@ -37,6 +41,10 @@ interface AuthContextType {
   signIn: (email: string, pass: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signInWithGoogleCredential: (idToken: string) => Promise<User | null>;
+  signInWithApple: () => Promise<void>;
+  setupRecaptcha: (containerId: string) => RecaptchaVerifier;
+  sendPhoneOtp: (phoneNumber: string, verifier: RecaptchaVerifier) => Promise<ConfirmationResult>;
+  confirmPhoneOtp: (confirmationResult: ConfirmationResult, code: string) => Promise<User | null>;
   signUp: (email: string, pass: string, displayName?: string) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -97,7 +105,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             currentUser.uid,
             currentUser.email || '',
             currentUser.displayName,
-            currentUser.photoURL
+            currentUser.photoURL,
+            currentUser.phoneNumber
           );
 
           setProfile(userProfile);
@@ -157,6 +166,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     return result.user;
+  };
+
+  const signInWithApple = async () => {
+    if (!isConfigured || !auth) {
+      throw new Error('Firebase Authentication is not yet configured.');
+    }
+    const provider = new OAuthProvider('apple.com');
+    provider.addScope('email');
+    provider.addScope('name');
+    await signInWithPopup(auth, provider);
+  };
+
+  const setupRecaptcha = (containerId: string): RecaptchaVerifier => {
+    if (!auth) throw new Error('Firebase Auth is not initialized.');
+    return new RecaptchaVerifier(auth, containerId, {
+      size: 'invisible',
+      callback: () => {
+        // Invisible reCAPTCHA resolved automatically
+      },
+    });
+  };
+
+  const sendPhoneOtp = async (
+    phoneNumber: string,
+    verifier: RecaptchaVerifier
+  ): Promise<ConfirmationResult> => {
+    if (!auth) throw new Error('Firebase Auth is not initialized.');
+    return await signInWithPhoneNumber(auth, phoneNumber, verifier);
+  };
+
+  const confirmPhoneOtp = async (
+    confirmationResult: ConfirmationResult,
+    code: string
+  ): Promise<User | null> => {
+    const credential = await confirmationResult.confirm(code);
+    if (credential.user) {
+      const p = await ensureUserProfile(
+        credential.user.uid,
+        credential.user.email || '',
+        credential.user.displayName,
+        credential.user.photoURL,
+        credential.user.phoneNumber
+      );
+      setProfile(p);
+    }
+    return credential.user;
   };
 
   const signUp = async (email: string, pass: string, displayName?: string) => {
@@ -285,6 +340,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signIn,
         signInWithGoogle,
         signInWithGoogleCredential,
+        signInWithApple,
+        setupRecaptcha,
+        sendPhoneOtp,
+        confirmPhoneOtp,
         signUp,
         signOut,
         resetPassword,
