@@ -134,6 +134,24 @@ export async function getAppBySlug(slug: string): Promise<DocApp | null> {
   return null;
 }
 
+const RESERVED_USERNAMES = new Set([
+  'admin',
+  'administrator',
+  'docdril',
+  'docstudio',
+  'support',
+  'help',
+  'api',
+  'auth',
+  'system',
+  'root',
+  'account',
+  'billing',
+  'security',
+  'official',
+  'team',
+]);
+
 /**
  * Check if a username is available.
  * Usernames must be 3-20 lowercase alphanumeric characters or underscores.
@@ -148,6 +166,9 @@ export async function isUsernameAvailable(
   }
   if (!/^[a-z0-9_]+$/.test(clean)) {
     return { available: false, reason: 'Username can only contain lowercase letters, numbers, and underscores.' };
+  }
+  if (RESERVED_USERNAMES.has(clean)) {
+    return { available: false, reason: 'This handle is reserved by the platform.' };
   }
 
   if (!isFirebaseConfigured() || !db) {

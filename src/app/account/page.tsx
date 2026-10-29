@@ -17,6 +17,7 @@ import { LinkPhoneModal } from '@/components/ui/LinkPhoneModal';
 import { CREDIT_PACKS, CreditPack } from '@/lib/pricingData';
 import { ensureDefaultUserSubscriptions, isUsernameAvailable } from '@/lib/firebase/db';
 import { AppSubscription } from '@/types';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import {
   User as UserIconLucide,
   AtSign,
@@ -33,6 +34,8 @@ import {
   LogOut,
   CheckCircle,
   AlertCircle,
+  XCircle,
+  Loader2,
   Camera,
   Pencil,
   X,
@@ -84,6 +87,10 @@ export default function AccountPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [copiedUsername, setCopiedUsername] = useState(false);
+
+  // Live username availability check state
+  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'unavailable' | 'invalid'>('idle');
+  const [usernameMessage, setUsernameMessage] = useState<string>('');
 
   // Subscriptions state
   const [subscriptions, setSubscriptions] = useState<AppSubscription[]>([]);
@@ -224,6 +231,70 @@ export default function AccountPage() {
     }
   }, [profile, user]);
 
+  // Debounced live username availability validation
+  useEffect(() => {
+    if (!isEditing) {
+      setUsernameStatus('idle');
+      setUsernameMessage('');
+      return;
+    }
+
+    const clean = username.trim().toLowerCase();
+    const currentClean = (profile?.username || defaultUsername || '').toLowerCase();
+
+    // Matching user's current handle
+    if (clean === currentClean && clean.length > 0) {
+      setUsernameStatus('available');
+      setUsernameMessage('Your current verified handle');
+      return;
+    }
+
+    if (!clean) {
+      setUsernameStatus('invalid');
+      setUsernameMessage('Username cannot be empty');
+      return;
+    }
+
+    if (clean.length < 3) {
+      setUsernameStatus('invalid');
+      setUsernameMessage('Username must be at least 3 characters');
+      return;
+    }
+
+    if (clean.length > 20) {
+      setUsernameStatus('invalid');
+      setUsernameMessage('Username cannot exceed 20 characters');
+      return;
+    }
+
+    if (!/^[a-z0-9_]+$/.test(clean)) {
+      setUsernameStatus('invalid');
+      setUsernameMessage('Only lowercase letters, numbers, and underscores allowed');
+      return;
+    }
+
+    setUsernameStatus('checking');
+    setUsernameMessage('Checking availability...');
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await isUsernameAvailable(clean, user?.uid);
+        if (res.available) {
+          setUsernameStatus('available');
+          setUsernameMessage('Username is available');
+        } else {
+          setUsernameStatus('unavailable');
+          setUsernameMessage(res.reason || 'Username not available');
+        }
+      } catch {
+        setUsernameStatus('idle');
+        setUsernameMessage('');
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [username, isEditing, profile?.username, defaultUsername, user?.uid]);
+
   // Load subscriptions
   const loadSubscriptions = async () => {
     if (!user) return;
@@ -262,6 +333,8 @@ export default function AccountPage() {
   const handleCancelEdit = () => {
     setDisplayName(profile?.displayName || user?.displayName || '');
     setUsername(profile?.username || defaultUsername);
+    setUsernameStatus('idle');
+    setUsernameMessage('');
     setPhoneNumber(profile?.phoneNumber || '');
     setBio(profile?.bio || '');
     setIsEditing(false);
@@ -281,9 +354,17 @@ export default function AccountPage() {
       return;
     }
 
+    if (usernameStatus === 'unavailable') {
+      setGeneralError(usernameMessage || 'This username is already taken by another creator.');
+      setProfileSaving(false);
+      return;
+    }
+
     if (cleanUsername !== (profile?.username || '').toLowerCase()) {
       const check = await isUsernameAvailable(cleanUsername, user?.uid);
       if (!check.available) {
+        setUsernameStatus('unavailable');
+        setUsernameMessage(check.reason || 'This username is already taken by another creator.');
         setGeneralError(check.reason || 'This username is already taken by another creator.');
         setProfileSaving(false);
         return;
@@ -512,8 +593,9 @@ export default function AccountPage() {
                   <div className="text-xs font-bold text-neutral-900 dark:text-white truncate font-sans">
                     {displayName || 'DocStudio User'}
                   </div>
-                  <div className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate font-mono">
-                    @{currentUsername}
+                  <div className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate font-mono flex items-center gap-1">
+                    <span>@{currentUsername}</span>
+                    <VerifiedBadge size="sm" />
                   </div>
                 </div>
               </div>
@@ -575,6 +657,7 @@ export default function AccountPage() {
                         <span className="bg-neutral-100 dark:bg-neutral-900 px-2.5 py-1 border border-neutral-200 dark:border-neutral-800 font-mono text-xs text-neutral-800 dark:text-neutral-200 rounded-lg flex items-center gap-1.5 font-medium">
                           <span className="text-neutral-400 dark:text-neutral-500">@</span>
                           <span>{currentUsername}</span>
+                          <VerifiedBadge size="sm" />
                           <button
                             type="button"
                             onClick={handleCopyUsername}
@@ -662,13 +745,16 @@ export default function AccountPage() {
                             <AtSign className="w-3.5 h-3.5" />
                             <span>Username</span>
                           </div>
-                          <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
                             Unique Handle
                           </span>
                         </div>
-                        <p className="text-sm font-bold font-mono text-neutral-950 dark:text-white">
-                          @{currentUsername}
-                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <p className="text-sm font-bold font-mono text-neutral-950 dark:text-white">
+                            @{currentUsername}
+                          </p>
+                          <VerifiedBadge size="sm" />
+                        </div>
                       </div>
 
                       {/* Email Address (Immutable) */}
@@ -792,12 +878,66 @@ export default function AccountPage() {
                             placeholder="username"
                             maxLength={20}
                             required
-                            className="w-full rounded-lg border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 focus:border-neutral-950 dark:focus:border-white bg-white dark:bg-neutral-900/90 pl-8 pr-3.5 py-2.5 text-sm font-mono text-neutral-900 dark:text-white focus:outline-none transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
+                            className={`w-full rounded-lg border bg-white dark:bg-neutral-900/90 pl-8 pr-10 py-2.5 text-sm font-mono text-neutral-900 dark:text-white focus:outline-none transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-500 ${
+                              usernameStatus === 'unavailable'
+                                ? 'border-rose-500 focus:border-rose-500 dark:border-rose-500 dark:focus:border-rose-500 ring-1 ring-rose-500/30'
+                                : usernameStatus === 'available'
+                                ? 'border-emerald-500 focus:border-emerald-500 dark:border-emerald-500 dark:focus:border-emerald-500'
+                                : usernameStatus === 'invalid'
+                                ? 'border-amber-500 focus:border-amber-500 dark:border-amber-500 dark:focus:border-amber-500'
+                                : 'border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 focus:border-neutral-950 dark:focus:border-white'
+                            }`}
                           />
+                          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            {usernameStatus === 'checking' && (
+                              <Loader2 className="w-4 h-4 text-neutral-400 animate-spin" />
+                            )}
+                            {usernameStatus === 'available' && (
+                              <CheckCircle className="w-4 h-4 text-emerald-500" />
+                            )}
+                            {usernameStatus === 'unavailable' && (
+                              <XCircle className="w-4 h-4 text-rose-500" />
+                            )}
+                            {usernameStatus === 'invalid' && (
+                              <AlertCircle className="w-4 h-4 text-amber-500" />
+                            )}
+                          </div>
                         </div>
-                        <p className="text-[11px] text-neutral-400 dark:text-neutral-500 font-sans">
-                          3-20 characters (lowercase letters, numbers, underscores).
-                        </p>
+
+                        {/* Live availability feedback */}
+                        {usernameStatus === 'unavailable' && (
+                          <div className="flex items-center gap-1.5 text-xs text-rose-600 dark:text-rose-400 font-sans mt-1 animate-fadeIn">
+                            <XCircle className="w-3.5 h-3.5 shrink-0" />
+                            <span className="font-semibold">Username not available</span>
+                            <span className="text-rose-500/80 dark:text-rose-400/80">— {usernameMessage}</span>
+                          </div>
+                        )}
+                        {usernameStatus === 'available' && (
+                          <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-sans mt-1 animate-fadeIn">
+                            <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+                            <span>{usernameMessage}</span>
+                            {username.trim().toLowerCase() === (profile?.username || defaultUsername || '').toLowerCase() && (
+                              <VerifiedBadge size="sm" />
+                            )}
+                          </div>
+                        )}
+                        {usernameStatus === 'invalid' && (
+                          <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-sans mt-1 animate-fadeIn">
+                            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                            <span>{usernameMessage}</span>
+                          </div>
+                        )}
+                        {usernameStatus === 'checking' && (
+                          <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-1 animate-fadeIn">
+                            <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" />
+                            <span>Checking handle availability...</span>
+                          </div>
+                        )}
+                        {usernameStatus === 'idle' && (
+                          <p className="text-[11px] text-neutral-400 dark:text-neutral-500 font-sans">
+                            3-20 characters (lowercase letters, numbers, underscores).
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -857,7 +997,13 @@ export default function AccountPage() {
                     </div>
 
                     <div className="flex items-center gap-3 pt-4 border-t border-neutral-200 dark:border-neutral-900">
-                      <Button type="submit" variant="primary" size="md" isLoading={profileSaving}>
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        size="md"
+                        isLoading={profileSaving}
+                        disabled={profileSaving || usernameStatus === 'unavailable' || usernameStatus === 'invalid' || usernameStatus === 'checking'}
+                      >
                         Save Changes
                       </Button>
                       <Button
@@ -1120,22 +1266,15 @@ export default function AccountPage() {
 
                 {/* Section 1: Connected Authentication & Identity Logins */}
                 <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0" />
-                      <div>
-                        <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
-                          Connected Authentication Methods
-                        </h3>
-                        <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
-                          Every credential linked here is permanently tied to your Unified Account ID.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 self-start sm:self-center bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 px-3 py-1 rounded-xl text-xs font-mono text-neutral-600 dark:text-neutral-400">
-                      <span>UID:</span>
-                      <strong className="text-neutral-950 dark:text-white">{user?.uid?.slice(0, 10)}...</strong>
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0" />
+                    <div>
+                      <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                        Connected Authentication Methods
+                      </h3>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+                        Every credential linked here is permanently tied to your Docdril account.
+                      </p>
                     </div>
                   </div>
 

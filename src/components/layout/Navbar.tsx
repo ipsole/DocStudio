@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { UserAvatar } from '@/components/ui/UserAvatar';
+import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import {
   LogOut,
   LayoutDashboard,
@@ -158,8 +159,9 @@ export function Navbar() {
                         <p className="text-xs font-bold text-neutral-950 dark:text-white truncate font-sans">
                           {profile?.displayName || user.displayName || 'DocStudio User'}
                         </p>
-                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate font-sans">
-                          {user.email}
+                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate font-mono flex items-center gap-1">
+                          <span>@{profile?.username || user.email?.split('@')[0] || 'creator'}</span>
+                          <VerifiedBadge size="sm" />
                         </p>
                       </div>
                     </div>
