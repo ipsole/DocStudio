@@ -11,6 +11,7 @@
 
 html {
   scrollbar-gutter: stable;
+  overflow-y: scroll;
 }
 
 html.dark,

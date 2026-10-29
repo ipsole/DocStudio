@@ -171,7 +171,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
         onClose={() => setShowTour(false)}
       />
 
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 py-8 sm:py-12 space-y-10 sm:space-y-12">
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-10 sm:space-y-12">
         {/* 1. Cinematic Hero Header */}
         <div className="animate-fade-in-up flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-neutral-200/80 dark:border-neutral-900">
           <div className="space-y-1.5">
@@ -217,7 +217,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
         {/* 2. Enterprise Plan, Quota & Access Ribbon */}
         <div id="tour-quota-card" className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 animate-fade-in-up animation-delay-100">
           {/* Card 1: Your Current Plan & Upgrade Action */}
-          <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-all flex flex-col justify-between space-y-4">
+          <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-shadow flex flex-col justify-between space-y-4">
             <div className="flex items-center justify-between">
               <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                 Current Plan
@@ -252,7 +252,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
           </div>
 
           {/* Card 2: Generation Quota with Visual Usage Meter & Get More Credits Button */}
-          <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-all flex flex-col justify-between space-y-4">
+          <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-shadow flex flex-col justify-between space-y-4">
             <div className="flex items-center justify-between">
               <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                 Generation Quota
@@ -280,7 +280,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
               {/* Visual Enterprise Usage Bar */}
               <div className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-900 rounded-full overflow-hidden mt-3 mb-1">
                 <div
-                  className="h-full bg-emerald-500 dark:bg-emerald-400 rounded-full transition-all duration-500"
+                  className="h-full bg-emerald-500 dark:bg-emerald-400 rounded-full"
                   style={{
                     width: `${Math.min(100, Math.max(0, ((subscriptions.length > 0 ? totalCreditsRemaining : 175) / (subscriptions.length > 0 ? totalCreditsMax : 175)) * 100))}%`,
                   }}
@@ -307,7 +307,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
           </div>
 
           {/* Card 3: Connected Subdomain Mesh */}
-          <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-all flex flex-col justify-between space-y-4">
+          <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-shadow flex flex-col justify-between space-y-4">
             <div className="flex items-center justify-between">
               <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                 Connected Suites

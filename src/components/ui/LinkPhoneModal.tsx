@@ -172,15 +172,6 @@ export function LinkPhoneModal({ isOpen, onClose, onSuccess }: LinkPhoneModalPro
               autoFocus
             />
 
-            <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-500 dark:text-neutral-400 font-sans space-y-1">
-              <p className="font-semibold text-neutral-700 dark:text-neutral-300">
-                🔒 Enterprise Account Linking Guarantee:
-              </p>
-              <p>
-                Linking your phone will <strong>not</strong> create a new account or reset your credits. Your existing UID, active subscriptions, and preferences remain unchanged.
-              </p>
-            </div>
-
             <div className="flex items-center justify-end gap-3 pt-2">
               <Button type="button" variant="secondary" size="md" onClick={handleClose} disabled={loading}>
                 Cancel
