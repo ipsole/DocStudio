@@ -147,7 +147,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    await signInWithRedirect(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    if (result.user) {
+      const userProfile = await ensureUserProfile(
+        result.user.uid,
+        result.user.email || '',
+        result.user.displayName,
+        result.user.photoURL,
+        result.user.phoneNumber
+      );
+      const createdTime = typeof userProfile?.createdAt === 'number' ? userProfile.createdAt : Number(userProfile?.createdAt || 0);
+      if (userProfile && Date.now() - createdTime < 120000 && typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem('docstudio_login_welcome', 'pending');
+        } catch {
+          // ignore
+        }
+      }
+    }
   };
 
   const signInWithGoogleCredential = async (idToken: string): Promise<User | null> => {
