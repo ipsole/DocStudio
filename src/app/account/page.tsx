@@ -51,7 +51,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 
-type TabKey = 'profile' | 'subscriptions' | 'security' | 'settings' | 'legal' | 'danger';
+type TabKey = 'profile' | 'subscriptions' | 'security' | 'settings' | 'legal';
 
 export default function AccountPage() {
   const router = useRouter();
@@ -117,7 +117,7 @@ export default function AccountPage() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash.replace('#', '') as TabKey;
-      if (['profile', 'subscriptions', 'security', 'settings', 'legal', 'danger'].includes(hash)) {
+      if (['profile', 'subscriptions', 'security', 'settings', 'legal'].includes(hash)) {
         setActiveTab(hash);
       }
     }
@@ -282,21 +282,20 @@ export default function AccountPage() {
     totalCreditsMax > 0 ? Math.min(100, Math.round((totalCreditsRemaining / totalCreditsMax) * 100)) : 0;
 
   // Sidebar navigation items
-  const navItems: { key: TabKey; label: string; icon: React.ElementType; badge?: string; danger?: boolean }[] = [
+  const navItems: { key: TabKey; label: string; icon: React.ElementType; badge?: string }[] = [
     { key: 'profile', label: 'Profile & Identity', icon: UserIconLucide },
     { key: 'subscriptions', label: 'Subscriptions & Quota', icon: Layers, badge: `${totalCreditsRemaining} pts` },
     { key: 'security', label: 'Security & Password', icon: KeyRound },
     { key: 'settings', label: 'Preferences & Theme', icon: Sliders },
     { key: 'legal', label: 'Terms & Policies', icon: FileText },
-    { key: 'danger', label: 'Danger Zone', icon: Trash2, danger: true },
   ];
 
   return (
     <ProtectedRoute>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8 text-neutral-900 dark:text-white transition-colors duration-200">
         
-        {/* Top Header */}
-        <div className="border-b border-neutral-200 dark:border-neutral-900 pb-5 flex items-center justify-between">
+        {/* Top Header - Pure clean typography with no border line */}
+        <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
             Settings
           </h1>
@@ -336,11 +335,7 @@ export default function AccountPage() {
                 onClick={() => handleTabChange(item.key)}
                 className={`whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-sans font-medium flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
                   isActive
-                    ? item.danger
-                      ? 'bg-red-600 text-white shadow-sm'
-                      : 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-sm'
-                    : item.danger
-                    ? 'text-red-600 dark:text-red-400 bg-red-50/60 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/50'
+                    ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-sm'
                     : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white bg-neutral-100/80 dark:bg-neutral-900/60'
                 }`}
               >
@@ -371,11 +366,7 @@ export default function AccountPage() {
                     onClick={() => handleTabChange(item.key)}
                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-sans font-medium transition-all text-left cursor-pointer group ${
                       isActive
-                        ? item.danger
-                          ? 'bg-red-600 text-white shadow-sm font-semibold'
-                          : 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-sm font-semibold'
-                        : item.danger
-                        ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40'
+                        ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-sm font-semibold'
                         : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900/80'
                     }`}
                   >
@@ -384,15 +375,13 @@ export default function AccountPage() {
                         className={`w-4 h-4 transition-transform group-hover:scale-110 ${
                           isActive
                             ? 'opacity-100'
-                            : item.danger
-                            ? 'text-red-500'
                             : 'text-neutral-500 dark:text-neutral-400'
                         }`}
                       />
                       <span>{item.label}</span>
                     </div>
 
-                    {item.badge && !item.danger && (
+                    {item.badge && (
                       <span
                         className={`text-[10px] px-2 py-0.5 rounded-md font-mono ${
                           isActive
@@ -1187,6 +1176,48 @@ export default function AccountPage() {
                     <span className="text-[11px] font-mono text-neutral-400">ONLINE</span>
                   </div>
                 </div>
+
+                {/* Danger Zone: Complete Account Deletion (Inside Security & Password) */}
+                <div className="p-6 sm:p-8 rounded-3xl border border-red-300 dark:border-red-950/80 bg-red-50/40 dark:bg-red-950/20 backdrop-blur-xl space-y-6">
+                  <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                    <ShieldAlert className="w-5 h-5 shrink-0" />
+                    <div>
+                      <h3 className="text-base font-bold uppercase tracking-wider font-sans">
+                        Danger Zone • Complete Account Deletion
+                      </h3>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400 font-sans mt-0.5">
+                        Permanent, irreversible deletion of your DocStudio user records and assets.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900/70 border border-red-200 dark:border-red-900/50 space-y-3 text-xs font-sans text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    <p className="font-bold text-red-600 dark:text-red-400 uppercase tracking-wider text-[11px]">
+                      Please read carefully before proceeding:
+                    </p>
+                    <ul className="list-disc list-inside space-y-1 text-neutral-600 dark:text-neutral-400">
+                      <li>Your user profile, name, phone, bio, and avatar preferences will be purged immediately.</li>
+                      <li>Active subscriptions for Docdril Canvas, Motion, and Flow will be terminated.</li>
+                      <li>Any remaining balance of generation credits will be forfeited immediately.</li>
+                      <li>
+                        A GDPR-compliant irreversible SHA-256 fingerprint is recorded in the anti-abuse tombstone registry. If you re-register with this email later, initial free welcome credits cannot be re-claimed.
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="pt-2">
+                    <Button
+                      type="button"
+                      variant="danger"
+                      size="md"
+                      onClick={() => setIsDeleteModalOpen(true)}
+                      className="gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Delete Account & Wipe All Data</span>
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1404,52 +1435,6 @@ export default function AccountPage() {
                         Under GDPR Right to Erasure, deleting your account wipes all profile records, subscription histories, and cloud projects. To protect system infrastructure from spam recreate-and-exploit attacks, an irreversible cryptographic SHA-256 hash of your identity is recorded. This prevents re-claiming initial free welcome credits while keeping zero personal data on disk.
                       </p>
                     </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* TAB 6: Danger Zone */}
-            {activeTab === 'danger' && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="p-6 sm:p-8 rounded-3xl border border-red-300 dark:border-red-950/80 bg-red-50/40 dark:bg-red-950/20 backdrop-blur-xl space-y-6">
-                  <div className="flex items-center gap-2 text-red-600 dark:text-red-400">
-                    <ShieldAlert className="w-5 h-5 shrink-0" />
-                    <div>
-                      <h3 className="text-base font-bold uppercase tracking-wider font-sans">
-                        Danger Zone • Complete Account Deletion
-                      </h3>
-                      <p className="text-xs text-neutral-600 dark:text-neutral-400 font-sans mt-0.5">
-                        Permanent, irreversible deletion of your DocStudio user records and assets.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900/70 border border-red-200 dark:border-red-900/50 space-y-3 text-xs font-sans text-neutral-700 dark:text-neutral-300 leading-relaxed">
-                    <p className="font-bold text-red-600 dark:text-red-400 uppercase tracking-wider text-[11px]">
-                      Please read carefully before proceeding:
-                    </p>
-                    <ul className="list-disc list-inside space-y-1 text-neutral-600 dark:text-neutral-400">
-                      <li>Your user profile, name, phone, bio, and avatar preferences will be purged immediately.</li>
-                      <li>Active subscriptions for Docdril Canvas, Motion, and Flow will be terminated.</li>
-                      <li>Any remaining balance of generation credits will be forfeited immediately.</li>
-                      <li>
-                        A GDPR-compliant irreversible SHA-256 fingerprint is recorded in the anti-abuse tombstone registry. If you re-register with this email later, initial free welcome credits cannot be re-claimed.
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="pt-2">
-                    <Button
-                      type="button"
-                      variant="danger"
-                      size="md"
-                      onClick={() => setIsDeleteModalOpen(true)}
-                      className="gap-2"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      <span>Delete Account & Wipe All Data</span>
-                    </Button>
                   </div>
                 </div>
               </div>
