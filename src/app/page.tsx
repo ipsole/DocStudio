@@ -78,9 +78,9 @@ export default function HomePage() {
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [packQuantities, setPackQuantities] = useState<Record<string, number>>({
-    'mini-boost': 1,
-    'studio-boost': 1,
-    'power-vault': 1,
+    'pack-mini': 1,
+    'pack-studio': 1,
+    'pack-power': 1,
   });
 
   useEffect(() => {
@@ -378,9 +378,10 @@ export default function HomePage() {
               {(billingCycle === 'yearly' ? YEARLY_PRICING_PLANS : PRICING_PLANS).map((plan) => {
                 const isCurrentPlan =
                   activePlanId === plan.id ||
+                  (activePlanId === 'free' && (plan.id === 'starter' || plan.id === 'free')) ||
                   (activePlanId === 'pro' && (plan.id === 'pro' || plan.id === 'pro-yearly')) ||
                   (activePlanId === 'enterprise' && (plan.id === 'ultra' || plan.id === 'ultra-yearly'));
-                const isIncluded = (activePlanId === 'pro' || activePlanId === 'enterprise') && plan.id === 'free';
+                const isIncluded = (activePlanId === 'pro' || activePlanId === 'enterprise') && (plan.id === 'free' || plan.id === 'starter');
                 const isDowngrade = activePlanId === 'enterprise' && (plan.id === 'pro' || plan.id === 'pro-yearly');
 
                 return (
