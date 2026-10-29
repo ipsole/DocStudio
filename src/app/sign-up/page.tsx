@@ -116,6 +116,10 @@ export default function SignUpPage() {
         setError(
           `SMS delivery for ${countryCode} is currently disabled in your Firebase Console. Please enable region ${countryCode} in Firebase Console > Authentication > Settings > SMS region policy.`
         );
+      } else if (fbErr.code === 'auth/billing-not-enabled') {
+        setError(
+          'Sending real carrier SMS requires the Firebase Blaze (Pay as you go) plan, or you can register this number under Firebase Console > Authentication > Phone > "Phone numbers for testing" to verify instantly for free.'
+        );
       } else if (fbErr.code === 'auth/too-many-requests' || fbErr.code === 'auth/quota-exceeded') {
         setError('SMS quota limit reached. Please register using Google, Apple, or Email.');
       } else {
