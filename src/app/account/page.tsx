@@ -14,7 +14,7 @@ import { DeleteAccountModal } from '@/components/ui/DeleteAccountModal';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
 import { CREDIT_PACKS, CreditPack } from '@/lib/pricingData';
-import { ensureDefaultUserSubscriptions, getUserSubscriptions } from '@/lib/firebase/db';
+import { ensureDefaultUserSubscriptions } from '@/lib/firebase/db';
 import { AppSubscription } from '@/types';
 import {
   User as UserIconLucide,
@@ -25,10 +25,8 @@ import {
   Shield,
   KeyRound,
   Layers,
-  CreditCard,
   FileText,
   Sliders,
-  Trash2,
   LogOut,
   CheckCircle,
   AlertCircle,
@@ -43,12 +41,9 @@ import {
   Sparkles,
   Sun,
   Moon,
-  Bell,
   ChevronRight,
   Zap,
-  ShieldAlert,
   Globe,
-  RefreshCw,
 } from 'lucide-react';
 
 type TabKey = 'profile' | 'subscriptions' | 'security' | 'settings' | 'legal';
@@ -294,7 +289,7 @@ export default function AccountPage() {
     <ProtectedRoute>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8 text-neutral-900 dark:text-white transition-colors duration-200">
         
-        {/* Top Header - Pure clean typography with no border line */}
+        {/* Top Header - Pure clean typography without dividing line */}
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
             Settings
@@ -350,7 +345,7 @@ export default function AccountPage() {
         <div className="flex flex-col md:flex-row gap-8 items-start">
           
           {/* Left Navigation Sidebar */}
-          <aside className="hidden md:block w-64 shrink-0 space-y-6 sticky top-24">
+          <aside className="hidden md:block w-64 shrink-0 space-y-4 sticky top-24">
             <nav className="p-2 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white/70 dark:bg-neutral-950/70 backdrop-blur-xl space-y-1 shadow-sm">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -426,13 +421,13 @@ export default function AccountPage() {
           </aside>
 
           {/* Right Main Content Pane */}
-          <main className="flex-1 min-w-0 w-full space-y-6">
+          <main className="flex-1 min-w-0 w-full">
 
-            {/* TAB 1: Profile & Identity */}
+            {/* TAB 1: Account */}
             {activeTab === 'profile' && (
               <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
                 
-                {/* Header row: Live Avatar Hero + Identity */}
+                {/* Header Row: Live Avatar Hero + Identity */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-neutral-200 dark:border-neutral-900">
                   <div className="flex items-center gap-5">
                     <div
@@ -475,7 +470,7 @@ export default function AccountPage() {
                             className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors"
                             title="Copy UID"
                           >
-                            {copiedUid ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+                            {copiedUid ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3 text-neutral-400" />}
                           </button>
                         </span>
                         <span className="text-neutral-300 dark:text-neutral-700">•</span>
@@ -500,7 +495,7 @@ export default function AccountPage() {
 
                 {/* Profile Details: VIEW MODE vs EDIT MODE */}
                 {!isEditing ? (
-                  /* 1. VIEW MODE (Default Clean Preview) */
+                  /* 1. VIEW MODE */
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
                       <div>
@@ -612,7 +607,6 @@ export default function AccountPage() {
                       </button>
                     </div>
 
-                    {/* Form Inputs */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       <Input
                         label="Full Name"
@@ -622,7 +616,6 @@ export default function AccountPage() {
                         required
                       />
 
-                      {/* Email Address is STRICTLY READ-ONLY and NON-EDITABLE */}
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
                           <label className="block font-sans text-xs font-medium text-neutral-700 dark:text-neutral-300">
@@ -689,51 +682,56 @@ export default function AccountPage() {
               </div>
             )}
 
-            {/* TAB 2: Subscriptions & Quota */}
+            {/* TAB 2: Subscriptions */}
             {activeTab === 'subscriptions' && (
-              <div className="space-y-6 animate-fadeIn">
-                {/* Credit Summary Card */}
-                <div className="p-6 sm:p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm dark:shadow-none space-y-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-amber-500" />
-                        <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
-                          Generation Credits Vault
-                        </h3>
-                      </div>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-0.5">
-                        Shared balance across all Docdril creative pipelines and document engines.
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedPack(CREDIT_PACKS[1]); // Default to popular 500 pack
-                          setIsTopUpOpen(true);
-                        }}
-                        className="gap-1.5"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                        <span>Add Credits</span>
-                      </Button>
-
-                      <Link href="/pricing">
-                        <Button variant="primary" size="sm" className="gap-1.5">
-                          <span>Upgrade Plan</span>
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </Button>
-                      </Link>
-                    </div>
+              <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
+                
+                {/* Header Row */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-200 dark:border-neutral-900">
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+                      Subscriptions & Credits
+                    </h2>
+                    <p className="mt-1 text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 font-sans">
+                      Shared balance across all Docdril creative pipelines and document engines.
+                    </p>
                   </div>
 
-                  {/* Big Number & Progress */}
-                  <div className="p-5 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800/80 space-y-3">
-                    <div className="flex items-baseline justify-between">
+                  <div className="flex items-center gap-3">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedPack(CREDIT_PACKS[1]);
+                        setIsTopUpOpen(true);
+                      }}
+                      className="gap-1.5"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Add Credits</span>
+                    </Button>
+
+                    <Link href="/pricing">
+                      <Button variant="primary" size="sm" className="gap-1.5">
+                        <span>Upgrade Plan</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Section 1: Generation Credits Vault */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Zap className="w-4 h-4 text-amber-500" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                      Generation Credits Vault
+                    </h3>
+                  </div>
+
+                  <div className="p-5 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 space-y-3">
+                    <div className="flex items-baseline justify-between flex-wrap gap-2">
                       <div className="flex items-baseline gap-2">
                         <span className="text-4xl font-extrabold font-mono text-neutral-950 dark:text-white">
                           {subsLoading ? '...' : totalCreditsRemaining}
@@ -747,7 +745,6 @@ export default function AccountPage() {
                       </span>
                     </div>
 
-                    {/* Progress Bar */}
                     <div className="w-full h-2.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-500"
@@ -757,8 +754,8 @@ export default function AccountPage() {
                   </div>
                 </div>
 
-                {/* Software Suites Status List */}
-                <div className="p-6 sm:p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm dark:shadow-none space-y-6">
+                {/* Section 2: Active Software Subscriptions */}
+                <div className="space-y-4 pt-6 border-t border-neutral-200 dark:border-neutral-900">
                   <div>
                     <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
                       Active Software Subscriptions
@@ -844,8 +841,8 @@ export default function AccountPage() {
                   </div>
                 </div>
 
-                {/* Credit Packs Quick Buy */}
-                <div className="p-6 sm:p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm dark:shadow-none space-y-6">
+                {/* Section 3: Extra Credit Packs */}
+                <div className="space-y-4 pt-6 border-t border-neutral-200 dark:border-neutral-900">
                   <div>
                     <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
                       Top-Up Extra Credits On Demand
@@ -908,29 +905,39 @@ export default function AccountPage() {
               </div>
             )}
 
-            {/* TAB 3: Security & Password */}
+            {/* TAB 3: Security */}
             {activeTab === 'security' && (
-              <div className="space-y-6 animate-fadeIn">
+              <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
                 
-                {/* Authentication Provider Card */}
-                <div className="p-6 sm:p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm dark:shadow-none space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-emerald-500" />
-                      <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
-                        Authentication Provider
-                      </h3>
-                    </div>
+                {/* Header Row */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-neutral-200 dark:border-neutral-900">
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+                      Security & Authentication
+                    </h2>
+                    <p className="mt-1 text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 font-sans">
+                      Manage your login credentials, password updates, and session devices.
+                    </p>
+                  </div>
 
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300">
-                      {isGoogleUser ? 'Google SSO' : 'Email & Password'}
-                    </span>
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 self-start sm:self-center">
+                    {isGoogleUser ? 'Google SSO' : 'Email & Password'}
+                  </span>
+                </div>
+
+                {/* Section 1: Authentication Provider Status */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-emerald-500" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                      Active Provider
+                    </h3>
                   </div>
 
                   {isGoogleUser ? (
-                    <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="p-4 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shadow-sm">
+                        <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shadow-sm shrink-0">
                           <svg className="w-5 h-5" viewBox="0 0 24 24">
                             <path
                               fill="#4285F4"
@@ -971,8 +978,8 @@ export default function AccountPage() {
                       </a>
                     </div>
                   ) : (
-                    <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shadow-sm">
+                    <div className="p-4 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shadow-sm shrink-0">
                         <Mail className="w-5 h-5 text-neutral-600 dark:text-neutral-300" />
                       </div>
                       <div>
@@ -987,8 +994,8 @@ export default function AccountPage() {
                   )}
                 </div>
 
-                {/* In-App Password Change (For Password Users) */}
-                <div className="p-6 sm:p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm dark:shadow-none space-y-6">
+                {/* Section 2: In-App Password Change */}
+                <div className="space-y-4 pt-6 border-t border-neutral-200 dark:border-neutral-900">
                   <div>
                     <div className="flex items-center gap-2">
                       <KeyRound className="w-4 h-4 text-neutral-900 dark:text-white" />
@@ -1017,7 +1024,6 @@ export default function AccountPage() {
 
                   {hasPasswordProvider ? (
                     <form onSubmit={handlePasswordChange} className="space-y-4 max-w-lg">
-                      {/* Current Password */}
                       <div>
                         <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 font-sans mb-1.5">
                           Current Password
@@ -1041,7 +1047,6 @@ export default function AccountPage() {
                         </div>
                       </div>
 
-                      {/* New Password */}
                       <div>
                         <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 font-sans mb-1.5">
                           New Password
@@ -1066,7 +1071,6 @@ export default function AccountPage() {
                         </div>
                       </div>
 
-                      {/* Confirm New Password */}
                       <div>
                         <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300 font-sans mb-1.5">
                           Confirm New Password
@@ -1098,7 +1102,7 @@ export default function AccountPage() {
                       </div>
                     </form>
                   ) : (
-                    <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-600 dark:text-neutral-400 font-sans space-y-2">
+                    <div className="p-4 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-600 dark:text-neutral-400 font-sans space-y-2">
                       <p>
                         You are currently signed in using <strong>Google SSO</strong>. To establish an independent password for direct email sign-in, you can trigger a password setup email below.
                       </p>
@@ -1137,8 +1141,8 @@ export default function AccountPage() {
                   </div>
                 </div>
 
-                {/* Session Security */}
-                <div className="p-6 sm:p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm dark:shadow-none space-y-4">
+                {/* Section 3: Active Device Session */}
+                <div className="space-y-4 pt-6 border-t border-neutral-200 dark:border-neutral-900">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
@@ -1161,7 +1165,7 @@ export default function AccountPage() {
                     </Button>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex items-center justify-between text-xs font-sans">
+                  <div className="p-4 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex items-center justify-between text-xs font-sans">
                     <div className="flex items-center gap-3">
                       <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                       <div>
@@ -1173,8 +1177,8 @@ export default function AccountPage() {
                   </div>
                 </div>
 
-                {/* Account Deletion */}
-                <div className="p-6 sm:p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm dark:shadow-none space-y-6">
+                {/* Section 4: Account Deletion */}
+                <div className="space-y-4 pt-6 border-t border-neutral-200 dark:border-neutral-900">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="space-y-1">
                       <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
@@ -1196,7 +1200,7 @@ export default function AccountPage() {
                     </Button>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 text-xs font-sans text-neutral-600 dark:text-neutral-400 space-y-1.5">
+                  <div className="p-4 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 text-xs font-sans text-neutral-600 dark:text-neutral-400 space-y-1.5">
                     <p className="font-semibold text-neutral-800 dark:text-neutral-200">
                       Data Governance & Permanent Erasure
                     </p>
@@ -1208,11 +1212,22 @@ export default function AccountPage() {
               </div>
             )}
 
-            {/* TAB 4: Preferences & Settings */}
+            {/* TAB 4: Preferences */}
             {activeTab === 'settings' && (
-              <div className="space-y-6 animate-fadeIn">
-                {/* Theme Selector Card */}
-                <div className="p-6 sm:p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm dark:shadow-none space-y-6">
+              <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
+                
+                {/* Header Row */}
+                <div className="pb-6 border-b border-neutral-200 dark:border-neutral-900">
+                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+                    Preferences & Interface
+                  </h2>
+                  <p className="mt-1 text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 font-sans">
+                    Customize your visual theme, alert notifications, and regional settings.
+                  </p>
+                </div>
+
+                {/* Section 1: Appearance & Theme */}
+                <div className="space-y-4">
                   <div>
                     <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
                       Appearance & Theme
@@ -1273,8 +1288,8 @@ export default function AccountPage() {
                   </div>
                 </div>
 
-                {/* Notifications & Alert Settings */}
-                <div className="p-6 sm:p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm dark:shadow-none space-y-6">
+                {/* Section 2: Notifications & Alerts */}
+                <div className="space-y-4 pt-6 border-t border-neutral-200 dark:border-neutral-900">
                   <div>
                     <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
                       Notifications & Alerts
@@ -1336,8 +1351,8 @@ export default function AccountPage() {
                   )}
                 </div>
 
-                {/* Regional & Currency Info */}
-                <div className="p-6 sm:p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm dark:shadow-none space-y-4">
+                {/* Section 3: Localization & Currency */}
+                <div className="space-y-4 pt-6 border-t border-neutral-200 dark:border-neutral-900">
                   <div className="flex items-center gap-2">
                     <Globe className="w-4 h-4 text-neutral-600 dark:text-neutral-300" />
                     <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
@@ -1347,12 +1362,12 @@ export default function AccountPage() {
                   <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
                     DocStudio supports dual currency transparent pricing:
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                    <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div className="p-4 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800">
                       <p className="text-xs font-bold text-neutral-950 dark:text-white font-sans">Indian Rupee (INR ₹)</p>
                       <p className="text-[11px] text-neutral-500 font-sans mt-0.5">Primary domestic pricing (₹499 Pro / ₹999 Ultra)</p>
                     </div>
-                    <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800">
+                    <div className="p-4 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800">
                       <p className="text-xs font-bold text-neutral-950 dark:text-white font-sans">US Dollar (USD $)</p>
                       <p className="text-[11px] text-neutral-500 font-sans mt-0.5">International side-by-side ($6 Pro / $12 Ultra)</p>
                     </div>
@@ -1361,35 +1376,42 @@ export default function AccountPage() {
               </div>
             )}
 
-            {/* TAB 5: Terms & Policies */}
+            {/* TAB 5: Terms */}
             {activeTab === 'legal' && (
-              <div className="space-y-6 animate-fadeIn">
-                <div className="p-6 sm:p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm dark:shadow-none space-y-6">
-                  <div>
-                    <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
-                      Terms of Service & Licensing
-                    </h3>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-0.5">
-                      Clear, creator-friendly governance and intellectual property ownership rules.
-                    </p>
-                  </div>
+              <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 p-6 sm:p-8 space-y-8 rounded-3xl backdrop-blur-xl shadow-sm dark:shadow-none animate-fadeIn">
+                
+                {/* Header Row */}
+                <div className="pb-6 border-b border-neutral-200 dark:border-neutral-900">
+                  <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+                    Terms & Governance
+                  </h2>
+                  <p className="mt-1 text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 font-sans">
+                    Clear, creator-friendly governance, commercial licensing, and data protection standards.
+                  </p>
+                </div>
 
-                  <div className="space-y-4 text-xs font-sans text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                    <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 space-y-1.5">
+                {/* Section 1: Terms of Service */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                    Terms of Service & Licensing
+                  </h3>
+
+                  <div className="space-y-3 text-xs font-sans text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                    <div className="p-4 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 space-y-1.5">
                       <h4 className="font-bold text-neutral-950 dark:text-white">1. 100% Creator Ownership</h4>
                       <p>
                         You retain 100% intellectual property ownership of all artwork, motion sequences, artboards, vectors, and documents generated on DocStudio. We claim zero rights or ownership over your creative output.
                       </p>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 space-y-1.5">
+                    <div className="p-4 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 space-y-1.5">
                       <h4 className="font-bold text-neutral-950 dark:text-white">2. Acceptable Use & Fair Access</h4>
                       <p>
                         You agree to use DocStudio tools in compliance with all relevant laws. Automated scraping, reverse-engineering of cloud rendering engines, or attempting to exploit credit quotas violates our service terms.
                       </p>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 space-y-1.5">
+                    <div className="p-4 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 space-y-1.5">
                       <h4 className="font-bold text-neutral-950 dark:text-white">3. Commercial Rights</h4>
                       <p>
                         Assets rendered under DocStudio Pro and Ultra subscriptions are eligible for commercial use, client distribution, video production, and commercial publishing without royalty obligations.
@@ -1398,28 +1420,24 @@ export default function AccountPage() {
                   </div>
                 </div>
 
-                <div className="p-6 sm:p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm dark:shadow-none space-y-6">
-                  <div>
-                    <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
-                      Privacy Policy & GDPR Compliance
-                    </h3>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-0.5">
-                      Strict data protection protocols and cryptographic anti-abuse architecture.
-                    </p>
-                  </div>
+                {/* Section 2: Privacy Policy & GDPR */}
+                <div className="space-y-4 pt-6 border-t border-neutral-200 dark:border-neutral-900">
+                  <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                    Privacy Policy & GDPR Compliance
+                  </h3>
 
-                  <div className="space-y-4 text-xs font-sans text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                    <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 space-y-1.5">
+                  <div className="space-y-3 text-xs font-sans text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                    <div className="p-4 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 space-y-1.5">
                       <h4 className="font-bold text-neutral-950 dark:text-white">Zero Third-Party Data Selling</h4>
                       <p>
                         DocStudio never sells, brokers, or monetizes personal data. Your email, phone, and project parameters remain confidential and encrypted in transit (TLS 1.3) and at rest (AES-256).
                       </p>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 space-y-1.5">
-                      <h4 className="font-bold text-neutral-950 dark:text-white">Right to Erasure & Anti-Abuse Tombstones</h4>
+                    <div className="p-4 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 space-y-1.5">
+                      <h4 className="font-bold text-neutral-950 dark:text-white">Right to Erasure & Anti-Abuse Safeguards</h4>
                       <p>
-                        Under GDPR Right to Erasure, deleting your account wipes all profile records, subscription histories, and cloud projects. To protect system infrastructure from spam recreate-and-exploit attacks, an irreversible cryptographic SHA-256 hash of your identity is recorded. This prevents re-claiming initial free welcome credits while keeping zero personal data on disk.
+                        Under GDPR Right to Erasure, deleting your account wipes all profile records, subscription histories, and cloud projects. To protect system infrastructure from recreate-and-exploit attacks, an irreversible cryptographic SHA-256 hash is retained solely to prevent automated re-claiming of initial free credits.
                       </p>
                     </div>
                   </div>
