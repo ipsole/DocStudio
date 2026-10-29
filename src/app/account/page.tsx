@@ -1146,70 +1146,7 @@ export default function AccountPage() {
                       </p>
                     </div>
 
-                    {/* Provider 2: Phone Number & SMS OTP */}
-                    <div className="p-4 rounded-2xl bg-neutral-50/60 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex flex-col justify-between space-y-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shrink-0">
-                            <Phone className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="text-xs font-bold text-neutral-950 dark:text-white font-sans">
-                                Phone Number (SMS OTP)
-                              </p>
-                              {hasPhoneProvider ? (
-                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
-                                  Linked
-                                </span>
-                              ) : (
-                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-400">
-                                  Not Linked
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs font-mono font-bold text-neutral-900 dark:text-neutral-100 mt-0.5">
-                              {user?.phoneNumber || profile?.phoneNumber || 'No mobile linked yet'}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-neutral-200/60 dark:border-neutral-800">
-                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
-                          {hasPhoneProvider
-                            ? 'Sign in directly via 6-digit SMS OTP.'
-                            : 'Link your phone for passwordless SMS OTP login.'}
-                        </p>
-
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <Button
-                            type="button"
-                            variant={hasPhoneProvider ? 'secondary' : 'primary'}
-                            size="sm"
-                            onClick={() => setIsPhoneModalOpen(true)}
-                            className="cursor-pointer text-[11px] h-8"
-                          >
-                            {hasPhoneProvider ? 'Update Phone' : '+ Link Phone'}
-                          </Button>
-                          {hasPhoneProvider && linkedProvidersCount > 1 && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleUnlinkProvider('phone')}
-                              isLoading={providerActionLoading === 'phone'}
-                              className="text-neutral-400 hover:text-red-600 dark:hover:text-red-400 text-[11px] h-8 px-2"
-                              title="Unlink Phone"
-                            >
-                              Disconnect
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Provider 3: Google Single Sign-On */}
+                    {/* Provider 2: Google Single Sign-On */}
                     <div className="p-4 rounded-2xl bg-neutral-50/60 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex flex-col justify-between space-y-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3">
@@ -1288,75 +1225,103 @@ export default function AccountPage() {
                       </div>
                     </div>
 
-                    {/* Provider 4: Sign in with Apple */}
-                    <div className="p-4 rounded-2xl bg-neutral-50/60 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex flex-col justify-between space-y-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shrink-0">
-                            <svg className="w-5 h-5 fill-current text-neutral-900 dark:text-white" viewBox="0 0 24 24">
-                              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 0.92-2.87-.93.04-2.02.63-2.66 1.38-.56.65-1.06 1.71-.93 2.74 1.04.08 2.06-.5 2.67-1.25z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="text-xs font-bold text-neutral-950 dark:text-white font-sans">
-                                Apple ID
-                              </p>
-                              {hasAppleProvider ? (
+                    {/* Optional: Phone Number (Only displayed if already linked to account) */}
+                    {hasPhoneProvider && (
+                      <div className="p-4 rounded-2xl bg-neutral-50/60 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex flex-col justify-between space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shrink-0">
+                              <Phone className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="text-xs font-bold text-neutral-950 dark:text-white font-sans">
+                                  Phone Number (SMS OTP)
+                                </p>
                                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
                                   Linked
                                 </span>
-                              ) : (
-                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-neutral-200 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-400">
-                                  Not Linked
-                                </span>
-                              )}
+                              </div>
+                              <p className="text-xs font-mono font-bold text-neutral-900 dark:text-neutral-100 mt-0.5">
+                                {user?.phoneNumber || profile?.phoneNumber}
+                              </p>
                             </div>
-                            <p className="text-xs font-mono text-neutral-900 dark:text-neutral-100 mt-0.5">
-                              {hasAppleProvider ? 'Connected via Apple' : 'Not connected'}
-                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2 pt-1 border-t border-neutral-200/60 dark:border-neutral-800">
+                          <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
+                            Sign in directly via 6-digit SMS OTP.
+                          </p>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {linkedProvidersCount > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleUnlinkProvider('phone')}
+                                isLoading={providerActionLoading === 'phone'}
+                                className="text-neutral-400 hover:text-red-600 dark:hover:text-red-400 text-[11px] h-8 px-2"
+                                title="Unlink Phone"
+                              >
+                                Disconnect
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>
+                    )}
 
-                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-neutral-200/60 dark:border-neutral-800">
-                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
-                          {hasAppleProvider ? 'Face ID / Touch ID active.' : 'Connect to sign in via Apple.'}
-                        </p>
+                    {/* Optional: Apple ID (Only displayed if already linked to account) */}
+                    {hasAppleProvider && (
+                      <div className="p-4 rounded-2xl bg-neutral-50/60 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex flex-col justify-between space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center shrink-0">
+                              <svg className="w-5 h-5 fill-current text-neutral-900 dark:text-white" viewBox="0 0 24 24">
+                                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 0.92-2.87-.93.04-2.02.63-2.66 1.38-.56.65-1.06 1.71-.93 2.74 1.04.08 2.06-.5 2.67-1.25z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="text-xs font-bold text-neutral-950 dark:text-white font-sans">
+                                  Apple ID
+                                </p>
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400">
+                                  Linked
+                                </span>
+                              </div>
+                              <p className="text-xs font-mono text-neutral-900 dark:text-neutral-100 mt-0.5">
+                                Connected via Apple
+                              </p>
+                            </div>
+                          </div>
+                        </div>
 
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {hasAppleProvider ? (
-                            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                              Active
-                            </span>
-                          ) : (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={handleLinkApple}
-                              isLoading={providerActionLoading === 'apple.com'}
-                              className="text-[11px] h-8"
-                            >
-                              Connect
-                            </Button>
-                          )}
-                          {hasAppleProvider && linkedProvidersCount > 1 && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleUnlinkProvider('apple.com')}
-                              isLoading={providerActionLoading === 'apple.com'}
-                              className="text-neutral-400 hover:text-red-600 dark:hover:text-red-400 text-[11px] h-8 px-2"
-                              title="Unlink Apple"
-                            >
-                              Disconnect
-                            </Button>
-                          )}
+                        <div className="flex items-center justify-between gap-2 pt-1 border-t border-neutral-200/60 dark:border-neutral-800">
+                          <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
+                            Face ID / Touch ID active.
+                          </p>
+
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {linkedProvidersCount > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleUnlinkProvider('apple.com')}
+                                isLoading={providerActionLoading === 'apple.com'}
+                                className="text-neutral-400 hover:text-red-600 dark:hover:text-red-400 text-[11px] h-8 px-2"
+                                title="Unlink Apple"
+                              >
+                                Disconnect
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 

@@ -7,9 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { PhoneInputWithCountry } from '@/components/ui/PhoneInputWithCountry';
-import { AlertCircle, Loader2, Phone, Mail, ArrowLeft, RotateCcw, ShieldCheck } from 'lucide-react';
-import type { ConfirmationResult } from 'firebase/auth';
+import { AlertCircle, Loader2 } from 'lucide-react';
 
 function SignInForm() {
   const router = useRouter();
@@ -20,10 +18,6 @@ function SignInForm() {
     loading: authLoading,
     signIn,
     signInWithGoogle,
-    signInWithApple,
-    setupRecaptcha,
-    sendPhoneOtp,
-    confirmPhoneOtp,
     isConfigured,
   } = useAuth();
 
@@ -33,24 +27,12 @@ function SignInForm() {
     }
   }, [user, authLoading, router, redirectPath]);
 
-  // Auth method: 'email' | 'phone'
-  const [authMethod, setAuthMethod] = useState<'email' | 'phone'>('email');
-
   // Email form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [appleLoading, setAppleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Phone OTP form state
-  const [countryCode, setCountryCode] = useState('+91');
-  const [nationalNumber, setNationalNumber] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpLoading, setOtpLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,92 +82,6 @@ function SignInForm() {
     }
   };
 
-  const handleAppleSignIn = async () => {
-    setError(null);
-    setAppleLoading(true);
-    try {
-      await signInWithApple();
-      router.push(redirectPath);
-    } catch (err: unknown) {
-      const fbErr = err as { code?: string; message?: string };
-      if (fbErr.code === 'auth/operation-not-allowed') {
-        setError(
-          'Sign in with Apple requires configuration in Firebase Console. You must supply your Apple Developer Services ID, Team ID, Key ID, and Private Key (.p8) in Firebase Console > Authentication > Sign-in method > Apple.'
-        );
-      } else if (fbErr.code !== 'auth/popup-closed-by-user') {
-        setError(fbErr.message || 'Apple sign in failed.');
-      }
-    } finally {
-      setAppleLoading(false);
-    }
-  };
-
-  // Send Phone OTP via SMS
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanDigits = nationalNumber.replace(/[\s-]/g, '').replace(/^0+/, '');
-    if (!cleanDigits) {
-      setError('Please enter your phone number.');
-      return;
-    }
-    setError(null);
-    setOtpLoading(true);
-
-    try {
-      const fullPhoneNumber = `${countryCode}${cleanDigits}`;
-      const verifier = setupRecaptcha('phone-recaptcha-container');
-      const confirmation = await sendPhoneOtp(fullPhoneNumber, verifier);
-      setConfirmationResult(confirmation);
-      setOtpSent(true);
-    } catch (err: unknown) {
-      const fbErr = err as { code?: string; message?: string };
-      if (fbErr.code === 'auth/invalid-phone-number') {
-        setError(`Please enter a valid phone number for country code ${countryCode}.`);
-      } else if (
-        fbErr.code === 'auth/operation-not-allowed' ||
-        fbErr.message?.toLowerCase().includes('region')
-      ) {
-        setError(
-          `SMS delivery for ${countryCode} is currently disabled in your Firebase Console. Please enable region ${countryCode} in Firebase Console > Authentication > Settings > SMS region policy.`
-        );
-      } else if (fbErr.code === 'auth/billing-not-enabled') {
-        setError(
-          'Sending real carrier SMS requires the Firebase Blaze (Pay as you go) plan, or you can register this number under Firebase Console > Authentication > Phone > "Phone numbers for testing" to verify instantly for free.'
-        );
-      } else if (fbErr.code === 'auth/too-many-requests' || fbErr.code === 'auth/quota-exceeded') {
-        setError('SMS quota limit reached. Please sign in using Google, Apple, or Email.');
-      } else {
-        setError(fbErr.message || 'Failed to send SMS verification code.');
-      }
-    } finally {
-      setOtpLoading(false);
-    }
-  };
-
-  // Verify 6-digit Phone OTP
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otpCode || !confirmationResult) return;
-    setError(null);
-    setOtpLoading(true);
-
-    try {
-      await confirmPhoneOtp(confirmationResult, otpCode.trim());
-      router.push(redirectPath);
-    } catch (err: unknown) {
-      const fbErr = err as { code?: string; message?: string };
-      if (fbErr.code === 'auth/invalid-verification-code') {
-        setError('Incorrect 6-digit code. Please verify and try again.');
-      } else if (fbErr.code === 'auth/code-expired') {
-        setError('Verification code has expired. Please request a new code.');
-      } else {
-        setError(fbErr.message || 'Failed to verify code.');
-      }
-    } finally {
-      setOtpLoading(false);
-    }
-  };
-
   return (
     <div className="bg-white dark:bg-neutral-950/90 border border-neutral-200 dark:border-neutral-800 p-6 sm:p-7 space-y-4 rounded-2xl shadow-xl dark:shadow-2xl backdrop-blur-xl text-neutral-900 dark:text-white">
       <div className="space-y-1">
@@ -196,9 +92,6 @@ function SignInForm() {
           Access your unified Docdril software dashboard
         </p>
       </div>
-
-      {/* Invisible reCAPTCHA container for SMS verification */}
-      <div id="phone-recaptcha-container"></div>
 
       {!isConfigured && (
         <div className="p-3 border border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/60 dark:text-amber-300 font-mono text-xs leading-relaxed rounded">
@@ -213,8 +106,8 @@ function SignInForm() {
         </div>
       )}
 
-      {/* Social Single Sign-On (Google & Apple) */}
-      <div className="space-y-2">
+      {/* Social Single Sign-On (Google) */}
+      <div>
         <Button
           type="button"
           variant="outline"
@@ -223,7 +116,7 @@ function SignInForm() {
           isLoading={googleLoading}
           disabled={googleLoading || !isConfigured}
         >
-          <svg className="w-4 h-4" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -243,20 +136,6 @@ function SignInForm() {
           </svg>
           <span>Continue with Google</span>
         </Button>
-
-        <Button
-          type="button"
-          variant="primary"
-          className="w-full gap-2 text-xs font-semibold h-11 cursor-pointer"
-          onClick={handleAppleSignIn}
-          isLoading={appleLoading}
-          disabled={appleLoading || !isConfigured}
-        >
-          <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
-            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.61-.75 1.04-1.8 0.92-2.87-.93.04-2.02.63-2.66 1.38-.56.65-1.06 1.71-.93 2.74 1.04.08 2.06-.5 2.67-1.25z" />
-          </svg>
-          <span>Continue with Apple</span>
-        </Button>
       </div>
 
       <div className="relative my-3">
@@ -265,49 +144,13 @@ function SignInForm() {
         </div>
         <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
           <span className="bg-white dark:bg-neutral-950 px-2.5 text-neutral-400 font-medium">
-            or choose sign-in method
+            or continue with email
           </span>
         </div>
       </div>
 
-      {/* Auth Method Switcher: Email vs Phone OTP */}
-      <div className="grid grid-cols-2 p-1 bg-neutral-100 dark:bg-neutral-900 rounded-xl">
-        <button
-          type="button"
-          onClick={() => {
-            setAuthMethod('email');
-            setError(null);
-          }}
-          className={`py-1.5 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-            authMethod === 'email'
-              ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-sm'
-              : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
-          }`}
-        >
-          <Mail className="w-3.5 h-3.5" />
-          <span>Email & Password</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            setAuthMethod('phone');
-            setError(null);
-          }}
-          className={`py-1.5 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-            authMethod === 'phone'
-              ? 'bg-white dark:bg-neutral-800 text-neutral-950 dark:text-white shadow-sm'
-              : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
-          }`}
-        >
-          <Phone className="w-3.5 h-3.5" />
-          <span>Phone & OTP</span>
-        </button>
-      </div>
-
       {/* 1. EMAIL FORM */}
-      {authMethod === 'email' && (
-        <form onSubmit={handleSubmit} className="space-y-3.5 animate-fadeIn">
+      <form onSubmit={handleSubmit} className="space-y-3.5 animate-fadeIn">
           <div>
             <Input
               label="Email address"
@@ -352,101 +195,6 @@ function SignInForm() {
             Sign In with Email
           </Button>
         </form>
-      )}
-
-      {/* 2. PHONE OTP FORM */}
-      {authMethod === 'phone' && (
-        <div className="animate-fadeIn">
-          {!otpSent ? (
-            /* Step A: Request OTP */
-            <form onSubmit={handleSendOtp} className="space-y-4">
-              <PhoneInputWithCountry
-                countryCode={countryCode}
-                setCountryCode={setCountryCode}
-                nationalNumber={nationalNumber}
-                setNationalNumber={setNationalNumber}
-                disabled={otpLoading}
-                autoFocus
-              />
-
-              <Button
-                type="submit"
-                variant="primary"
-                className="w-full h-11 cursor-pointer font-semibold"
-                isLoading={otpLoading}
-                disabled={otpLoading || !nationalNumber.trim()}
-              >
-                Send Verification Code
-              </Button>
-            </form>
-          ) : (
-            /* Step B: Verify OTP */
-            <form onSubmit={handleVerifyOtp} className="space-y-3.5">
-              <div className="p-3 bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 rounded-xl flex items-center justify-between text-xs">
-                <div>
-                  <span className="text-neutral-500">Code sent to:</span>{' '}
-                  <strong className="font-mono text-neutral-950 dark:text-white font-bold bg-neutral-200/60 dark:bg-neutral-800 px-2 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 ml-1">
-                    {countryCode} {nationalNumber}
-                  </strong>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOtpSent(false);
-                    setOtpCode('');
-                    setError(null);
-                  }}
-                  className="text-xs text-neutral-700 dark:text-neutral-300 hover:underline flex items-center gap-1 cursor-pointer font-semibold"
-                >
-                  <ArrowLeft className="w-3 h-3" />
-                  <span>Edit</span>
-                </button>
-              </div>
-
-              <div>
-                <label className="block font-sans text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
-                  6-Digit SMS Verification Code
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-400">
-                    <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  <input
-                    type="text"
-                    required
-                    maxLength={6}
-                    autoFocus
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
-                    placeholder="123456"
-                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 focus:border-neutral-950 dark:focus:border-white bg-white dark:bg-neutral-900/90 pl-10 pr-3.5 py-2.5 text-base tracking-[0.3em] font-mono font-bold text-center text-neutral-900 dark:text-white focus:outline-none transition-colors placeholder:tracking-normal placeholder:font-normal placeholder:text-neutral-400"
-                  />
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                variant="primary"
-                className="w-full h-11 cursor-pointer"
-                isLoading={otpLoading}
-                disabled={otpLoading || otpCode.length < 6}
-              >
-                Verify & Sign In
-              </Button>
-
-              <button
-                type="button"
-                onClick={handleSendOtp}
-                disabled={otpLoading}
-                className="w-full text-center text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors flex items-center justify-center gap-1 cursor-pointer pt-1"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Resend SMS Code</span>
-              </button>
-            </form>
-          )}
-        </div>
-      )}
 
       <div className="pt-3 border-t border-neutral-200 dark:border-neutral-800 text-center font-sans text-xs text-neutral-500 dark:text-neutral-400">
         Don&apos;t have an account?{' '}
