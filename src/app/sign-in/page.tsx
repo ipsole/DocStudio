@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PhoneInputWithCountry } from '@/components/ui/PhoneInputWithCountry';
 import { AlertCircle, Loader2, Phone, Mail, ArrowLeft, RotateCcw, ShieldCheck } from 'lucide-react';
 import type { ConfirmationResult } from 'firebase/auth';
 
@@ -44,7 +45,8 @@ function SignInForm() {
   const [error, setError] = useState<string | null>(null);
 
   // Phone OTP form state
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [countryCode, setCountryCode] = useState('+91');
+  const [nationalNumber, setNationalNumber] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [otpSent, setOtpSent] = useState(false);
@@ -131,23 +133,24 @@ function SignInForm() {
   // Send Phone OTP via SMS
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phoneNumber) return;
+    const cleanDigits = nationalNumber.replace(/[\s-]/g, '').replace(/^0+/, '');
+    if (!cleanDigits) {
+      setError('Please enter your phone number.');
+      return;
+    }
     setError(null);
     setOtpLoading(true);
 
     try {
-      let formatted = phoneNumber.trim().replace(/\s+/g, '');
-      if (!formatted.startsWith('+')) {
-        formatted = `+${formatted}`;
-      }
+      const fullPhoneNumber = `${countryCode}${cleanDigits}`;
       const verifier = setupRecaptcha('phone-recaptcha-container');
-      const confirmation = await sendPhoneOtp(formatted, verifier);
+      const confirmation = await sendPhoneOtp(fullPhoneNumber, verifier);
       setConfirmationResult(confirmation);
       setOtpSent(true);
     } catch (err: unknown) {
       const fbErr = err as { code?: string; message?: string };
       if (fbErr.code === 'auth/invalid-phone-number') {
-        setError('Please enter a valid phone number with country code (e.g. +91 98765 43210).');
+        setError(`Please enter a valid phone number for country code ${countryCode}.`);
       } else if (fbErr.code === 'auth/too-many-requests' || fbErr.code === 'auth/quota-exceeded') {
         setError('SMS quota limit reached. Please sign in using Google, Apple, or Email.');
       } else {
@@ -355,35 +358,22 @@ function SignInForm() {
         <div className="animate-fadeIn">
           {!otpSent ? (
             /* Step A: Request OTP */
-            <form onSubmit={handleSendOtp} className="space-y-3.5">
-              <div>
-                <label className="block font-sans text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
-                  Phone Number
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-400">
-                    <Phone className="w-4 h-4" />
-                  </div>
-                  <input
-                    type="tel"
-                    required
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="+91 98765 43210"
-                    className="w-full rounded-lg border border-neutral-300 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 focus:border-neutral-950 dark:focus:border-white bg-white dark:bg-neutral-900/90 pl-10 pr-3.5 py-2.5 text-sm font-mono text-neutral-900 dark:text-white focus:outline-none transition-colors placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
-                  />
-                </div>
-                <p className="mt-1 text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
-                  Include country code (e.g. +91 for India, +1 for US). A 6-digit SMS verification code will be sent.
-                </p>
-              </div>
+            <form onSubmit={handleSendOtp} className="space-y-4">
+              <PhoneInputWithCountry
+                countryCode={countryCode}
+                setCountryCode={setCountryCode}
+                nationalNumber={nationalNumber}
+                setNationalNumber={setNationalNumber}
+                disabled={otpLoading}
+                autoFocus
+              />
 
               <Button
                 type="submit"
                 variant="primary"
-                className="w-full h-11 cursor-pointer"
+                className="w-full h-11 cursor-pointer font-semibold"
                 isLoading={otpLoading}
-                disabled={otpLoading || !phoneNumber.trim()}
+                disabled={otpLoading || !nationalNumber.trim()}
               >
                 Send Verification Code
               </Button>
@@ -394,7 +384,9 @@ function SignInForm() {
               <div className="p-3 bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 rounded-xl flex items-center justify-between text-xs">
                 <div>
                   <span className="text-neutral-500">Code sent to:</span>{' '}
-                  <strong className="font-mono text-neutral-900 dark:text-white">{phoneNumber}</strong>
+                  <strong className="font-mono text-neutral-950 dark:text-white font-bold bg-neutral-200/60 dark:bg-neutral-800 px-2 py-0.5 rounded border border-neutral-300 dark:border-neutral-700 ml-1">
+                    {countryCode} {nationalNumber}
+                  </strong>
                 </div>
                 <button
                   type="button"
@@ -403,7 +395,7 @@ function SignInForm() {
                     setOtpCode('');
                     setError(null);
                   }}
-                  className="text-xs text-neutral-700 dark:text-neutral-300 hover:underline flex items-center gap-1 cursor-pointer"
+                  className="text-xs text-neutral-700 dark:text-neutral-300 hover:underline flex items-center gap-1 cursor-pointer font-semibold"
                 >
                   <ArrowLeft className="w-3 h-3" />
                   <span>Edit</span>
