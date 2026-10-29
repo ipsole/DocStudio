@@ -127,7 +127,7 @@ export function UserAvatar({
   if (isGoogleActive && googlePhoto) {
     return (
       <div
-        className={`relative inline-flex items-center justify-center shrink-0 select-none ${conf.container} ${className}`}
+        className={`relative inline-flex items-center justify-center shrink-0 select-none ${conf.container} ${radiusClass} ${className}`}
       >
         <div
           className={`w-full h-full overflow-hidden ${radiusClass} border border-neutral-200/90 dark:border-neutral-800 shadow-sm bg-neutral-100 dark:bg-neutral-900 ring-1 ring-black/5 dark:ring-white/10`}
@@ -152,7 +152,7 @@ export function UserAvatar({
       const IconComponent = persona.icon;
       return (
         <div
-          className={`relative inline-flex items-center justify-center shrink-0 select-none ${conf.container} ${className}`}
+          className={`relative inline-flex items-center justify-center shrink-0 select-none ${conf.container} ${radiusClass} ${className}`}
         >
           <div
             className={`w-full h-full overflow-hidden ${radiusClass} flex items-center justify-center text-white shadow-sm ring-1 ring-black/10 dark:ring-white/15`}
@@ -171,7 +171,7 @@ export function UserAvatar({
     if (grad) {
       return (
         <div
-          className={`relative inline-flex items-center justify-center shrink-0 select-none ${conf.container} ${className}`}
+          className={`relative inline-flex items-center justify-center shrink-0 select-none ${conf.container} ${radiusClass} ${className}`}
         >
           <div
             className={`w-full h-full overflow-hidden ${radiusClass} border ${grad.border} flex items-center justify-center text-white font-serif font-semibold tracking-wider shadow-sm ring-1 ring-black/10 dark:ring-white/15`}
@@ -189,7 +189,7 @@ export function UserAvatar({
     const IconComponent = ALL_LEGACY_ICONS[activeAvatar];
     return (
       <div
-        className={`relative inline-flex items-center justify-center shrink-0 select-none ${conf.container} ${className}`}
+        className={`relative inline-flex items-center justify-center shrink-0 select-none ${conf.container} ${radiusClass} ${className}`}
       >
         <div
           className={`w-full h-full overflow-hidden ${radiusClass} bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 flex items-center justify-center shadow-sm border border-neutral-300 dark:border-neutral-700`}
@@ -203,7 +203,7 @@ export function UserAvatar({
   // 5. Default Initials Monogram
   return (
     <div
-      className={`relative inline-flex items-center justify-center shrink-0 select-none ${conf.container} ${className}`}
+      className={`relative inline-flex items-center justify-center shrink-0 select-none ${conf.container} ${radiusClass} ${className}`}
     >
       <div
         className={`w-full h-full overflow-hidden ${radiusClass} bg-neutral-200 dark:bg-neutral-800 text-neutral-800 dark:text-neutral-200 font-sans font-semibold flex items-center justify-center border border-neutral-300 dark:border-neutral-700 shadow-sm`}

@@ -179,13 +179,13 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
             <Link
               href="/account"
               title="Manage Profile & Avatar"
-              className="relative group shrink-0"
+              className="relative group shrink-0 rounded-full focus:outline-none"
             >
               <UserAvatar
                 user={user}
                 profile={profile}
                 size="2xl"
-                className="ring-2 ring-neutral-200/80 dark:ring-neutral-800 group-hover:ring-neutral-400 dark:group-hover:ring-neutral-600 transition-all shadow-md group-hover:scale-105"
+                className="group-hover:scale-105 transition-transform shadow-md"
               />
               <span className="absolute -bottom-1 -right-1 p-1 bg-white dark:bg-neutral-900 rounded-full border border-neutral-200 dark:border-neutral-700 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
                 <Settings className="w-3 h-3 text-neutral-600 dark:text-neutral-300" />
