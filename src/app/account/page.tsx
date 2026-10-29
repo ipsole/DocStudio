@@ -296,29 +296,10 @@ export default function AccountPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8 text-neutral-900 dark:text-white transition-colors duration-200">
         
         {/* Top Header */}
-        <div className="border-b border-neutral-200 dark:border-neutral-900 pb-6">
-          <div className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1 flex items-center gap-2">
-            <span>DocStudio Workspace</span>
-            <span className="text-neutral-300 dark:text-neutral-700">/</span>
-            <span className="text-neutral-700 dark:text-neutral-300">Settings</span>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-neutral-950 dark:text-white font-sans">
-                Account & Preferences
-              </h1>
-              <p className="mt-1 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-sans">
-                Configure your identity, active software subscriptions, security credentials, and legal policies.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 self-start sm:self-center">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                Active Account
-              </span>
-            </div>
-          </div>
+        <div className="border-b border-neutral-200 dark:border-neutral-900 pb-5 flex items-center justify-between">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+            Settings
+          </h1>
         </div>
 
         {/* Global Feedback Banners */}
