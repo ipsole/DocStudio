@@ -27,7 +27,7 @@ export function generateReceiptHtml(order: OrderRecord, recipientName?: string):
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Payment Receipt - Docdril Studio</title>
+  <title>Payment Receipt - DocStudio</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #0a0a0a; color: #ffffff; }
     .container { max-width: 600px; margin: 40px auto; background-color: #121212; border: 1px solid #262626; border-radius: 16px; overflow: hidden; }
@@ -53,7 +53,7 @@ export function generateReceiptHtml(order: OrderRecord, recipientName?: string):
 <body>
   <div class="container">
     <div class="header">
-      <div class="brand">DOCDRIL STUDIO</div>
+      <div class="brand">DOCSTUDIO</div>
       <span class="badge">Payment Confirmed</span>
       <h1 class="title">₹${order.amount.toFixed(2)} INR</h1>
       <p class="subtitle">Receipt for ${order.itemName}</p>
@@ -105,14 +105,14 @@ export function generateReceiptHtml(order: OrderRecord, recipientName?: string):
       </div>
 
       <div class="btn-container">
-        <a href="https://studio.docdril.com/dashboard" class="btn">Open Docdril Studio</a>
+        <a href="https://docstudio.docdril.com/" class="btn">Open DocStudio</a>
       </div>
     </div>
 
     <div class="footer">
-      <p>Thank you for building with Docdril. This is an official electronic payment receipt.<br/>
-      If you have questions regarding this charge, contact our support desk at <a href="mailto:support@docdril.com" style="color: #a1a1aa;">support@docdril.com</a>.</p>
-      <p style="margin-top: 12px; color: #52525b;">Docdril Softwares &bull; All rights reserved.</p>
+      <p>Thank you for building with DocStudio. This is an official electronic payment receipt.<br/>
+      If you have questions regarding this charge, contact our desk at <a href="mailto:billing@docdril.com" style="color: #a1a1aa;">billing@docdril.com</a>.</p>
+      <p style="margin-top: 12px; color: #52525b;">DocStudio by Docdril &bull; All rights reserved.</p>
     </div>
   </div>
 </body>
@@ -135,7 +135,7 @@ export async function sendPurchaseConfirmationEmail({
   const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASSWORD;
-  const smtpFrom = process.env.SMTP_FROM || '"Docdril Studio" <billing@docdril.com>';
+  const smtpFrom = process.env.SMTP_FROM || '"DocStudio" <billing@docdril.com>';
 
   // Check if live SMTP is configured
   if (smtpHost && smtpUser && smtpPass) {

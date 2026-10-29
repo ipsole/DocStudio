@@ -3,6 +3,12 @@ import crypto from 'crypto';
 import { getRazorpayClient } from '@/lib/razorpay';
 import { PRICING_PLANS, CREDIT_PACKS } from '@/lib/pricingData';
 import { saveOrderRecord, upgradeUserPlan, addSharedCredits } from '@/lib/firebase/db';
+import {
+  recordOrderAdmin,
+  upgradeUserPlanAdmin,
+  addSharedCreditsAdmin,
+  sanitizeForFirestore,
+} from '@/lib/billingServer';
 import { sendPurchaseConfirmationEmail } from '@/lib/email/receiptEmail';
 import { OrderRecord, PaymentMethodSummary, SubscriptionPlan } from '@/types';
 
@@ -110,16 +116,38 @@ export async function POST(request: NextRequest) {
       paidAt: Date.now(),
     };
 
-    // 5. Database Persistence
-    await saveOrderRecord(orderRecord);
+    // 5. Database Persistence (Admin SDK for server-side authority)
+    const sanitizedOrder = sanitizeForFirestore(orderRecord);
+    const adminSaved = await recordOrderAdmin(sanitizedOrder);
+    if (!adminSaved) {
+      try {
+        await saveOrderRecord(sanitizedOrder);
+      } catch (clientDbErr) {
+        console.warn('[Billing API] Client db fallback write skipped:', clientDbErr);
+      }
+    }
 
-    // 6. Provision user account entitlements / credits
+    // 6. Provision user account entitlements / credits via Admin SDK
     if (userId) {
       if (itemType === 'subscription') {
         const targetPlan: SubscriptionPlan = (itemId === 'enterprise' ? 'enterprise' : 'pro') as SubscriptionPlan;
-        await upgradeUserPlan(userId, userEmail || '', targetPlan);
+        const upgraded = await upgradeUserPlanAdmin(userId, userEmail || '', targetPlan);
+        if (!upgraded) {
+          try {
+            await upgradeUserPlan(userId, userEmail || '', targetPlan);
+          } catch (upgradeErr) {
+            console.warn('[Billing API] Client db plan upgrade skipped:', upgradeErr);
+          }
+        }
       } else if (itemType === 'credit_pack' && creditsAdded > 0) {
-        await addSharedCredits(userId, userEmail || '', creditsAdded);
+        const credited = await addSharedCreditsAdmin(userId, userEmail || '', creditsAdded);
+        if (!credited) {
+          try {
+            await addSharedCredits(userId, userEmail || '', creditsAdded);
+          } catch (creditErr) {
+            console.warn('[Billing API] Client db credits addition skipped:', creditErr);
+          }
+        }
       }
     }
 
