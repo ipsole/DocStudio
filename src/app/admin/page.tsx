@@ -281,26 +281,25 @@ export default function AdminPage() {
       // 3. Server-side API update
       const url = '/api/admin/coupons';
       const method = editingCoupon ? 'PUT' : 'POST';
-      try {
-        const res = await fetch(url, {
-          method,
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Server rejected coupon save.');
+      }
+      if (data.data) {
+        setCoupons((prev) => {
+          const withoutOld = prev.filter(
+            (c) => c.code !== data.data.code && c.code !== editingCoupon?.code
+          );
+          return [data.data, ...withoutOld];
         });
-        const data = await res.json();
-        if (data.success && data.data) {
-          setCoupons((prev) => {
-            const withoutOld = prev.filter(
-              (c) => c.code !== data.data.code && c.code !== editingCoupon?.code
-            );
-            return [data.data, ...withoutOld];
-          });
-        }
-      } catch (srvErr) {
-        console.warn('Server API save warning:', srvErr);
       }
 
       setSuccessMsg(
@@ -329,7 +328,7 @@ export default function AdminPage() {
         updateDoc(doc(db, 'coupons', code), { active: !currentActive }).catch(console.warn);
       }
       const token = await user.getIdToken();
-      await fetch('/api/admin/coupons', {
+      const res = await fetch('/api/admin/coupons', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -337,14 +336,24 @@ export default function AdminPage() {
         },
         body: JSON.stringify({ code, active: !currentActive }),
       });
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to update coupon status.');
+      }
     } catch (err) {
       console.error('Error toggling coupon:', err);
+      // Revert on error
+      setCoupons((prev) =>
+        prev.map((c) => (c.code === code ? { ...c, active: currentActive } : c))
+      );
+      setError(err instanceof Error ? err.message : 'Error updating coupon status.');
     }
   };
 
   const handleDeleteCoupon = async (code: string) => {
     if (!user) return;
     if (!confirm(`Are you sure you want to permanently delete coupon "${code}"?`)) return;
+    const prevCoupons = [...coupons];
     try {
       // Optimistic delete
       setCoupons((prev) => prev.filter((c) => c.code !== code));
@@ -354,15 +363,21 @@ export default function AdminPage() {
       }
 
       const token = await user.getIdToken();
-      await fetch(`/api/admin/coupons?code=${encodeURIComponent(code)}`, {
+      const res = await fetch(`/api/admin/coupons?code=${encodeURIComponent(code)}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to delete coupon.');
+      }
 
       setSuccessMsg(`Coupon "${code}" deleted.`);
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err) {
       console.error('Error deleting coupon:', err);
+      setCoupons(prevCoupons);
+      setError(err instanceof Error ? err.message : 'Error deleting coupon.');
     }
   };
 

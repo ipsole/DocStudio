@@ -224,7 +224,8 @@ export async function saveCouponAdmin(
         { merge: true }
       );
     } catch (err) {
-      console.warn('[CouponsServer] Firestore write failed in saveCouponAdmin (persisted to local):', err);
+      console.error('[CouponsServer] Firestore write failed in saveCouponAdmin:', err);
+      throw new Error(`Failed to save coupon to Firestore: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
@@ -248,7 +249,8 @@ export async function toggleCouponAdmin(code: string, active: boolean): Promise<
     try {
       await firestore.collection(COUPONS_COLLECTION).doc(cleanCode).update({ active });
     } catch (err) {
-      console.warn('[CouponsServer] Firestore update error in toggleCouponAdmin:', err);
+      console.error('[CouponsServer] Firestore update error in toggleCouponAdmin:', err);
+      throw new Error(`Failed to update coupon in Firestore: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 }
@@ -278,7 +280,8 @@ export async function deleteCouponAdmin(code: string): Promise<void> {
         { merge: true }
       );
     } catch (err) {
-      console.warn('[CouponsServer] Firestore delete error in deleteCouponAdmin:', err);
+      console.error('[CouponsServer] Firestore delete error in deleteCouponAdmin:', err);
+      throw new Error(`Failed to delete coupon in Firestore: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 }
