@@ -167,80 +167,80 @@ export default function PricingPage() {
         </div>
       )}
 
-      {/* Hero Header & Billing Toggle */}
-      <div className="max-w-3xl mx-auto text-center space-y-6 pt-2 sm:pt-4">
-        <div className="space-y-3">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
-            Transparent Pricing for Creative Scale
-          </h1>
-          <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-sans max-w-2xl mx-auto leading-relaxed">
-            One unified account gives you full access across all Docdril creative and document tools. Choose flexible monthly billing or save 20% with annual plans.
-          </p>
-        </div>
+      {/* 1. Subscription Plans Section (Hero Header, Billing Switcher & Cards Grid) */}
+      <div className="space-y-6 sm:space-y-8">
+        <div className="max-w-3xl mx-auto text-center space-y-5 pt-2 sm:pt-4">
+          <div className="space-y-3">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+              Transparent Pricing for Creative Scale
+            </h1>
+            <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-sans max-w-2xl mx-auto leading-relaxed">
+              One unified account gives you full access across all Docdril creative and document tools. Choose flexible monthly billing or save 20% with annual plans.
+            </p>
+          </div>
 
-        {/* Monthly / Yearly Billing Switcher */}
-        <div className="flex flex-col items-center justify-center gap-2.5">
-          <div className="relative inline-flex items-center p-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
-            {/* Sliding Billing Cycle Pill Indicator */}
-            {billingIndicator.ready && (
-              <div
-                className={`absolute top-1 bottom-1 rounded-full shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none ${
-                  billingCycle === 'yearly'
-                    ? 'bg-emerald-600'
-                    : 'bg-neutral-950 dark:bg-white'
-                }`}
-                style={{
-                  left: `${billingIndicator.left}px`,
-                  width: `${billingIndicator.width}px`,
-                }}
-              />
-            )}
+          {/* Monthly / Yearly Billing Switcher */}
+          <div className="flex flex-col items-center justify-center gap-2.5">
+            <div className="relative inline-flex items-center p-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+              {/* Sliding Billing Cycle Pill Indicator */}
+              {billingIndicator.ready && (
+                <div
+                  className={`absolute top-1 bottom-1 rounded-full shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none ${
+                    billingCycle === 'yearly'
+                      ? 'bg-emerald-600'
+                      : 'bg-neutral-950 dark:bg-white'
+                  }`}
+                  style={{
+                    left: `${billingIndicator.left}px`,
+                    width: `${billingIndicator.width}px`,
+                  }}
+                />
+              )}
 
-            <button
-              ref={(el) => { billingTabRefs.current['monthly'] = el; }}
-              type="button"
-              onClick={() => setBillingCycle('monthly')}
-              className={`relative z-10 px-4 py-1.5 rounded-full text-xs font-semibold transition-colors duration-200 cursor-pointer ${
-                billingCycle === 'monthly'
-                  ? 'text-white dark:text-black'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
-              }`}
-            >
-              Monthly Billing
-            </button>
-            <button
-              ref={(el) => { billingTabRefs.current['yearly'] = el; }}
-              type="button"
-              onClick={() => setBillingCycle('yearly')}
-              className={`relative z-10 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-colors duration-200 cursor-pointer ${
-                billingCycle === 'yearly'
-                  ? 'text-white'
-                  : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
-              }`}
-            >
-              <span>Yearly Billing</span>
-              <span
-                className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full transition-colors ${
-                  billingCycle === 'yearly'
-                    ? 'bg-white/20 text-white'
-                    : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800'
+              <button
+                ref={(el) => { billingTabRefs.current['monthly'] = el; }}
+                type="button"
+                onClick={() => setBillingCycle('monthly')}
+                className={`relative z-10 px-4 py-1.5 rounded-full text-xs font-semibold transition-colors duration-200 cursor-pointer ${
+                  billingCycle === 'monthly'
+                    ? 'text-white dark:text-black'
+                    : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
                 }`}
               >
-                Save 20%
-              </span>
-            </button>
+                Monthly Billing
+              </button>
+              <button
+                ref={(el) => { billingTabRefs.current['yearly'] = el; }}
+                type="button"
+                onClick={() => setBillingCycle('yearly')}
+                className={`relative z-10 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-colors duration-200 cursor-pointer ${
+                  billingCycle === 'yearly'
+                    ? 'text-white'
+                    : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
+                }`}
+              >
+                <span>Yearly Billing</span>
+                <span
+                  className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full transition-colors ${
+                    billingCycle === 'yearly'
+                      ? 'bg-white/20 text-white'
+                      : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800'
+                  }`}
+                >
+                  Save 20%
+                </span>
+              </button>
+            </div>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+              {billingCycle === 'yearly'
+                ? '✨ Annual plans include 2 months free + massive yearly generation credit allotment!'
+                : 'Flexible monthly billing • cancel or switch tiers anytime.'}
+            </p>
           </div>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
-            {billingCycle === 'yearly'
-              ? '✨ Annual plans include 2 months free + massive yearly generation credit allotment!'
-              : 'Flexible monthly billing • cancel or switch tiers anytime.'}
-          </p>
         </div>
-      </div>
 
-      {/* 1. Subscription Plans Section */}
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch">
+        {/* Subscription Plan Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch pt-1 sm:pt-2">
           {(billingCycle === 'yearly' ? YEARLY_PRICING_PLANS : PRICING_PLANS).map((plan) => {
             const isCurrentPlan =
               activePlanId === plan.id ||

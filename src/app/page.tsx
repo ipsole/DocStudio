@@ -409,7 +409,7 @@ export default function HomePage() {
 
         {/* Tab 2: Pricings in INR */}
         {activeTab === 'pricings' && (
-          <div id="pricings" className="space-y-10 animate-fadeIn pt-2">
+          <div id="pricings" className="space-y-6 sm:space-y-8 animate-fadeIn pt-2">
             <div className="text-center max-w-xl mx-auto space-y-5">
               <div className="space-y-2">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-sans text-neutral-950 dark:text-white tracking-tight">
