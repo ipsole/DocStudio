@@ -97,11 +97,11 @@ export default function AppsCatalogPage() {
   return (
     <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 pt-10 sm:pt-14 pb-12 sm:pb-16 space-y-8">
       {/* Centered Clean Header */}
-      <div className="max-w-3xl mx-auto text-center space-y-2.5">
+      <div className="max-w-4xl lg:max-w-5xl mx-auto text-center space-y-2.5">
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
           Software, Tools & Plugins
         </h1>
-        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-sans max-w-2xl mx-auto leading-relaxed">
+        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-sans max-w-2xl md:max-w-4xl lg:max-w-none mx-auto leading-relaxed md:whitespace-nowrap">
           Discover and launch active and upcoming applications, creative tools, and plugins across Docdril.
         </p>
       </div>
