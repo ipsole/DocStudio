@@ -103,13 +103,21 @@ export function Navbar() {
     ready: false,
   });
 
+  const [optimisticTab, setOptimisticTab] = useState<string | null>(null);
+
+  // Clear optimistic tab once route pathname updates
+  useEffect(() => {
+    setOptimisticTab(null);
+  }, [pathname]);
+
   const activeTabName = useMemo(() => {
+    if (optimisticTab) return optimisticTab;
     if (pathname === '/') return 'Home';
     if (pathname?.startsWith('/apps')) return 'Softwares';
     if (pathname?.startsWith('/pricing')) return 'Pricings';
     if (pathname?.startsWith('/tutorials')) return 'Tutorials';
     return '';
-  }, [pathname]);
+  }, [pathname, optimisticTab]);
 
   useEffect(() => {
     const updateNav = () => {
@@ -160,6 +168,8 @@ export function Navbar() {
                   key={tab.name}
                   ref={(el) => { navTabRefs.current[tab.name] = el; }}
                   href={tab.href}
+                  prefetch={true}
+                  onClick={() => setOptimisticTab(tab.name)}
                   className={`relative z-10 px-3 py-1.5 rounded-full text-xs sm:text-sm transition-colors duration-200 whitespace-nowrap ${
                     isActive
                       ? 'font-medium text-neutral-950 dark:text-white'
