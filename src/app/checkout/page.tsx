@@ -332,10 +332,7 @@ function CheckoutContent() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         {/* LEFT COLUMN: Order Summary & Item Breakdown (col-span-5, Golden Premium Edition) */}
         <div className="lg:col-span-5 order-2 lg:order-1 space-y-6">
-          <div className="relative rounded-3xl p-6 sm:p-7 space-y-6 overflow-hidden border border-amber-300/80 dark:border-amber-500/30 bg-gradient-to-b from-amber-50/90 via-amber-50/40 to-white dark:from-amber-950/30 dark:via-neutral-900/90 dark:to-neutral-900 shadow-[0_8px_30px_rgb(217,119,6,0.08)] dark:shadow-[0_8px_30px_rgb(245,158,11,0.04)]">
-            {/* Subtle Top Gold Accent Line */}
-            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-300 via-amber-400 to-amber-300 dark:from-amber-600/40 dark:via-amber-400/80 dark:to-amber-600/40" />
-
+          <div className="rounded-3xl p-6 sm:p-7 space-y-6 border border-amber-200/90 dark:border-amber-800/50 bg-amber-50/40 dark:bg-amber-950/20 shadow-sm">
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5 text-[11px] font-sans font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400">
                 <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
@@ -346,7 +343,7 @@ function CheckoutContent() {
                   {selectedItem.name}
                 </h2>
                 {'badge' in selectedItem && selectedItem.badge ? (
-                  <span className="inline-flex items-center text-[10px] sm:text-[11px] font-bold px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500 via-amber-600 to-yellow-600 dark:from-amber-400 dark:via-yellow-400 dark:to-amber-500 text-white dark:text-neutral-950 shadow-sm whitespace-nowrap shrink-0 leading-none">
+                  <span className="inline-flex items-center text-[10px] sm:text-[11px] font-semibold px-2.5 py-1 rounded-full bg-neutral-950 text-white dark:bg-white dark:text-black whitespace-nowrap shrink-0 leading-none">
                     {selectedItem.badge}
                   </span>
                 ) : null}
