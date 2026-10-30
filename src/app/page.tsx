@@ -491,11 +491,7 @@ export default function HomePage() {
                 {/* Sliding Billing Cycle Pill Indicator */}
                 {billingIndicator.ready && (
                   <div
-                    className={`absolute top-1 bottom-1 rounded-full shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none ${
-                      billingCycle === 'yearly'
-                        ? 'bg-emerald-600'
-                        : 'bg-neutral-950 dark:bg-white'
-                    }`}
+                    className="absolute top-1 bottom-1 rounded-full shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none bg-neutral-950 dark:bg-white"
                     style={{
                       left: `${billingIndicator.left}px`,
                       width: `${billingIndicator.width}px`,
@@ -521,7 +517,7 @@ export default function HomePage() {
                   onClick={() => setBillingCycle('yearly')}
                   className={`relative z-10 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-colors duration-200 cursor-pointer ${
                     billingCycle === 'yearly'
-                      ? 'text-white'
+                      ? 'text-white dark:text-black'
                       : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
                   }`}
                 >
@@ -529,7 +525,7 @@ export default function HomePage() {
                   <span
                     className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full transition-colors ${
                       billingCycle === 'yearly'
-                        ? 'bg-white/20 text-white'
+                        ? 'bg-emerald-600 text-white dark:bg-emerald-600 dark:text-white shadow-xs'
                         : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800'
                     }`}
                   >
