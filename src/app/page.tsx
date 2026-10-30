@@ -345,18 +345,18 @@ export default function HomePage() {
         />
       )}
 
-      <div className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center bg-white text-neutral-900 dark:bg-black dark:text-white px-4 sm:px-6 md:px-8 pt-0 sm:pt-1 pb-16 sm:pb-24 overflow-hidden transition-colors duration-200">
+      <div className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center bg-white text-neutral-900 dark:bg-black dark:text-white px-4 sm:px-6 md:px-8 pt-0 sm:pt-2 pb-16 sm:pb-24 overflow-hidden transition-colors duration-200">
         {/* Luxury Serif Typography - Natural Wide Proportions, Uncompressed */}
-        <div className="relative z-10 text-center select-none pt-0 pb-4 sm:pb-6">
-          <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-[6.5rem] font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-tight select-none">
+        <div className="relative z-10 text-center select-none pt-2 sm:pt-4 pb-1">
+          <h1 className="text-6xl sm:text-8xl md:text-9xl lg:text-[7.5rem] xl:text-[8.5rem] font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-[1.05] select-none">
             DocStudio
           </h1>
         </div>
 
-      {/* Tabs Selector Directly Below Login Screen */}
-      <div id="ecosystem" className="relative z-10 w-full max-w-[1400px] mx-auto pt-2 space-y-6">
+      {/* Tabs Selector Directly Below DocStudio Heading */}
+      <div id="ecosystem" className="relative z-10 w-full max-w-[1400px] mx-auto pt-4 sm:pt-6 space-y-3 sm:space-y-4">
         {/* Master View Switcher (Softwares, Pricings, Tutorials) */}
-        <div className="flex items-center justify-center pt-1 pb-2">
+        <div className="flex items-center justify-center pb-1">
           <div className="relative inline-flex p-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900/80 backdrop-blur-md">
             {/* Sliding Pill Indicator */}
             {ecosystemIndicator.ready && (
