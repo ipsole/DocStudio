@@ -410,18 +410,19 @@ export default function HomePage() {
         {/* Tab 2: Pricings in INR */}
         {activeTab === 'pricings' && (
           <div id="pricings" className="space-y-10 animate-fadeIn pt-2">
-            <div className="text-center max-w-xl mx-auto space-y-2">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-sans text-neutral-950 dark:text-white tracking-tight">
-                Transparent Pricing for Creative Scale
-              </h2>
-              <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-sans leading-relaxed">
-                One unified membership unlocks creative artboards, motion engines, and document pipelines across all Docdril products.
-              </p>
-            </div>
+            <div className="text-center max-w-xl mx-auto space-y-5">
+              <div className="space-y-2">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-sans text-neutral-950 dark:text-white tracking-tight">
+                  Transparent Pricing for Creative Scale
+                </h2>
+                <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-sans leading-relaxed">
+                  One unified membership unlocks creative artboards, motion engines, and document pipelines across all Docdril products.
+                </p>
+              </div>
 
-            {/* Monthly / Yearly Billing Toggle */}
-            <div className="flex flex-col items-center justify-center gap-2.5">
-              <div className="relative inline-flex items-center p-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+              {/* Monthly / Yearly Billing Toggle */}
+              <div className="flex flex-col items-center justify-center gap-2.5">
+                <div className="relative inline-flex items-center p-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
                 {/* Sliding Billing Cycle Pill Indicator */}
                 {billingIndicator.ready && (
                   <div
@@ -477,8 +478,9 @@ export default function HomePage() {
                   : 'Flexible monthly billing • cancel or switch tiers anytime.'}
               </p>
             </div>
+          </div>
 
-            {/* Subscription Plans Grid */}
+          {/* Subscription Plans Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-7 items-stretch">
               {(billingCycle === 'yearly' ? YEARLY_PRICING_PLANS : PRICING_PLANS).map((plan) => {
                 const isCurrentPlan =

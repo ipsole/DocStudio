@@ -167,19 +167,19 @@ export default function PricingPage() {
         </div>
       )}
 
-      {/* Hero Header */}
-      <div className="max-w-3xl mx-auto text-center space-y-3 pt-2 sm:pt-4">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
-          Transparent Pricing for Creative Scale
-        </h1>
-        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-sans max-w-2xl mx-auto leading-relaxed">
-          One unified account gives you full access across all Docdril creative and document tools. Choose flexible monthly billing or save 20% with annual plans.
-        </p>
-      </div>
+      {/* Hero Header & Billing Toggle */}
+      <div className="max-w-3xl mx-auto text-center space-y-6 pt-2 sm:pt-4">
+        <div className="space-y-3">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+            Transparent Pricing for Creative Scale
+          </h1>
+          <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-sans max-w-2xl mx-auto leading-relaxed">
+            One unified account gives you full access across all Docdril creative and document tools. Choose flexible monthly billing or save 20% with annual plans.
+          </p>
+        </div>
 
-      {/* 1. Subscription Plans Section */}
-      <div className="space-y-6">
-        <div className="flex flex-col items-center justify-center gap-3">
+        {/* Monthly / Yearly Billing Switcher */}
+        <div className="flex flex-col items-center justify-center gap-2.5">
           <div className="relative inline-flex items-center p-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
             {/* Sliding Billing Cycle Pill Indicator */}
             {billingIndicator.ready && (
@@ -236,7 +236,10 @@ export default function PricingPage() {
               : 'Flexible monthly billing • cancel or switch tiers anytime.'}
           </p>
         </div>
+      </div>
 
+      {/* 1. Subscription Plans Section */}
+      <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch">
           {(billingCycle === 'yearly' ? YEARLY_PRICING_PLANS : PRICING_PLANS).map((plan) => {
             const isCurrentPlan =
