@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -218,6 +218,31 @@ export default function AccountPage() {
   // Username fallback derivation
   const defaultUsername = (user?.email?.split('@')[0] || 'creator').toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20);
   const currentUsername = profile?.username || defaultUsername;
+
+  // Measure exact initial top offset for zero-drift sticky locking
+  const asideRef = useRef<HTMLElement>(null);
+  const [stickyTop, setStickyTop] = useState<number | null>(null);
+
+  useEffect(() => {
+    const updateStickyTop = () => {
+      if (asideRef.current) {
+        const parent = asideRef.current.parentElement;
+        if (parent) {
+          const parentRect = parent.getBoundingClientRect();
+          const naturalTop = Math.round(parentRect.top + window.scrollY);
+          setStickyTop(naturalTop);
+        }
+      }
+    };
+
+    updateStickyTop();
+    const raf = requestAnimationFrame(updateStickyTop);
+    window.addEventListener('resize', updateStickyTop);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', updateStickyTop);
+    };
+  }, []);
 
   // Load URL hash on initial mount
   useEffect(() => {
@@ -633,10 +658,10 @@ export default function AccountPage() {
 
   return (
     <ProtectedRoute>
-      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8 text-neutral-900 dark:text-white transition-colors duration-200">
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 text-neutral-900 dark:text-white transition-colors duration-200">
         
         {/* Mobile Header (Settings title + Horizontal Tabs) */}
-        <div className="md:hidden space-y-4">
+        <div className="md:hidden space-y-4 mb-6">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
             Settings
           </h1>
@@ -667,7 +692,11 @@ export default function AccountPage() {
         <div className="w-full flex flex-col md:flex-row gap-8 items-start">
           
           {/* Left Navigation Sidebar - Sticky Locked in Viewport from Scroll 0 */}
-          <aside className="hidden md:block w-64 shrink-0 space-y-4 sticky top-[112px] self-start">
+          <aside
+            ref={asideRef}
+            style={{ top: stickyTop !== null ? `${stickyTop}px` : undefined }}
+            className="hidden md:block w-64 shrink-0 space-y-4 sticky top-[112px] self-start"
+          >
             <div className="pb-1">
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
                 Settings
