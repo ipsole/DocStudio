@@ -293,7 +293,7 @@ export default function HomePage() {
       {/* Tabs Selector Directly Below Login Screen */}
       <div id="ecosystem" className="relative z-10 w-full max-w-[1400px] mx-auto pt-2 space-y-6">
         {/* Master View Switcher (Softwares, Pricings, Tutorials) */}
-        <div className="flex items-center justify-center pt-2 pb-6">
+        <div className="flex items-center justify-center pt-1 pb-2">
           <div className="relative inline-flex p-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900/80 backdrop-blur-md">
             {/* Sliding Pill Indicator */}
             {ecosystemIndicator.ready && (
@@ -409,20 +409,10 @@ export default function HomePage() {
 
         {/* Tab 2: Pricings in INR */}
         {activeTab === 'pricings' && (
-          <div id="pricings" className="space-y-6 sm:space-y-8 animate-fadeIn pt-2">
-            <div className="text-center max-w-xl mx-auto space-y-5">
-              <div className="space-y-2">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-sans text-neutral-950 dark:text-white tracking-tight">
-                  Transparent Pricing
-                </h2>
-                <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-sans leading-relaxed">
-                  One unified membership unlocks creative artboards, motion engines, and document pipelines across all Docdril products.
-                </p>
-              </div>
-
-              {/* Monthly / Yearly Billing Toggle */}
-              <div className="flex flex-col items-center justify-center gap-2.5">
-                <div className="relative inline-flex items-center p-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+          <div id="pricings" className="space-y-6 sm:space-y-8 animate-fadeIn">
+            {/* Monthly / Yearly Billing Toggle */}
+            <div className="flex flex-col items-center justify-center gap-2.5">
+              <div className="relative inline-flex items-center p-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
                 {/* Sliding Billing Cycle Pill Indicator */}
                 {billingIndicator.ready && (
                   <div
@@ -478,9 +468,8 @@ export default function HomePage() {
                   : 'Flexible monthly billing • cancel or switch tiers anytime.'}
               </p>
             </div>
-          </div>
 
-          {/* Subscription Plans Grid */}
+            {/* Subscription Plans Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-7 items-stretch">
               {(billingCycle === 'yearly' ? YEARLY_PRICING_PLANS : PRICING_PLANS).map((plan) => {
                 const isCurrentPlan =
@@ -712,16 +701,7 @@ export default function HomePage() {
 
         {/* Tab 3: Tutorials */}
         {activeTab === 'tutorials' && (
-          <div id="tutorials" className="space-y-8 animate-fadeIn pt-2">
-            <div className="text-center max-w-xl mx-auto space-y-1">
-              <h2 className="text-2xl sm:text-3xl font-bold font-sans text-neutral-950 dark:text-white">
-                Tutorials & Video Walkthroughs
-              </h2>
-              <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400">
-                Step-by-step documentation and project guides for all creative software.
-              </p>
-            </div>
-
+          <div id="tutorials" className="space-y-6 animate-fadeIn">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {TUTORIAL_GUIDES.map((guide) => {
                 const Icon = guide.icon;
