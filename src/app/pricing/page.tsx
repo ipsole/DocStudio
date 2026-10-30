@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { PRICING_PLANS, YEARLY_PRICING_PLANS, CREDIT_PACKS, PRICING_FAQS, CreditPack, PricingPlan } from '@/lib/pricingData';
 import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
-import { getUserSubscriptions } from '@/lib/firebase/db';
+import { getUserSubscriptions, getUserOrders } from '@/lib/firebase/db';
 import { AppSubscription, SubscriptionPlan, OrderRecord } from '@/types';
 import { Check, Sparkles, ArrowRight, Zap, HelpCircle, ShieldCheck, Plus, Loader2 } from 'lucide-react';
 
@@ -17,8 +17,9 @@ export default function PricingPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [successToast, setSuccessToast] = useState<string | null>(null);
 
-  // User subscriptions to detect current active plan
+  // User subscriptions and paid orders to detect current active plan and billing cycle
   const [userSubs, setUserSubs] = useState<AppSubscription[]>([]);
+  const [userOrders, setUserOrders] = useState<OrderRecord[]>([]);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [packQuantities, setPackQuantities] = useState<Record<string, number>>({
     'pack-mini': 1,
@@ -57,22 +58,29 @@ export default function PricingPage() {
   useEffect(() => {
     if (!user) {
       setUserSubs([]);
+      setUserOrders([]);
       return;
     }
 
     if (typeof window !== 'undefined') {
       try {
-        const cached = localStorage.getItem(`docstudio_subscriptions_${user.uid}`);
-        if (cached) setUserSubs(JSON.parse(cached));
+        const cachedSubs = localStorage.getItem(`docstudio_subscriptions_${user.uid}`);
+        if (cachedSubs) setUserSubs(JSON.parse(cachedSubs));
+        const cachedOrders = localStorage.getItem(`docstudio_orders_${user.uid}`);
+        if (cachedOrders) setUserOrders(JSON.parse(cachedOrders));
       } catch {}
     }
 
     getUserSubscriptions(user.uid).then((subs) => {
       if (subs && subs.length > 0) setUserSubs(subs);
     });
+
+    getUserOrders(user.uid, user.email || '').then((ords) => {
+      if (ords && ords.length > 0) setUserOrders(ords);
+    });
   }, [user]);
 
-  // Determine current active plan
+  // Determine current active plan tier (free, pro, enterprise)
   const activePlanId: SubscriptionPlan = useMemo(() => {
     if (!userSubs || userSubs.length === 0) return 'free';
     const hasEnterprise = userSubs.some((s) => s.plan === 'enterprise');
@@ -81,6 +89,27 @@ export default function PricingPage() {
     if (hasPro) return 'pro';
     return 'free';
   }, [userSubs]);
+
+  // Check if the user specifically purchased an annual/yearly subscription
+  const isYearlyUser = useMemo(() => {
+    const hasYearlyOrder = userOrders.some(
+      (o) =>
+        o.itemType === 'subscription' &&
+        o.status === 'paid' &&
+        (o.itemId?.includes('yearly') ||
+          o.itemName?.toLowerCase().includes('annual') ||
+          o.amount > 3000)
+    );
+    if (hasYearlyOrder) return true;
+
+    // Check duration in Firestore (validUntil > 60 days means annual since monthly is 30 days)
+    const now = Date.now();
+    const hasAnnualDuration = userSubs.some((s) => {
+      const validUntil = typeof s.validUntil === 'number' ? s.validUntil : 0;
+      return validUntil - now > 60 * 24 * 60 * 60 * 1000;
+    });
+    return hasAnnualDuration;
+  }, [userOrders, userSubs]);
 
   const handleOpenTopUp = (pack: CreditPack) => {
     setSelectedPack(pack);
@@ -111,7 +140,14 @@ export default function PricingPage() {
       return;
     }
 
-    if (plan.id === activePlanId) {
+    // Direct to billing only if clicking on their exact current plan (matching billing cycle)
+    const isExactCurrentPlan =
+      (activePlanId === 'pro' && !isYearlyUser && plan.id === 'pro') ||
+      (activePlanId === 'pro' && isYearlyUser && plan.id === 'pro-yearly') ||
+      (activePlanId === 'enterprise' && !isYearlyUser && plan.id === 'ultra') ||
+      (activePlanId === 'enterprise' && isYearlyUser && plan.id === 'ultra-yearly');
+
+    if (isExactCurrentPlan) {
       router.push('/account#billing');
       return;
     }
@@ -209,13 +245,43 @@ export default function PricingPage() {
         {/* Subscription Plan Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch pt-1 sm:pt-2">
           {(billingCycle === 'yearly' ? YEARLY_PRICING_PLANS : PRICING_PLANS).map((plan) => {
-            const isCurrentPlan =
-              activePlanId === plan.id ||
-              (activePlanId === 'free' && (plan.id === 'starter' || plan.id === 'free')) ||
-              (activePlanId === 'pro' && (plan.id === 'pro' || plan.id === 'pro-yearly')) ||
-              (activePlanId === 'enterprise' && (plan.id === 'ultra' || plan.id === 'ultra-yearly'));
-            const isIncluded = (activePlanId === 'pro' || activePlanId === 'enterprise') && (plan.id === 'free' || plan.id === 'starter');
-            const isDowngrade = activePlanId === 'enterprise' && (plan.id === 'pro' || plan.id === 'pro-yearly');
+            // Determine if this plan is the user's active plan
+            const isCurrentPlan = (() => {
+              if (activePlanId === 'free') {
+                return plan.id === 'starter' || plan.id === 'free';
+              }
+              if (activePlanId === 'pro') {
+                if (isYearlyUser) {
+                  return plan.id === 'pro-yearly' || (billingCycle === 'monthly' && plan.id === 'pro');
+                } else {
+                  return billingCycle === 'monthly' && plan.id === 'pro';
+                }
+              }
+              if (activePlanId === 'enterprise') {
+                if (isYearlyUser) {
+                  return plan.id === 'ultra-yearly' || (billingCycle === 'monthly' && plan.id === 'ultra');
+                } else {
+                  return billingCycle === 'monthly' && plan.id === 'ultra';
+                }
+              }
+              return false;
+            })();
+
+            // If user is on a monthly subscription and viewing annual cycle, allow upgrading to annual
+            const isUpgradeToAnnual =
+              !isYearlyUser &&
+              ((activePlanId === 'pro' && plan.id === 'pro-yearly') ||
+                (activePlanId === 'enterprise' && plan.id === 'ultra-yearly'));
+
+            const isIncluded =
+              !isUpgradeToAnnual &&
+              ((activePlanId === 'pro' || activePlanId === 'enterprise') && (plan.id === 'free' || plan.id === 'starter'));
+
+            const isDowngrade =
+              !isUpgradeToAnnual &&
+              (activePlanId === 'enterprise' && (plan.id === 'pro' || plan.id === 'pro-yearly'));
+
+            const ctaText = isUpgradeToAnnual ? 'Upgrade to Annual' : plan.cta;
 
             return (
               <div
@@ -305,7 +371,7 @@ export default function PricingPage() {
                       <span>Included in your tier</span>
                     ) : (
                       <>
-                        <span>{plan.cta}</span>
+                        <span>{ctaText}</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </>
                     )}
