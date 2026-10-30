@@ -63,7 +63,7 @@ export default function AppsCatalogPage() {
                 : 'border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 hover:border-neutral-400 dark:hover:border-neutral-600 hover:text-black dark:hover:text-white'
             }`}
           >
-            All Softwares
+            All Suites
           </button>
 
           {CATEGORIES.filter((c) => c.id !== 'all').map((cat) => {

@@ -348,11 +348,11 @@ export default function HomePage() {
         {/* Tab 1: Softwares Catalog */}
         {activeTab === 'softwares' && (
           <div id="softwares" className="space-y-6 animate-fadeIn">
-            {/* Catalog Toolbar Header: Left-aligned Category Chips + Right-aligned Live Count */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-neutral-100 dark:border-neutral-900/80">
+            {/* Catalog Toolbar Header: Left-aligned Category Chips */}
+            <div className="flex items-center pb-3 border-b border-neutral-100 dark:border-neutral-900/80">
               <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5">
                 {[
-                  { id: 'all', label: 'All Softwares', count: apps.length },
+                  { id: 'all', label: 'All Suites', count: apps.length },
                   { id: 'creative', label: 'Creative', count: apps.filter(a => a.category?.toLowerCase() === 'creative').length },
                   { id: 'animation', label: 'Animation', count: apps.filter(a => a.category?.toLowerCase() === 'animation').length },
                   { id: 'productivity', label: 'Productivity', count: apps.filter(a => a.category?.toLowerCase() === 'productivity').length },
@@ -381,11 +381,6 @@ export default function HomePage() {
                     )}
                   </button>
                 ))}
-              </div>
-
-              <div className="text-xs text-neutral-500 dark:text-neutral-400 font-sans hidden sm:flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                <span>{filteredApps.length} {filteredApps.length === 1 ? 'Suite' : 'Suites'} Ready</span>
               </div>
             </div>
 
