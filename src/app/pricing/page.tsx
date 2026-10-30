@@ -168,11 +168,7 @@ export default function PricingPage() {
       )}
 
       {/* Hero Header */}
-      <div className="max-w-3xl mx-auto text-center space-y-3.5 pt-2 sm:pt-4">
-        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-sans font-semibold uppercase tracking-wider bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 shadow-sm">
-          <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-          <span>Transparent INR (₹) Pricing • Instant Activation</span>
-        </div>
+      <div className="max-w-3xl mx-auto text-center space-y-3 pt-2 sm:pt-4">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
           Transparent Pricing for Creative Scale
         </h1>

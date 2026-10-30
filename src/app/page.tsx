@@ -410,11 +410,7 @@ export default function HomePage() {
         {/* Tab 2: Pricings in INR */}
         {activeTab === 'pricings' && (
           <div id="pricings" className="space-y-10 animate-fadeIn pt-2">
-            <div className="text-center max-w-xl mx-auto space-y-2.5">
-              <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-sans font-semibold uppercase tracking-wider bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 shadow-sm">
-                <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-                <span>Transparent INR (₹) Pricing</span>
-              </div>
+            <div className="text-center max-w-xl mx-auto space-y-2">
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-sans text-neutral-950 dark:text-white tracking-tight">
                 Transparent Pricing for Creative Scale
               </h2>
