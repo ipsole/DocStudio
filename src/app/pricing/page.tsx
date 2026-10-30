@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { PRICING_PLANS, YEARLY_PRICING_PLANS, CREDIT_PACKS, PRICING_FAQS, CreditPack, PricingPlan } from '@/lib/pricingData';
 import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
-import { CheckoutDetailsModal } from '@/components/pricing/CheckoutDetailsModal';
 import { getUserSubscriptions } from '@/lib/firebase/db';
 import { AppSubscription, SubscriptionPlan, OrderRecord } from '@/types';
 import { Check, Sparkles, ArrowRight, Zap, HelpCircle, ShieldCheck, Plus, Loader2 } from 'lucide-react';
@@ -20,10 +19,6 @@ export default function PricingPage() {
 
   // User subscriptions to detect current active plan
   const [userSubs, setUserSubs] = useState<AppSubscription[]>([]);
-  const [checkoutItem, setCheckoutItem] = useState<PricingPlan | CreditPack | null>(null);
-  const [checkoutType, setCheckoutType] = useState<'subscription' | 'credit_pack'>('subscription');
-  const [checkoutQuantity, setCheckoutQuantity] = useState<number>(1);
-  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [packQuantities, setPackQuantities] = useState<Record<string, number>>({
     'pack-mini': 1,
@@ -93,15 +88,12 @@ export default function PricingPage() {
   };
 
   const handleOpenPackCheckout = (pack: CreditPack) => {
+    const qty = packQuantities[pack.id] || 1;
     if (!user) {
-      router.push('/sign-in?redirect=/pricing');
+      router.push(`/sign-in?redirect=${encodeURIComponent(`/checkout?pack=${pack.id}&qty=${qty}`)}`);
       return;
     }
-    const qty = packQuantities[pack.id] || 1;
-    setCheckoutItem(pack);
-    setCheckoutType('credit_pack');
-    setCheckoutQuantity(qty);
-    setCheckoutModalOpen(true);
+    router.push(`/checkout?pack=${pack.id}&qty=${qty}`);
   };
 
   const handleTopUpSuccess = (added: number) => {
@@ -119,42 +111,17 @@ export default function PricingPage() {
       return;
     }
 
-    if (!user) {
-      router.push('/sign-in?redirect=/pricing');
-      return;
-    }
-
     if (plan.id === activePlanId) {
       router.push('/account#billing');
       return;
     }
 
-    setCheckoutItem(plan);
-    setCheckoutType('subscription');
-    setCheckoutQuantity(1);
-    setCheckoutModalOpen(true);
-  };
-
-  const handlePlanCheckoutSuccess = (order: OrderRecord) => {
-    setSuccessToast(`Subscribed to ${order.itemName}! Invoice #${order.receiptNumber}`);
-    if (checkoutItem && checkoutType === 'subscription') {
-      const target = checkoutItem.id as SubscriptionPlan;
-      setUserSubs((prev) =>
-        prev.map((s) => ({
-          ...s,
-          plan: target,
-          creditsRemaining: (s.creditsRemaining || 0) + (('creditsAllotment' in checkoutItem ? checkoutItem.creditsAllotment : 0) || 0),
-        }))
-      );
-    } else if (order.creditsAdded) {
-      setUserSubs((prev) =>
-        prev.map((s, idx) => (idx === 0 ? { ...s, creditsRemaining: (s.creditsRemaining || 0) + (order.creditsAdded || 0) } : s))
-      );
+    if (!user) {
+      router.push(`/sign-in?redirect=${encodeURIComponent(`/checkout?plan=${plan.id}`)}`);
+      return;
     }
-    setTimeout(() => {
-      setCheckoutModalOpen(false);
-      router.push('/account#billing');
-    }, 2000);
+
+    router.push(`/checkout?plan=${plan.id}`);
   };
 
   return (
@@ -526,19 +493,6 @@ export default function PricingPage() {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         onSuccess={handleTopUpSuccess}
-      />
-
-      {/* Pre-Checkout Billing & GST Details Modal */}
-      <CheckoutDetailsModal
-        isOpen={checkoutModalOpen}
-        onClose={() => setCheckoutModalOpen(false)}
-        item={checkoutItem}
-        itemType={checkoutType}
-        initialQuantity={checkoutQuantity}
-        userId={user?.uid || ''}
-        userEmail={user?.email || ''}
-        userName={user?.displayName || undefined}
-        onSuccess={handlePlanCheckoutSuccess}
       />
     </div>
   );

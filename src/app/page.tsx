@@ -9,7 +9,6 @@ import { AppCard } from '@/components/apps/AppCard';
 import { IntroSplash } from '@/components/ui/IntroSplash';
 import { PRICING_PLANS, YEARLY_PRICING_PLANS, CREDIT_PACKS, CreditPack, PricingPlan } from '@/lib/pricingData';
 import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
-import { CheckoutDetailsModal } from '@/components/pricing/CheckoutDetailsModal';
 import { getUserSubscriptions } from '@/lib/firebase/db';
 import {
   Loader2,
@@ -72,10 +71,6 @@ export default function HomePage() {
 
   // Active user subscription detection
   const [userSubs, setUserSubs] = useState<AppSubscription[]>([]);
-  const [checkoutItem, setCheckoutItem] = useState<PricingPlan | CreditPack | null>(null);
-  const [checkoutType, setCheckoutType] = useState<'subscription' | 'credit_pack'>('subscription');
-  const [checkoutQuantity, setCheckoutQuantity] = useState<number>(1);
-  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [packQuantities, setPackQuantities] = useState<Record<string, number>>({
     'pack-mini': 1,
@@ -214,32 +209,26 @@ export default function HomePage() {
       return;
     }
 
-    if (!user) {
-      window.location.href = '/sign-in?redirect=/';
-      return;
-    }
-
     if (plan.id === activePlanId) {
       window.location.href = '/account#billing';
       return;
     }
 
-    setCheckoutItem(plan);
-    setCheckoutType('subscription');
-    setCheckoutQuantity(1);
-    setCheckoutModalOpen(true);
+    if (!user) {
+      window.location.href = `/sign-in?redirect=${encodeURIComponent(`/checkout?plan=${plan.id}`)}`;
+      return;
+    }
+
+    window.location.href = `/checkout?plan=${plan.id}`;
   };
 
   const handleOpenPackCheckout = (pack: CreditPack) => {
+    const qty = packQuantities[pack.id] || 1;
     if (!user) {
-      window.location.href = '/sign-in?redirect=/';
+      window.location.href = `/sign-in?redirect=${encodeURIComponent(`/checkout?pack=${pack.id}&qty=${qty}`)}`;
       return;
     }
-    const qty = packQuantities[pack.id] || 1;
-    setCheckoutItem(pack);
-    setCheckoutType('credit_pack');
-    setCheckoutQuantity(qty);
-    setCheckoutModalOpen(true);
+    window.location.href = `/checkout?pack=${pack.id}&qty=${qty}`;
   };
 
   useEffect(() => {
@@ -804,38 +793,6 @@ export default function HomePage() {
             if (subs && subs.length > 0) setUserSubs(subs);
           });
         }
-      }}
-    />
-
-    {/* Pre-Checkout Billing & GST Details Modal */}
-    <CheckoutDetailsModal
-      isOpen={checkoutModalOpen}
-      onClose={() => setCheckoutModalOpen(false)}
-      item={checkoutItem}
-      itemType={checkoutType}
-      initialQuantity={checkoutQuantity}
-      userId={user?.uid || ''}
-      userEmail={user?.email || ''}
-      userName={user?.displayName || undefined}
-      onSuccess={(order) => {
-        if (checkoutItem && checkoutType === 'subscription') {
-          const target = checkoutItem.id as SubscriptionPlan;
-          setUserSubs((prev) =>
-            prev.map((s) => ({
-              ...s,
-              plan: target,
-              creditsRemaining: (s.creditsRemaining || 0) + (('creditsAllotment' in checkoutItem ? checkoutItem.creditsAllotment : 0) || 0),
-            }))
-          );
-        } else if (order.creditsAdded) {
-          setUserSubs((prev) =>
-            prev.map((s, idx) => (idx === 0 ? { ...s, creditsRemaining: (s.creditsRemaining || 0) + (order.creditsAdded || 0) } : s))
-          );
-        }
-        setTimeout(() => {
-          setCheckoutModalOpen(false);
-          window.location.href = '/account#billing';
-        }, 1800);
       }}
     />
     </>
