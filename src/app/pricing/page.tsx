@@ -158,7 +158,7 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 space-y-16 sm:space-y-20 text-neutral-900 dark:text-white">
+    <div className="max-w-[1360px] mx-auto px-4 sm:px-6 md:px-8 pt-10 sm:pt-14 pb-12 sm:pb-16 space-y-16 sm:space-y-20 text-neutral-900 dark:text-white">
       {/* Toast Notification */}
       {successToast && (
         <div className="fixed bottom-6 right-6 z-50 bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-2xl font-sans text-xs font-semibold flex items-center gap-2 animate-fade-in-up">
@@ -169,9 +169,9 @@ export default function PricingPage() {
 
       {/* 1. Subscription Plans Section (Hero Header, Billing Switcher & Cards Grid) */}
       <div className="space-y-6 sm:space-y-8">
-        <div className="max-w-3xl mx-auto text-center space-y-5 pt-2 sm:pt-4">
-          <div className="space-y-3">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+        <div className="max-w-3xl mx-auto text-center space-y-5">
+          <div className="space-y-2.5">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
               Transparent Pricing
             </h1>
             <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-sans max-w-2xl mx-auto leading-relaxed">

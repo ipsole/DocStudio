@@ -37,12 +37,12 @@ export default function TutorialsPage() {
   ];
 
   return (
-    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 py-12 sm:py-16 space-y-12">
-      <div className="max-w-2xl mx-auto text-center space-y-3">
-        <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+    <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 pt-10 sm:pt-14 pb-12 sm:pb-16 space-y-12">
+      <div className="max-w-3xl mx-auto text-center space-y-2.5">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
           Tutorials & Documentation
         </h1>
-        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-sans">
+        <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-sans max-w-2xl mx-auto leading-relaxed">
           Guides, walkthroughs, and technical references to help you get the most out of every Docdril tool.
         </p>
       </div>
