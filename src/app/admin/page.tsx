@@ -272,7 +272,11 @@ export default function AdminPage() {
           if (editingCoupon && editingCoupon.code !== payload.code) {
             await deleteDoc(doc(db, 'coupons', editingCoupon.code));
           }
-          await setDoc(doc(db, 'coupons', payload.code), couponDocData, { merge: true });
+          const clientPayload: Record<string, any> = {};
+          for (const [k, v] of Object.entries(couponDocData)) {
+            if (v !== undefined) clientPayload[k] = v;
+          }
+          await setDoc(doc(db, 'coupons', payload.code), clientPayload, { merge: true });
         } catch (clientDbErr) {
           console.warn('Client Firestore write warning:', clientDbErr);
         }

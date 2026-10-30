@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { getRazorpayKeySecret } from '@/lib/razorpay';
 import {
   recordOrderAdmin,
   upgradeUserPlanAdmin,
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     const webhookSecret =
-      process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET || '';
+      process.env.RAZORPAY_WEBHOOK_SECRET || getRazorpayKeySecret() || '';
 
     if (!webhookSecret) {
       console.error('[Razorpay Webhook] Webhook secret not configured on server.');

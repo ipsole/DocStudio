@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { getRazorpayClient } from '@/lib/razorpay';
+import { getRazorpayClient, getRazorpayKeySecret } from '@/lib/razorpay';
 import { PRICING_PLANS, CREDIT_PACKS, ALL_PRICING_PLANS } from '@/lib/pricingData';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import * as admin from 'firebase-admin';
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 1. Cryptographic HMAC SHA256 Signature Verification
-    const secret = process.env.RAZORPAY_KEY_SECRET || '';
+    const secret = getRazorpayKeySecret();
     if (!secret) {
       return NextResponse.json(
         { success: false, error: 'SERVER_MISCONFIGURED', message: 'Razorpay Key Secret is missing on server.' },

@@ -212,10 +212,16 @@ export async function saveCouponAdmin(
   updatedLocal.unshift(coupon);
   writeLocalCoupons(updatedLocal);
 
-  // 2. Persist to Firestore if available
+  // 2. Persist to Firestore if available (stripping any undefined properties)
   if (firestore) {
     try {
-      await firestore.collection(COUPONS_COLLECTION).doc(cleanCode).set(coupon, { merge: true });
+      const firestorePayload: Record<string, any> = {};
+      for (const [key, val] of Object.entries(coupon)) {
+        if (val !== undefined) {
+          firestorePayload[key] = val;
+        }
+      }
+      await firestore.collection(COUPONS_COLLECTION).doc(cleanCode).set(firestorePayload, { merge: true });
       await firestore.collection('system').doc('coupons_init').set(
         {
           initializedAt: Date.now(),

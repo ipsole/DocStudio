@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
-import { getRazorpayClient } from '@/lib/razorpay';
+import { getRazorpayClient, getPublicRazorpayKeyId } from '@/lib/razorpay';
 import { PRICING_PLANS, CREDIT_PACKS, ALL_PRICING_PLANS, ELITE_MEMBERSHIP } from '@/lib/pricingData';
 import { validateCouponServer, recordCouponRedemptionAdmin } from '@/lib/couponsServer';
 import {
@@ -313,7 +313,7 @@ export async function POST(request: NextRequest) {
       amount: order.amount,
       amountInr: amountInInr,
       currency: order.currency,
-      keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      keyId: getPublicRazorpayKeyId(),
       itemName,
       receiptNumber,
       customerId,

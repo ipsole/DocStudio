@@ -151,9 +151,21 @@ export function getFirebaseAdmin(): {
     }
   }
 
+  let firestoreInstance: admin.firestore.Firestore | undefined;
+  if (adminApp) {
+    try {
+      firestoreInstance = rootAdmin.firestore(adminApp);
+      if (firestoreInstance) {
+        firestoreInstance.settings({ ignoreUndefinedProperties: true });
+      }
+    } catch {
+      firestoreInstance = adminApp ? rootAdmin.firestore(adminApp) : undefined;
+    }
+  }
+
   return {
     app: adminApp,
     auth: adminApp ? rootAdmin.auth(adminApp) : undefined,
-    firestore: adminApp ? rootAdmin.firestore(adminApp) : undefined,
+    firestore: firestoreInstance,
   };
 }
