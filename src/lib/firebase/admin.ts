@@ -53,15 +53,36 @@ function findServiceAccount(): admin.ServiceAccount | null {
     console.warn('[DocStore Admin] Error finding service account file:', err);
   }
 
-  // 3. Check direct environment variables
+  // 3. Check JSON blob environment variables (single string in Vercel: FIREBASE_SERVICE_ACCOUNT_KEY or FIREBASE_SERVICE_ACCOUNT)
+  const jsonBlob = process.env.FIREBASE_SERVICE_ACCOUNT_KEY || process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (jsonBlob) {
+    try {
+      let parsedStr = jsonBlob.trim();
+      if (!parsedStr.startsWith('{') && parsedStr.length > 20) {
+        parsedStr = Buffer.from(parsedStr, 'base64').toString('utf8');
+      }
+      const raw: RawServiceAccount = JSON.parse(parsedStr);
+      if (raw.client_email || raw.clientEmail) {
+        return {
+          projectId: raw.project_id || raw.projectId || 'docdril-softwares',
+          clientEmail: raw.client_email || raw.clientEmail,
+          privateKey: (raw.private_key || raw.privateKey || '').replace(/^["']|["']$/g, '').replace(/\\n/g, '\n'),
+        };
+      }
+    } catch (e) {
+      console.warn('[DocStore Admin] Error parsing FIREBASE_SERVICE_ACCOUNT_KEY JSON:', e);
+    }
+  }
+
+  // 4. Check direct individual environment variables
   if (process.env.FIREBASE_ADMIN_PRIVATE_KEY && process.env.FIREBASE_ADMIN_CLIENT_EMAIL) {
     return {
       projectId:
         process.env.FIREBASE_ADMIN_PROJECT_ID ||
         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
         'docdril-softwares',
-      clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL.trim(),
+      privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY.trim().replace(/^["']|["']$/g, '').replace(/\\n/g, '\n'),
     };
   }
 

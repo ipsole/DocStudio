@@ -5,6 +5,8 @@ import { useAuth } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { DocApp, AppStatus, AppVisibility, Coupon, CouponDiscountType, CouponTargetType } from '@/types';
 import { SUPER_ADMIN_EMAIL } from '@/lib/adminConfig';
+import { db } from '@/lib/firebase/client';
+import { collection, doc, setDoc, deleteDoc, updateDoc, getDocs } from 'firebase/firestore';
 import { StatusBadge, Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -171,13 +173,41 @@ export default function AdminPage() {
     if (!user) return;
     setCouponsLoading(true);
     try {
-      const token = await user.getIdToken();
-      const res = await fetch('/api/admin/coupons', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.success) {
-        setCoupons(data.data || []);
+      let combinedCoupons: Coupon[] = [];
+
+      // 1. Fetch from server API
+      try {
+        const token = await user.getIdToken();
+        const res = await fetch('/api/admin/coupons', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          combinedCoupons = data.data;
+        }
+      } catch (srvErr) {
+        console.warn('Server fetch error in loadAdminCoupons:', srvErr);
+      }
+
+      // 2. Query Cloud Firestore directly via client SDK to ensure any custom coupons reflect immediately
+      if (db) {
+        try {
+          const snap = await getDocs(collection(db, 'coupons'));
+          if (!snap.empty) {
+            const clientList = snap.docs.map((d) => d.data() as Coupon);
+            const clientCodes = new Set(clientList.map((c) => c.code));
+            combinedCoupons = [
+              ...clientList,
+              ...combinedCoupons.filter((c) => !clientCodes.has(c.code)),
+            ];
+          }
+        } catch (clientDbErr) {
+          console.warn('Client Firestore query warning:', clientDbErr);
+        }
+      }
+
+      if (combinedCoupons.length > 0) {
+        setCoupons(combinedCoupons);
       }
     } catch (err: unknown) {
       console.warn('Error loading coupons:', err);
@@ -211,21 +241,66 @@ export default function AdminPage() {
         expiresAt: couponFormData.expiresAt ? new Date(couponFormData.expiresAt).getTime() : null,
       };
 
-      const url = '/api/admin/coupons';
-      const method = editingCoupon ? 'PUT' : 'POST';
+      const couponDocData: Coupon = {
+        id: payload.code,
+        code: payload.code,
+        description: payload.description,
+        discountType: payload.discountType,
+        discountValue: payload.discountValue,
+        targetType: payload.targetType,
+        targetValue: payload.targetValue,
+        singleUsePerUser: payload.singleUsePerUser,
+        maxTotalUses: payload.maxTotalUses,
+        currentUses: editingCoupon ? (editingCoupon.currentUses || 0) : 0,
+        active: true,
+        expiresAt: payload.expiresAt,
+        createdAt: editingCoupon ? (editingCoupon.createdAt || Date.now()) : Date.now(),
+        createdBy: user.email || 'admin',
+      };
 
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
+      // 1. Optimistic immediate update to local state so the coupon appears in the UI instantly
+      setCoupons((prev) => {
+        const withoutOld = prev.filter(
+          (c) => c.code !== payload.code && c.code !== editingCoupon?.code
+        );
+        return [couponDocData, ...withoutOld];
       });
 
-      const data = await res.json();
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to save coupon.');
+      // 2. Direct Cloud Firestore write with user's active Google Auth token
+      if (db) {
+        try {
+          if (editingCoupon && editingCoupon.code !== payload.code) {
+            await deleteDoc(doc(db, 'coupons', editingCoupon.code));
+          }
+          await setDoc(doc(db, 'coupons', payload.code), couponDocData, { merge: true });
+        } catch (clientDbErr) {
+          console.warn('Client Firestore write warning:', clientDbErr);
+        }
+      }
+
+      // 3. Server-side API update
+      const url = '/api/admin/coupons';
+      const method = editingCoupon ? 'PUT' : 'POST';
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          setCoupons((prev) => {
+            const withoutOld = prev.filter(
+              (c) => c.code !== data.data.code && c.code !== editingCoupon?.code
+            );
+            return [data.data, ...withoutOld];
+          });
+        }
+      } catch (srvErr) {
+        console.warn('Server API save warning:', srvErr);
       }
 
       setSuccessMsg(
@@ -236,7 +311,6 @@ export default function AdminPage() {
       setTimeout(() => setSuccessMsg(null), 4000);
       setIsCouponModalOpen(false);
       setEditingCoupon(null);
-      await loadAdminCoupons();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error saving coupon.');
     } finally {
@@ -246,9 +320,16 @@ export default function AdminPage() {
 
   const handleToggleCoupon = async (code: string, currentActive: boolean) => {
     if (!user) return;
+    // Optimistic toggle
+    setCoupons((prev) =>
+      prev.map((c) => (c.code === code ? { ...c, active: !currentActive } : c))
+    );
     try {
+      if (db) {
+        updateDoc(doc(db, 'coupons', code), { active: !currentActive }).catch(console.warn);
+      }
       const token = await user.getIdToken();
-      const res = await fetch('/api/admin/coupons', {
+      await fetch('/api/admin/coupons', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -256,12 +337,6 @@ export default function AdminPage() {
         },
         body: JSON.stringify({ code, active: !currentActive }),
       });
-      const data = await res.json();
-      if (data.success) {
-        setCoupons((prev) =>
-          prev.map((c) => (c.code === code ? { ...c, active: !currentActive } : c))
-        );
-      }
     } catch (err) {
       console.error('Error toggling coupon:', err);
     }
@@ -271,17 +346,21 @@ export default function AdminPage() {
     if (!user) return;
     if (!confirm(`Are you sure you want to permanently delete coupon "${code}"?`)) return;
     try {
+      // Optimistic delete
+      setCoupons((prev) => prev.filter((c) => c.code !== code));
+
+      if (db) {
+        deleteDoc(doc(db, 'coupons', code)).catch(console.warn);
+      }
+
       const token = await user.getIdToken();
-      const res = await fetch(`/api/admin/coupons?code=${encodeURIComponent(code)}`, {
+      await fetch(`/api/admin/coupons?code=${encodeURIComponent(code)}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = await res.json();
-      if (data.success) {
-        setCoupons((prev) => prev.filter((c) => c.code !== code));
-        setSuccessMsg(`Coupon "${code}" deleted.`);
-        setTimeout(() => setSuccessMsg(null), 3000);
-      }
+
+      setSuccessMsg(`Coupon "${code}" deleted.`);
+      setTimeout(() => setSuccessMsg(null), 3000);
     } catch (err) {
       console.error('Error deleting coupon:', err);
     }
