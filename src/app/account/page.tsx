@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { AvatarEditModal } from '@/components/ui/AvatarEditModal';
 import { DeleteAccountModal } from '@/components/ui/DeleteAccountModal';
+import { DeactivateAccountModal } from '@/components/ui/DeactivateAccountModal';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
 import { LinkPhoneModal } from '@/components/ui/LinkPhoneModal';
@@ -76,6 +77,7 @@ export default function AccountPage() {
     resetPassword,
     signOut,
     deleteAccount,
+    deactivateAccount,
     isAdmin,
     linkGoogle,
     linkApple,
@@ -93,6 +95,7 @@ export default function AccountPage() {
   const [avatarIcon, setAvatarIcon] = useState<string | null>('User');
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeactivateModalOpen, setIsDeactivateModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [copiedUsername, setCopiedUsername] = useState(false);
 
@@ -555,10 +558,16 @@ export default function AccountPage() {
     await loadSubscriptions();
   };
 
+  // Deactivate account handler
+  const handleConfirmDeactivate = async (password?: string) => {
+    await deactivateAccount(password);
+    router.push('/sign-in?deactivated=true');
+  };
+
   // Delete account handler
-  const handleConfirmDelete = async () => {
-    await deleteAccount();
-    router.push('/');
+  const handleConfirmDelete = async (password?: string) => {
+    await deleteAccount(password);
+    router.push('/?deleted=true');
   };
 
   // Aggregate credits
@@ -2285,13 +2294,46 @@ export default function AccountPage() {
                   </div>
                 </div>
 
-                {/* Section 4: Account Deletion */}
-                <div className="space-y-4 pt-6 border-t border-neutral-200 dark:border-neutral-900">
+                {/* Section 4: Account Deactivation & Deletion */}
+                <div className="space-y-6 pt-6 border-t border-neutral-200 dark:border-neutral-900">
+                  {/* Subsection 4A: Deactivate Account (Temporary) */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="space-y-1">
-                      <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
-                        Delete Account
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                          Deactivate Account
+                        </h3>
+                        <span className="text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900">
+                          Temporary
+                        </span>
+                      </div>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans max-w-xl leading-relaxed">
+                        Temporarily pause your account and hide your profile across the Docdril ecosystem. Your active subscriptions, software access, and generation credit balances are preserved safely until you sign back in to reactivate.
+                      </p>
+                    </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsDeactivateModalOpen(true)}
+                      className="shrink-0 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/50"
+                    >
+                      Deactivate Account
+                    </Button>
+                  </div>
+
+                  {/* Subsection 4B: Delete Account (Permanent) */}
+                  <div className="pt-4 border-t border-dashed border-neutral-200 dark:border-neutral-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                          Delete Account
+                        </h3>
+                        <span className="text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900">
+                          Permanent
+                        </span>
+                      </div>
                       <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans max-w-xl leading-relaxed">
                         Permanently delete your profile, credentials, and active software subscriptions across the Docdril ecosystem.
                       </p>
@@ -2566,11 +2608,21 @@ export default function AccountPage() {
           onSave={handleSaveAvatar}
         />
 
+        {/* Deactivate Account Modal */}
+        <DeactivateAccountModal
+          isOpen={isDeactivateModalOpen}
+          onClose={() => setIsDeactivateModalOpen(false)}
+          userEmail={user?.email || ''}
+          hasPassword={hasPasswordProvider}
+          onConfirmDeactivate={handleConfirmDeactivate}
+        />
+
         {/* Delete Account Modal */}
         <DeleteAccountModal
           isOpen={isDeleteModalOpen}
           onClose={() => setIsDeleteModalOpen(false)}
           userEmail={user?.email || ''}
+          hasPassword={hasPasswordProvider}
           onConfirmDelete={handleConfirmDelete}
         />
 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -11,6 +11,8 @@ import { AlertCircle, Loader2 } from 'lucide-react';
 
 function SignInForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const wasDeactivated = searchParams?.get('deactivated') === 'true';
   const {
     user,
     loading: authLoading,
@@ -94,6 +96,12 @@ function SignInForm() {
       {!isConfigured && (
         <div className="p-3 border border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/60 dark:text-amber-300 font-mono text-xs leading-relaxed rounded">
           <strong>NOTICE:</strong> Firebase configuration is pending in <code className="font-mono text-neutral-950 dark:text-white">.env.local</code>.
+        </div>
+      )}
+
+      {wasDeactivated && (
+        <div className="p-3.5 border border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/60 dark:text-amber-300 text-xs font-sans leading-relaxed rounded-xl flex items-center gap-2">
+          <span>Your account has been deactivated. Signing in with your credentials will automatically reactivate your account and restore your workspace.</span>
         </div>
       )}
 

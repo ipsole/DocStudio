@@ -32,6 +32,8 @@ import {
   ensureUserProfile,
   updateUserProfile as dbUpdateUserProfile,
   deleteUserAccountData,
+  deactivateUserAccount,
+  reactivateUserAccount,
 } from '@/lib/firebase/db';
 import { UserProfile } from '@/types';
 
@@ -66,7 +68,9 @@ interface AuthContextType {
     avatarIcon?: string | null;
     photoURL?: string | null;
   }) => Promise<void>;
-  deleteAccount: () => Promise<void>;
+  deleteAccount: (password?: string) => Promise<void>;
+  deactivateAccount: (password?: string) => Promise<void>;
+  reactivateAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -412,8 +416,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile((prev) => (prev ? { ...prev, ...updates } : null));
   };
 
-  const deleteAccount = async () => {
-    if (!user) throw new Error('Not authenticated');
+  const deleteAccount = async (password?: string) => {
+    if (!user || !auth?.currentUser) throw new Error('Not authenticated');
+
+    const hasPasswordProvider = auth.currentUser.providerData?.some(
+      (p) => p.providerId === 'password'
+    );
+
+    // If account has password, verify with re-authentication
+    if (hasPasswordProvider) {
+      if (!password || !password.trim()) {
+        throw new Error('Please enter your account password to authorize deletion.');
+      }
+      try {
+        const credential = EmailAuthProvider.credential(auth.currentUser.email || '', password);
+        await reauthenticateWithCredential(auth.currentUser, credential);
+      } catch (err: unknown) {
+        const code = (err as { code?: string })?.code;
+        if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+          throw new Error('Incorrect password. Please verify your password and try again.');
+        } else if (code === 'auth/too-many-requests') {
+          throw new Error('Too many failed attempts. Please try again later.');
+        }
+        throw err;
+      }
+    }
 
     const googleProvider = user.providerData?.find((p) => p.providerId === 'google.com');
     const googleUid = googleProvider?.uid || null;
@@ -422,14 +449,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await deleteUserAccountData(user.uid, user.email || '', googleUid);
 
     // 2. Delete user credentials in Firebase Auth
-    if (auth?.currentUser) {
-      await fbDeleteUser(auth.currentUser);
-    }
+    await fbDeleteUser(auth.currentUser);
 
     // 3. Clear local states
     setUser(null);
     setProfile(null);
     setIsAdmin(false);
+  };
+
+  const deactivateAccount = async (password?: string) => {
+    if (!user || !auth?.currentUser) throw new Error('Not authenticated');
+
+    const hasPasswordProvider = auth.currentUser.providerData?.some(
+      (p) => p.providerId === 'password'
+    );
+
+    // If account has password, verify with re-authentication
+    if (hasPasswordProvider) {
+      if (!password || !password.trim()) {
+        throw new Error('Please enter your account password to authorize deactivation.');
+      }
+      try {
+        const credential = EmailAuthProvider.credential(auth.currentUser.email || '', password);
+        await reauthenticateWithCredential(auth.currentUser, credential);
+      } catch (err: unknown) {
+        const code = (err as { code?: string })?.code;
+        if (code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+          throw new Error('Incorrect password. Please verify your password and try again.');
+        } else if (code === 'auth/too-many-requests') {
+          throw new Error('Too many failed attempts. Please try again later.');
+        }
+        throw err;
+      }
+    }
+
+    // 1. Mark account as deactivated in Firestore
+    await deactivateUserAccount(user.uid);
+
+    // 2. Sign user out
+    await fbSignOut(auth);
+
+    // 3. Clear local states
+    setUser(null);
+    setProfile(null);
+    setIsAdmin(false);
+  };
+
+  const reactivateAccount = async () => {
+    if (!user) throw new Error('Not authenticated');
+    await reactivateUserAccount(user.uid);
+    setProfile((prev) => (prev ? { ...prev, isDeactivated: false, deactivatedAt: null } : null));
   };
 
   return (
@@ -459,6 +528,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         updateName,
         updateProfileDetails,
         deleteAccount,
+        deactivateAccount,
+        reactivateAccount,
       }}
     >
       {children}

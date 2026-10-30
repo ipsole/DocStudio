@@ -1,22 +1,26 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AlertTriangle, Trash2, X, Loader2, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, Trash2, X, Loader2, ShieldAlert, Eye, EyeOff, Lock } from 'lucide-react';
 
 interface DeleteAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
   userEmail: string;
-  onConfirmDelete: () => Promise<void>;
+  hasPassword?: boolean;
+  onConfirmDelete: (password?: string) => Promise<void>;
 }
 
 export function DeleteAccountModal({
   isOpen,
   onClose,
   userEmail,
+  hasPassword = true,
   onConfirmDelete,
 }: DeleteAccountModalProps) {
   const [confirmationText, setConfirmationText] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,12 +30,15 @@ export function DeleteAccountModal({
     confirmationText.trim().toLowerCase() === userEmail.trim().toLowerCase() ||
     confirmationText.trim().toUpperCase() === 'DELETE';
 
+  const isPasswordReady = !hasPassword || password.trim().length > 0;
+  const canSubmit = isConfirmed && isPasswordReady;
+
   const handleDelete = async () => {
-    if (!isConfirmed) return;
+    if (!canSubmit) return;
     setLoading(true);
     setError(null);
     try {
-      await onConfirmDelete();
+      await onConfirmDelete(hasPassword ? password : undefined);
       onClose();
     } catch (err: unknown) {
       if (err instanceof Error && err.message.includes('requires-recent-login')) {
@@ -120,6 +127,37 @@ export function DeleteAccountModal({
           />
         </div>
 
+        {/* Password Verification (Required when user has a password) */}
+        {hasPassword ? (
+          <div className="space-y-2 font-sans">
+            <label className="block text-xs font-medium text-neutral-700 dark:text-neutral-300">
+              Enter your account password to authorize permanent deletion:
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+                placeholder="Account password"
+                className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 text-sm font-sans focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-600 dark:text-neutral-400 font-sans flex items-center gap-2">
+            <Lock className="w-3.5 h-3.5 shrink-0 text-neutral-500" />
+            <span>Authenticated via Google Single Sign-On ({userEmail}).</span>
+          </div>
+        )}
+
         {/* Footer Actions */}
         <div className="flex items-center justify-end gap-3 pt-3 border-t border-neutral-200 dark:border-neutral-800">
           <button
@@ -134,7 +172,7 @@ export function DeleteAccountModal({
           <button
             type="button"
             onClick={handleDelete}
-            disabled={!isConfirmed || loading}
+            disabled={!canSubmit || loading}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider bg-red-600 hover:bg-red-700 text-white transition-all shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {loading ? (

@@ -310,6 +310,8 @@ export async function ensureUserProfile(
         photoURL: data.photoURL || photoURL || null,
         avatarIcon: data.avatarIcon || localCache?.avatarIcon || (photoURL || data.photoURL ? 'google' : null),
         isAdmin: Boolean(data.isAdmin),
+        isDeactivated: Boolean(data.isDeactivated),
+        deactivatedAt: data.deactivatedAt?.toMillis ? data.deactivatedAt.toMillis() : (data.deactivatedAt || null),
         createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : Date.now(),
         updatedAt: data.updatedAt?.toMillis ? data.updatedAt.toMillis() : Date.now(),
       };
@@ -688,6 +690,46 @@ export async function deleteUserAccountData(
     return true;
   } catch (err) {
     console.error('[DocStore DB] Error deleting user account data:', err);
+    return false;
+  }
+}
+
+/**
+ * Temporarily deactivates user account (pauses access and hides profile).
+ */
+export async function deactivateUserAccount(userId: string): Promise<boolean> {
+  if (!isFirebaseConfigured() || !db) return false;
+
+  try {
+    const userDocRef = doc(db, USERS_COLLECTION, userId);
+    await updateDoc(userDocRef, {
+      isDeactivated: true,
+      deactivatedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    return true;
+  } catch (err) {
+    console.error('[DocStore DB] Error deactivating user account:', err);
+    return false;
+  }
+}
+
+/**
+ * Reactivates a previously deactivated user account.
+ */
+export async function reactivateUserAccount(userId: string): Promise<boolean> {
+  if (!isFirebaseConfigured() || !db) return false;
+
+  try {
+    const userDocRef = doc(db, USERS_COLLECTION, userId);
+    await updateDoc(userDocRef, {
+      isDeactivated: false,
+      deactivatedAt: null,
+      updatedAt: serverTimestamp(),
+    });
+    return true;
+  } catch (err) {
+    console.error('[DocStore DB] Error reactivating user account:', err);
     return false;
   }
 }
