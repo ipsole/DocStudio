@@ -23,6 +23,8 @@ export function generateReceiptHtml(order: OrderRecord, recipientName?: string):
   const totalTax = (order.amount - Number(baseAmount)).toFixed(2);
   const cgst = (Number(totalTax) / 2).toFixed(2);
   const sgst = (Number(totalTax) - Number(cgst)).toFixed(2);
+  const cleanGstin = (order.gstin || '').trim().toUpperCase();
+  const isInterState = cleanGstin.length >= 2 ? cleanGstin.slice(0, 2) !== '07' : true;
 
   const paymentMethodLabel = order.paymentMethod?.type === 'card'
     ? `${order.paymentMethod.brand || 'Card'} ending in •••• ${order.paymentMethod.last4 || '****'}`
@@ -133,6 +135,12 @@ export function generateReceiptHtml(order: OrderRecord, recipientName?: string):
           <td style="color: #a1a1aa;">Taxable Subtotal (Base)</td>
           <td style="text-align: right; font-family: monospace; color: #e4e4e7;">₹${baseAmount}</td>
         </tr>
+        ${isInterState ? `
+        <tr>
+          <td style="color: #a1a1aa;">Integrated GST (IGST @ 18%)</td>
+          <td style="text-align: right; font-family: monospace; color: #e4e4e7;">₹${totalTax}</td>
+        </tr>
+        ` : `
         <tr>
           <td style="color: #a1a1aa;">Central GST (CGST @ 9%)</td>
           <td style="text-align: right; font-family: monospace; color: #e4e4e7;">₹${cgst}</td>
@@ -141,6 +149,7 @@ export function generateReceiptHtml(order: OrderRecord, recipientName?: string):
           <td style="color: #a1a1aa;">State / UT GST (SGST @ 9%)</td>
           <td style="text-align: right; font-family: monospace; color: #e4e4e7;">₹${sgst}</td>
         </tr>
+        `}
         <tr style="border-top: 2px solid #3f3f46;">
           <td style="padding-top: 14px; font-size: 14px; font-weight: 700; color: #ffffff;">Total Paid (Incl. 18% GST)</td>
           <td style="padding-top: 14px; text-align: right; font-size: 20px; font-weight: 800; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">₹${order.amount.toFixed(2)} <span style="font-size: 12px; font-weight: 600; color: #a1a1aa;">INR</span></td>

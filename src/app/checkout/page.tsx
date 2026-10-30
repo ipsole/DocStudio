@@ -39,16 +39,21 @@ function CheckoutContent() {
   const itemTypeParam = searchParams.get('type');
   const initialQtyParam = parseInt(searchParams.get('qty') || '1', 10);
 
-  // Identify plan or pack
-  const matchedPlan: PricingPlan | null = React.useMemo(() => {
-    if (planId) {
-      return ALL_PRICING_PLANS.find((p) => p.id === planId) || null;
-    }
-    if (itemTypeParam === 'subscription' && itemId) {
-      return ALL_PRICING_PLANS.find((p) => p.id === itemId) || null;
-    }
-    return null;
-  }, [planId, itemId, itemTypeParam]);
+  // Base tier detection for subscription plans ('starter' | 'pro' | 'ultra')
+  const baseTier: 'starter' | 'pro' | 'ultra' = React.useMemo(() => {
+    const raw = (planId || itemId || '').toLowerCase();
+    if (raw.includes('ultra')) return 'ultra';
+    if (raw.includes('starter')) return 'starter';
+    return 'pro';
+  }, [planId, itemId]);
+
+  // Initial billing cycle from URL (defaults to yearly if specified, otherwise monthly)
+  const initialCycle: 'monthly' | 'yearly' = React.useMemo(() => {
+    const raw = (planId || itemId || '').toLowerCase();
+    return raw.includes('yearly') || raw.includes('annual') ? 'yearly' : 'monthly';
+  }, [planId, itemId]);
+
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>(initialCycle);
 
   const matchedPack: CreditPack | null = React.useMemo(() => {
     if (packId) {
@@ -61,7 +66,30 @@ function CheckoutContent() {
   }, [packId, itemId, itemTypeParam]);
 
   const isCreditPack = Boolean(matchedPack);
-  const selectedItem: PricingPlan | CreditPack | null = matchedPack || matchedPlan;
+
+  // Active plan dynamically switches between monthly and annual
+  const currentPlan: PricingPlan | null = React.useMemo(() => {
+    if (isCreditPack) return null;
+    if (billingCycle === 'yearly') {
+      if (baseTier === 'ultra') return ALL_PRICING_PLANS.find((p) => p.id === 'ultra-yearly') || null;
+      if (baseTier === 'starter') return ALL_PRICING_PLANS.find((p) => p.id === 'starter') || null;
+      return ALL_PRICING_PLANS.find((p) => p.id === 'pro-yearly') || null;
+    } else {
+      if (baseTier === 'ultra') return ALL_PRICING_PLANS.find((p) => p.id === 'ultra') || null;
+      if (baseTier === 'starter') return ALL_PRICING_PLANS.find((p) => p.id === 'starter') || null;
+      return ALL_PRICING_PLANS.find((p) => p.id === 'pro') || null;
+    }
+  }, [isCreditPack, billingCycle, baseTier]);
+
+  const selectedItem: PricingPlan | CreditPack | null = matchedPack || currentPlan;
+
+  // Clean Plan Display Name: Always "DocStudio Pro" or "DocStudio Ultra" (without "Annual")
+  const planDisplayName = React.useMemo(() => {
+    if (matchedPack) return matchedPack.name;
+    if (baseTier === 'ultra') return 'DocStudio Ultra';
+    if (baseTier === 'starter') return 'DocStudio Starter';
+    return 'DocStudio Pro';
+  }, [matchedPack, baseTier]);
 
   // Quantity state for credit packs (limit 1 to 7)
   const [quantity, setQuantity] = useState<number>(
@@ -124,6 +152,19 @@ function CheckoutContent() {
   const gstAmount = (rawAmount - Number(baseAmount)).toFixed(2);
   const cgst = (Number(gstAmount) / 2).toFixed(2);
   const sgst = (Number(gstAmount) - Number(cgst)).toFixed(2);
+
+  // Dynamic GST determination:
+  // Seller (DocStudio / Docdril) is located in Delhi (GST State Code: 07).
+  // Intra-state (Delhi to Delhi, '07'): CGST (9%) + SGST (9%)
+  // Inter-state (Delhi to other States): IGST (18%)
+  const isInterState = React.useMemo(() => {
+    const cleanGstin = gstin.trim().toUpperCase();
+    if (cleanGstin.length >= 2) {
+      return cleanGstin.slice(0, 2) !== '07';
+    }
+    // Default pan-India supply: IGST @ 18%
+    return true;
+  }, [gstin]);
 
   // Handle Checkout Submission
   const handleStartPayment = async (e: React.FormEvent) => {
@@ -333,14 +374,50 @@ function CheckoutContent() {
         {/* LEFT COLUMN: Order Summary & Item Breakdown (col-span-5) */}
         <div className="lg:col-span-5 order-2 lg:order-1 space-y-6">
           <div className="rounded-3xl p-6 sm:p-7 space-y-6 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm">
+            {/* Subscription Billing Cycle Switcher */}
+            {!isCreditPack && (
+              <div className="flex items-center justify-between pb-4 border-b border-neutral-100 dark:border-neutral-800">
+                <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
+                  Billing Cycle
+                </span>
+                <div className="inline-flex items-center p-1 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                  <button
+                    type="button"
+                    onClick={() => setBillingCycle('monthly')}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                      billingCycle === 'monthly'
+                        ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-sm'
+                        : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
+                    }`}
+                  >
+                    Monthly
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBillingCycle('yearly')}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                      billingCycle === 'yearly'
+                        ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-sm'
+                        : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-200'
+                    }`}
+                  >
+                    <span>Annual</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-400 leading-none">
+                      -20%
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2.5">
               <h2 className="text-2xl sm:text-3xl lg:text-[2rem] font-bold font-sans text-neutral-950 dark:text-white tracking-tight leading-tight">
-                {selectedItem.name}
+                {planDisplayName}
               </h2>
-              {'badge' in selectedItem && selectedItem.badge ? (
+              {!isCreditPack && billingCycle === 'yearly' ? (
                 <div>
-                  <span className="inline-flex items-center text-xs font-bold px-3 py-1 rounded-full bg-[#D4AF37] border border-[#B38F46]/40 text-neutral-950 shadow-sm whitespace-nowrap shrink-0 leading-none tracking-wide">
-                    {selectedItem.badge}
+                  <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm whitespace-nowrap shrink-0 leading-none tracking-wide">
+                    Save 20% • 2 Months Free
                   </span>
                 </div>
               ) : null}
@@ -407,14 +484,23 @@ function CheckoutContent() {
                 <span>Taxable Value (Base)</span>
                 <span className="font-mono">₹{baseAmount}</span>
               </div>
-              <div className="flex justify-between items-center text-neutral-600 dark:text-neutral-400">
-                <span>Central GST (CGST @ 9%)</span>
-                <span className="font-mono">₹{cgst}</span>
-              </div>
-              <div className="flex justify-between items-center text-neutral-600 dark:text-neutral-400">
-                <span>State / UT GST (SGST @ 9%)</span>
-                <span className="font-mono">₹{sgst}</span>
-              </div>
+              {isInterState ? (
+                <div className="flex justify-between items-center text-neutral-600 dark:text-neutral-400">
+                  <span>Integrated GST (IGST @ 18%)</span>
+                  <span className="font-mono">₹{gstAmount}</span>
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between items-center text-neutral-600 dark:text-neutral-400">
+                    <span>Central GST (CGST @ 9%)</span>
+                    <span className="font-mono">₹{cgst}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-neutral-600 dark:text-neutral-400">
+                    <span>State / UT GST (SGST @ 9%)</span>
+                    <span className="font-mono">₹{sgst}</span>
+                  </div>
+                </>
+              )}
 
               <div className="border-t border-neutral-200 dark:border-neutral-800 pt-3 flex justify-between items-baseline">
                 <div>
@@ -552,10 +638,17 @@ function CheckoutContent() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 font-sans">
-                    <FileText className="w-3.5 h-3.5 text-neutral-400" />
-                    <span>GSTIN Number (Optional)</span>
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 font-sans">
+                      <FileText className="w-3.5 h-3.5 text-neutral-400" />
+                      <span>GSTIN Number (Optional)</span>
+                    </label>
+                    {gstin.length >= 2 && (
+                      <span className="text-[10px] font-mono font-semibold text-neutral-600 dark:text-neutral-400">
+                        {isInterState ? 'IGST @ 18%' : 'CGST (9%) + SGST (9%)'}
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="text"
                     value={gstin}

@@ -14,6 +14,9 @@ export function generatePrintableInvoiceHtml(order: OrderRecord, recipientName?:
   const cgst = (Number(totalTax) / 2).toFixed(2);
   const sgst = (Number(totalTax) - Number(cgst)).toFixed(2);
 
+  const cleanGstin = (order.gstin || '').trim().toUpperCase();
+  const isInterState = cleanGstin.length >= 2 ? cleanGstin.slice(0, 2) !== '07' : true;
+
   const paymentMethodLabel = order.paymentMethod?.type === 'card'
     ? `${order.paymentMethod.brand || 'Card'} ending in •••• ${order.paymentMethod.last4 || '****'}`
     : order.paymentMethod?.type === 'upi'
@@ -279,6 +282,12 @@ export function generatePrintableInvoiceHtml(order: OrderRecord, recipientName?:
           <td style="color: #71717a;">Taxable Subtotal</td>
           <td style="text-align: right; font-family: monospace; font-weight: 600;">₹${baseAmount}</td>
         </tr>
+        ${isInterState ? `
+        <tr>
+          <td style="color: #71717a;">Integrated GST (IGST @ 18%)</td>
+          <td style="text-align: right; font-family: monospace;">₹${totalTax}</td>
+        </tr>
+        ` : `
         <tr>
           <td style="color: #71717a;">Central GST (CGST @ 9%)</td>
           <td style="text-align: right; font-family: monospace;">₹${cgst}</td>
@@ -287,6 +296,7 @@ export function generatePrintableInvoiceHtml(order: OrderRecord, recipientName?:
           <td style="color: #71717a;">State / UT GST (SGST @ 9%)</td>
           <td style="text-align: right; font-family: monospace;">₹${sgst}</td>
         </tr>
+        `}
         <tr class="grand-total">
           <td>Grand Total</td>
           <td style="text-align: right; color: #09090b;">₹${order.amount.toFixed(2)} INR</td>
