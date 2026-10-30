@@ -330,36 +330,36 @@ function CheckoutContent() {
     <div className="max-w-[1240px] mx-auto px-4 sm:px-6 md:px-8 pt-8 sm:pt-12 pb-16 animate-fadeIn">
       {/* Main Grid: Left Order Summary, Right Billing Details Form */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-        {/* LEFT COLUMN: Order Summary & Item Breakdown (col-span-5, Golden Premium Edition) */}
+        {/* LEFT COLUMN: Order Summary & Item Breakdown (col-span-5) */}
         <div className="lg:col-span-5 order-2 lg:order-1 space-y-6">
-          <div className="rounded-3xl p-6 sm:p-7 space-y-6 border border-amber-200/90 dark:border-amber-800/50 bg-amber-50/40 dark:bg-amber-950/20 shadow-sm">
+          <div className="rounded-3xl p-6 sm:p-7 space-y-6 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm">
             <div className="space-y-2.5">
               <h2 className="text-2xl sm:text-3xl lg:text-[2rem] font-bold font-sans text-neutral-950 dark:text-white tracking-tight leading-tight">
                 {selectedItem.name}
               </h2>
               {'badge' in selectedItem && selectedItem.badge ? (
                 <div>
-                  <span className="inline-flex items-center text-xs font-bold px-3 py-1 rounded-full bg-amber-400 text-neutral-950 dark:bg-amber-400 dark:text-neutral-950 shadow-sm whitespace-nowrap shrink-0 leading-none tracking-wide">
+                  <span className="inline-flex items-center text-xs font-bold px-3 py-1 rounded-full bg-[#D4AF37] border border-[#B38F46]/40 text-neutral-950 shadow-sm whitespace-nowrap shrink-0 leading-none tracking-wide">
                     {selectedItem.badge}
                   </span>
                 </div>
               ) : null}
-              <p className="text-xs text-neutral-600 dark:text-neutral-300 font-sans pt-0.5">
+              <p className="text-xs text-neutral-600 dark:text-neutral-400 font-sans pt-0.5">
                 {selectedItem.description}
               </p>
             </div>
 
             {/* Credit Allotment Highlight Banner */}
-            <div className="p-3.5 rounded-2xl bg-amber-100/60 dark:bg-amber-950/40 border border-amber-200/90 dark:border-amber-800/60 flex items-center justify-between text-xs font-sans">
+            <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-800 flex items-center justify-between text-xs font-sans">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-amber-200/80 dark:bg-amber-900/60 border border-amber-300 dark:border-amber-700 flex items-center justify-center text-amber-700 dark:text-amber-300 shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
                   <Zap className="w-4 h-4" />
                 </div>
                 <div>
                   <div className="font-bold text-neutral-950 dark:text-white font-sans">
                     {totalCredits.toLocaleString()} Total Credits
                   </div>
-                  <div className="text-[11px] text-amber-800/80 dark:text-amber-300/80 font-medium">
+                  <div className="text-[11px] text-neutral-500 dark:text-neutral-400">
                     {isCreditPack ? 'Permanent top-up (Never expires)' : 'Shared cross-app monthly quota'}
                   </div>
                 </div>
@@ -368,7 +368,7 @@ function CheckoutContent() {
 
             {/* Credit Pack Quantity Stepper */}
             {isCreditPack && (
-              <div className="p-3.5 rounded-2xl bg-white/90 dark:bg-neutral-800/70 border border-amber-200/80 dark:border-amber-800/50 flex items-center justify-between">
+              <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-800/60 border border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
                 <div>
                   <span className="text-xs font-semibold text-neutral-900 dark:text-white block font-sans">
                     Packs Quantity
@@ -382,7 +382,7 @@ function CheckoutContent() {
                     type="button"
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     disabled={quantity <= 1}
-                    className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 flex items-center justify-center font-bold text-sm text-neutral-800 dark:text-neutral-200 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-all"
+                    className="w-8 h-8 rounded-lg bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 flex items-center justify-center font-bold text-sm text-neutral-800 dark:text-neutral-200 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-all"
                   >
                     -
                   </button>
@@ -393,7 +393,7 @@ function CheckoutContent() {
                     type="button"
                     onClick={() => setQuantity((q) => Math.min(7, q + 1))}
                     disabled={quantity >= 7}
-                    className="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 flex items-center justify-center font-bold text-sm text-neutral-800 dark:text-neutral-200 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-all"
+                    className="w-8 h-8 rounded-lg bg-white dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 flex items-center justify-center font-bold text-sm text-neutral-800 dark:text-neutral-200 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-all"
                   >
                     +
                   </button>
@@ -402,7 +402,7 @@ function CheckoutContent() {
             )}
 
             {/* Official Itemized Tax & Price Breakdown */}
-            <div className="rounded-2xl border border-amber-200/80 dark:border-amber-800/50 bg-white/95 dark:bg-neutral-950/70 p-4 space-y-2.5 text-xs font-sans shadow-sm">
+            <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/50 p-4 space-y-2.5 text-xs font-sans">
               <div className="flex justify-between items-center text-neutral-600 dark:text-neutral-400">
                 <span>Taxable Value (Base)</span>
                 <span className="font-mono">₹{baseAmount}</span>
@@ -416,7 +416,7 @@ function CheckoutContent() {
                 <span className="font-mono">₹{sgst}</span>
               </div>
 
-              <div className="border-t border-amber-200/80 dark:border-amber-800/50 pt-3 flex justify-between items-baseline">
+              <div className="border-t border-neutral-200 dark:border-neutral-800 pt-3 flex justify-between items-baseline">
                 <div>
                   <span className="font-bold text-neutral-950 dark:text-white text-sm block">
                     Total Amount Due
@@ -426,7 +426,7 @@ function CheckoutContent() {
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-xl sm:text-2xl font-extrabold text-neutral-950 dark:text-amber-300 font-sans tracking-tight">
+                  <span className="text-xl sm:text-2xl font-extrabold text-neutral-950 dark:text-white font-sans tracking-tight">
                     ₹{rawAmount} INR
                   </span>
                 </div>
@@ -435,14 +435,14 @@ function CheckoutContent() {
 
             {/* Plan Features Checklist */}
             {'features' in selectedItem && selectedItem.features ? (
-              <div className="space-y-2 pt-2 border-t border-amber-200/80 dark:border-amber-800/50">
-                <span className="text-[11px] font-bold text-amber-900 dark:text-amber-300 uppercase tracking-wider block font-sans">
+              <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
+                <span className="text-[11px] font-bold text-neutral-700 dark:text-neutral-300 uppercase tracking-wider block font-sans">
                   Included in this tier:
                 </span>
                 <div className="space-y-2">
                   {selectedItem.features.map((feat) => (
-                    <div key={feat} className="flex items-start gap-2.5 text-xs text-neutral-700 dark:text-neutral-300 font-sans">
-                      <Check className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                    <div key={feat} className="flex items-start gap-2.5 text-xs text-neutral-600 dark:text-neutral-400 font-sans">
+                      <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                       <span>{feat}</span>
                     </div>
                   ))}
@@ -451,8 +451,8 @@ function CheckoutContent() {
             ) : null}
 
             {/* Security Guarantee Badges */}
-            <div className="p-3 rounded-2xl bg-amber-100/50 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-800/50 flex items-center gap-3 text-[11px] text-amber-900/90 dark:text-amber-300/90 font-sans">
-              <ShieldCheck className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <div className="p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200 dark:border-neutral-800 flex items-center gap-3 text-[11px] text-neutral-600 dark:text-neutral-400 font-sans">
+              <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span>
                 RBI compliant tokenization • Official Tax Invoice with GSTIN credit generated immediately.
               </span>
