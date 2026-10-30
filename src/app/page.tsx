@@ -351,6 +351,17 @@ export default function HomePage() {
           <h1 className="text-6xl sm:text-8xl md:text-9xl lg:text-[7.5rem] xl:text-[8.5rem] font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-[1.05] select-none">
             DocStudio
           </h1>
+          <p className="mt-2 sm:mt-2.5 text-xs sm:text-sm font-sans font-medium tracking-[0.2em] uppercase text-neutral-400 dark:text-neutral-500">
+            by{' '}
+            <a
+              href="https://docdril.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-colors underline-offset-4 hover:underline cursor-pointer"
+            >
+              Docdril™
+            </a>
+          </p>
         </div>
 
       {/* Tabs Selector Directly Below DocStudio Heading */}
