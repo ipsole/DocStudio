@@ -38,7 +38,7 @@ function findServiceAccount(): admin.ServiceAccount | null {
     const cwd = process.cwd();
     const files = fs.readdirSync(cwd);
     const serviceAccountFile = files.find(
-      (f) => f.includes('firebase-adminsdk') && f.endsWith('.json')
+      (f) => !f.startsWith('.') && f.includes('firebase-adminsdk') && f.endsWith('.json')
     );
     if (serviceAccountFile) {
       const fullPath = path.join(cwd, serviceAccountFile);
@@ -81,17 +81,19 @@ export function getFirebaseAdmin(): {
     throw new Error('Firebase Admin SDK cannot be executed on the client side.');
   }
 
+  const rootAdmin = (admin as any).default || admin;
   let adminApp: admin.app.App | undefined;
 
-  if (admin.apps.length > 0) {
-    adminApp = admin.app();
+  const currentApps = rootAdmin.apps || [];
+  if (currentApps.length > 0) {
+    adminApp = currentApps[0];
   } else {
     const serviceAccount = findServiceAccount();
 
     if (serviceAccount && serviceAccount.privateKey && serviceAccount.clientEmail) {
       try {
-        adminApp = admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount),
+        adminApp = rootAdmin.initializeApp({
+          credential: rootAdmin.credential.cert(serviceAccount),
           projectId: serviceAccount.projectId || 'docdril-softwares',
         });
       } catch (err) {
@@ -99,7 +101,7 @@ export function getFirebaseAdmin(): {
       }
     } else {
       try {
-        adminApp = admin.initializeApp({
+        adminApp = rootAdmin.initializeApp({
           projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'docdril-softwares',
         });
       } catch (err) {
@@ -110,7 +112,7 @@ export function getFirebaseAdmin(): {
 
   return {
     app: adminApp,
-    auth: adminApp ? admin.auth(adminApp) : undefined,
-    firestore: adminApp ? admin.firestore(adminApp) : undefined,
+    auth: adminApp ? rootAdmin.auth(adminApp) : undefined,
+    firestore: adminApp ? rootAdmin.firestore(adminApp) : undefined,
   };
 }

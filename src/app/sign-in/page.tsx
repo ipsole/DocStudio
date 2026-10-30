@@ -13,6 +13,7 @@ function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const wasDeactivated = searchParams?.get('deactivated') === 'true';
+  const wasRevoked = searchParams?.get('revoked') === 'true';
   const {
     user,
     loading: authLoading,
@@ -102,6 +103,12 @@ function SignInForm() {
       {wasDeactivated && (
         <div className="p-3.5 border border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-800/60 dark:bg-amber-950/60 dark:text-amber-300 text-xs font-sans leading-relaxed rounded-xl flex items-center gap-2">
           <span>Your account has been deactivated. Signing in with your credentials will automatically reactivate your account and restore your workspace.</span>
+        </div>
+      )}
+
+      {wasRevoked && (
+        <div className="p-3.5 border border-neutral-300 bg-neutral-50 text-neutral-900 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-200 text-xs font-sans leading-relaxed rounded-xl flex items-center gap-2">
+          <span>This device was signed out remotely from your account settings. Enter your credentials to sign back in.</span>
         </div>
       )}
 

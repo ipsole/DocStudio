@@ -158,3 +158,35 @@ export interface SubdomainVerifyResponse {
     features: string[];
   } | null;
 }
+
+export interface DeviceSession {
+  id: string;
+  userId: string;
+  deviceName: string;
+  deviceType: 'desktop' | 'mobile' | 'tablet';
+  browser: string;
+  os: string;
+  ip?: string;
+  location?: string;
+  createdAt: string;
+  lastActiveAt: string;
+  status: 'active' | 'revoked';
+  isCurrent?: boolean;
+}
+
+export interface QRLoginSession {
+  tokenId: string;
+  userId: string;
+  username: string;
+  userEmail: string;
+  createdAt: number;
+  expiresAt: number;
+  status: 'pending' | 'authenticated' | 'expired' | 'revoked';
+  redeemedAt?: number;
+  redeemedByDevice?: {
+    deviceName?: string;
+    browser?: string;
+    os?: string;
+    location?: string;
+  };
+}

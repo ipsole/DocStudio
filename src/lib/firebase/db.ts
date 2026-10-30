@@ -9,6 +9,8 @@ import {
   query,
   where,
   limit,
+  orderBy,
+  onSnapshot,
   serverTimestamp,
   runTransaction,
   addDoc,
@@ -23,6 +25,8 @@ import {
   SubscriptionPlan,
   SubscriptionStatus,
   OrderRecord,
+  DeviceSession,
+  QRLoginSession,
 } from '@/types';
 import { DEMO_APPS } from '../seedData';
 
@@ -34,6 +38,7 @@ const SUBSCRIPTIONS_COLLECTION = 'subscriptions';
 const CREDIT_LOGS_COLLECTION = 'credit_logs';
 const TOMBSTONES_COLLECTION = 'account_tombstones';
 const ORDERS_COLLECTION = 'orders';
+const QR_LOGINS_COLLECTION = 'qr_logins';
 
 /**
  * Fetch public catalog apps (active and coming_soon products).
@@ -1191,5 +1196,245 @@ export async function addSharedCredits(
     } catch (err) {
       console.warn('[DocStore DB] Could not update shared credits in Firestore:', err);
     }
+  }
+}
+
+/**
+ * -------------------------------------------------------------
+ * Active Device Session Management & Remote Revocation
+ * -------------------------------------------------------------
+ */
+
+export async function syncDeviceSession(
+  userId: string,
+  session: Partial<DeviceSession> & { id: string }
+): Promise<void> {
+  if (!userId || !session.id) return;
+
+  const sessionData: DeviceSession = {
+    id: session.id,
+    userId,
+    deviceName: session.deviceName || 'Desktop Session',
+    deviceType: session.deviceType || 'desktop',
+    browser: session.browser || 'Browser',
+    os: session.os || 'OS',
+    location: session.location || 'Online Session',
+    ip: session.ip || '',
+    createdAt: session.createdAt || new Date().toISOString(),
+    lastActiveAt: new Date().toISOString(),
+    status: 'active',
+  };
+
+  if (typeof window !== 'undefined') {
+    try {
+      localStorage.setItem(`docstudio_active_session_${userId}`, JSON.stringify(sessionData));
+    } catch {}
+  }
+
+  if (isFirebaseConfigured() && db) {
+    try {
+      const sessionRef = doc(db, USERS_COLLECTION, userId, 'sessions', session.id);
+      await setDoc(sessionRef, {
+        ...sessionData,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+    } catch (err) {
+      console.warn('[DocStore DB] Could not sync device session in Firestore:', err);
+    }
+  }
+}
+
+export async function getUserDeviceSessions(userId: string): Promise<DeviceSession[]> {
+  if (!userId) return [];
+
+  if (isFirebaseConfigured() && db) {
+    try {
+      const sessionsRef = collection(db, USERS_COLLECTION, userId, 'sessions');
+      const q = query(sessionsRef, where('status', '==', 'active'), limit(20));
+      const snap = await getDocs(q);
+      const list: DeviceSession[] = snap.docs.map((d) => d.data() as DeviceSession);
+      return list.sort((a, b) => new Date(b.lastActiveAt).getTime() - new Date(a.lastActiveAt).getTime());
+    } catch (err) {
+      console.warn('[DocStore DB] Error getting device sessions:', err);
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      const local = localStorage.getItem(`docstudio_active_session_${userId}`);
+      if (local) return [JSON.parse(local)];
+    } catch {}
+  }
+
+  return [];
+}
+
+export function subscribeToDeviceSessions(
+  userId: string,
+  callback: (sessions: DeviceSession[]) => void
+): () => void {
+  if (!isFirebaseConfigured() || !db || !userId) {
+    callback([]);
+    return () => {};
+  }
+
+  try {
+    const sessionsRef = collection(db, USERS_COLLECTION, userId, 'sessions');
+    const q = query(sessionsRef, where('status', '==', 'active'), limit(20));
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        const sessions: DeviceSession[] = snapshot.docs.map((d) => d.data() as DeviceSession);
+        sessions.sort((a, b) => new Date(b.lastActiveAt).getTime() - new Date(a.lastActiveAt).getTime());
+        callback(sessions);
+      },
+      (err) => {
+        console.warn('[DocStore DB] Error listening to device sessions:', err);
+      }
+    );
+  } catch (err) {
+    console.warn('[DocStore DB] Failed to subscribe to device sessions:', err);
+    return () => {};
+  }
+}
+
+export function subscribeToCurrentSessionStatus(
+  userId: string,
+  sessionId: string,
+  onRevoked: () => void
+): () => void {
+  if (!isFirebaseConfigured() || !db || !userId || !sessionId) {
+    return () => {};
+  }
+
+  try {
+    const sessionRef = doc(db, USERS_COLLECTION, userId, 'sessions', sessionId);
+    return onSnapshot(sessionRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        if (data && data.status === 'revoked') {
+          onRevoked();
+        }
+      }
+    });
+  } catch (err) {
+    console.warn('[DocStore DB] Failed to subscribe to current session status:', err);
+    return () => {};
+  }
+}
+
+export async function revokeDeviceSession(userId: string, sessionId: string): Promise<void> {
+  if (!userId || !sessionId) return;
+
+  if (isFirebaseConfigured() && db) {
+    try {
+      const sessionRef = doc(db, USERS_COLLECTION, userId, 'sessions', sessionId);
+      await updateDoc(sessionRef, {
+        status: 'revoked',
+        revokedAt: new Date().toISOString(),
+        updatedAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.warn('[DocStore DB] Error revoking device session:', err);
+    }
+  }
+}
+
+export async function revokeAllOtherDeviceSessions(userId: string, currentSessionId: string): Promise<void> {
+  if (!userId) return;
+
+  if (isFirebaseConfigured() && db) {
+    try {
+      const sessionsRef = collection(db, USERS_COLLECTION, userId, 'sessions');
+      const q = query(sessionsRef, where('status', '==', 'active'));
+      const snap = await getDocs(q);
+      const updates = snap.docs
+        .filter((d) => d.id !== currentSessionId)
+        .map((d) =>
+          updateDoc(d.ref, {
+            status: 'revoked',
+            revokedAt: new Date().toISOString(),
+            updatedAt: serverTimestamp(),
+          })
+        );
+      await Promise.all(updates);
+    } catch (err) {
+      console.warn('[DocStore DB] Error revoking other device sessions:', err);
+    }
+  }
+}
+
+/**
+ * -------------------------------------------------------------
+ * Cross-Device Instant QR Code Login Handshake
+ * -------------------------------------------------------------
+ */
+
+export async function createQRLoginSession(
+  userId: string,
+  username: string,
+  userEmail: string
+): Promise<string> {
+  const tokenId =
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID().replace(/-/g, '')
+      : 'qr_' + Math.random().toString(36).substring(2, 14) + Date.now().toString(36);
+
+  const newSession: QRLoginSession = {
+    tokenId,
+    userId,
+    username: username.replace('@', ''),
+    userEmail,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 180000, // 3 minutes validity
+    status: 'pending',
+  };
+
+  if (isFirebaseConfigured() && db) {
+    const qrDocRef = doc(db, QR_LOGINS_COLLECTION, tokenId);
+    await setDoc(qrDocRef, {
+      ...newSession,
+      serverCreatedAt: serverTimestamp(),
+    });
+  }
+
+  return tokenId;
+}
+
+export function subscribeToQRLogin(
+  tokenId: string,
+  callback: (session: QRLoginSession | null) => void
+): () => void {
+  if (!isFirebaseConfigured() || !db || !tokenId) {
+    callback(null);
+    return () => {};
+  }
+
+  try {
+    const qrDocRef = doc(db, QR_LOGINS_COLLECTION, tokenId);
+    return onSnapshot(qrDocRef, (snapshot) => {
+      if (snapshot.exists()) {
+        callback(snapshot.data() as QRLoginSession);
+      } else {
+        callback(null);
+      }
+    });
+  } catch (err) {
+    console.warn('[DocStore DB] Error subscribing to QR login session:', err);
+    return () => {};
+  }
+}
+
+export async function cancelQRLogin(tokenId: string): Promise<void> {
+  if (!isFirebaseConfigured() || !db || !tokenId) return;
+
+  try {
+    const qrDocRef = doc(db, QR_LOGINS_COLLECTION, tokenId);
+    await updateDoc(qrDocRef, {
+      status: 'revoked',
+      revokedAt: Date.now(),
+    });
+  } catch (err) {
+    console.warn('[DocStore DB] Error canceling QR login session:', err);
   }
 }

@@ -34,7 +34,11 @@ import {
   deleteUserAccountData,
   deactivateUserAccount,
   reactivateUserAccount,
+  syncDeviceSession,
+  revokeDeviceSession,
+  subscribeToCurrentSessionStatus,
 } from '@/lib/firebase/db';
+import { getClientDeviceInfo } from '@/lib/device/deviceInfo';
 import { UserProfile } from '@/types';
 
 interface AuthContextType {
@@ -104,8 +108,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn('[AuthContext] getRedirectResult notice:', err);
       });
 
+    let unsubSessionStatus: (() => void) | null = null;
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      if (unsubSessionStatus) {
+        unsubSessionStatus();
+        unsubSessionStatus = null;
+      }
+
       if (currentUser) {
         if (typeof window !== 'undefined') {
           try {
@@ -130,6 +141,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           setProfile(userProfile);
           setIsAdmin(hasAdminClaim || Boolean(userProfile?.isAdmin));
+
+          // Register and heartbeat active device session
+          const dev = getClientDeviceInfo();
+          fetch('/api/auth/geo')
+            .then((r) => r.json())
+            .then((geo) => {
+              syncDeviceSession(currentUser.uid, {
+                id: dev.sessionId,
+                deviceName: dev.deviceName,
+                deviceType: dev.deviceType,
+                browser: dev.browser,
+                os: dev.os,
+                location: geo?.location || 'Online Session',
+                ip: geo?.ip || '',
+              });
+            })
+            .catch(() => {
+              syncDeviceSession(currentUser.uid, {
+                id: dev.sessionId,
+                deviceName: dev.deviceName,
+                deviceType: dev.deviceType,
+                browser: dev.browser,
+                os: dev.os,
+              });
+            });
+
+          // Listen for remote session termination
+          unsubSessionStatus = subscribeToCurrentSessionStatus(currentUser.uid, dev.sessionId, async () => {
+            console.warn('[AuthContext] Session was signed out remotely from another device.');
+            if (auth) {
+              await fbSignOut(auth);
+            }
+            setUser(null);
+            setProfile(null);
+            if (typeof window !== 'undefined') {
+              try {
+                localStorage.removeItem('docstudio_has_session');
+              } catch {}
+              window.location.href = '/sign-in?revoked=true';
+            }
+          });
         } catch (error) {
           console.error('[AuthContext] Error syncing user profile:', error);
         }
@@ -147,7 +199,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (unsubSessionStatus) {
+        unsubSessionStatus();
+      }
+    };
   }, [isConfigured]);
 
   const signIn = async (email: string, pass: string) => {
@@ -335,6 +392,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
+    const currentUid = auth?.currentUser?.uid || user?.uid;
+    if (currentUid) {
+      try {
+        const dev = getClientDeviceInfo();
+        await revokeDeviceSession(currentUid, dev.sessionId);
+      } catch (err) {
+        console.warn('[AuthContext] Error revoking session during sign out:', err);
+      }
+    }
     if (typeof window !== 'undefined') {
       try {
         localStorage.removeItem('docstudio_has_session');

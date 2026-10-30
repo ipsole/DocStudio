@@ -12,12 +12,21 @@ import { Badge } from '@/components/ui/Badge';
 import { AvatarEditModal } from '@/components/ui/AvatarEditModal';
 import { DeleteAccountModal } from '@/components/ui/DeleteAccountModal';
 import { DeactivateAccountModal } from '@/components/ui/DeactivateAccountModal';
+import { QuickLoginModal } from '@/components/ui/QuickLoginModal';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
 import { LinkPhoneModal } from '@/components/ui/LinkPhoneModal';
 import { CREDIT_PACKS, CreditPack } from '@/lib/pricingData';
-import { ensureDefaultUserSubscriptions, isUsernameAvailable, getUserOrders } from '@/lib/firebase/db';
-import { AppSubscription, OrderRecord, SubscriptionPlan, PaymentMethodSummary } from '@/types';
+import {
+  ensureDefaultUserSubscriptions,
+  isUsernameAvailable,
+  getUserOrders,
+  subscribeToDeviceSessions,
+  revokeDeviceSession,
+  revokeAllOtherDeviceSessions,
+} from '@/lib/firebase/db';
+import { getOrCreateSessionId } from '@/lib/device/deviceInfo';
+import { AppSubscription, OrderRecord, SubscriptionPlan, PaymentMethodSummary, DeviceSession } from '@/types';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { InvoiceReceiptModal } from '@/components/billing/InvoiceReceiptModal';
 import {
@@ -62,6 +71,9 @@ import {
   RefreshCw,
   Calendar,
   Trash2,
+  QrCode,
+  Laptop,
+  Tablet,
 } from 'lucide-react';
 
 type TabKey = 'profile' | 'subscriptions' | 'billing' | 'security' | 'settings' | 'legal';
@@ -143,6 +155,66 @@ export default function AccountPage() {
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
+
+  // Device Sessions & QR Login state
+  const [deviceSessions, setDeviceSessions] = useState<DeviceSession[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string>('');
+  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
+  const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null);
+  const [revokingAll, setRevokingAll] = useState(false);
+  const [deviceActionMsg, setDeviceActionMsg] = useState<string | null>(null);
+
+  // Subscribe to real-time active device sessions
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentSessionId(getOrCreateSessionId());
+    }
+    if (!user) return;
+    const unsub = subscribeToDeviceSessions(user.uid, (sessions) => {
+      setDeviceSessions(sessions);
+    });
+    return () => unsub();
+  }, [user]);
+
+  const handleRevokeSession = async (sessionId: string) => {
+    if (!user) return;
+    setRevokingSessionId(sessionId);
+    try {
+      await revokeDeviceSession(user.uid, sessionId);
+      setDeviceActionMsg('Device session revoked successfully.');
+      setTimeout(() => setDeviceActionMsg(null), 3000);
+    } catch (err) {
+      console.error('Error revoking device session:', err);
+    } finally {
+      setRevokingSessionId(null);
+    }
+  };
+
+  const handleRevokeAllOtherSessions = async () => {
+    if (!user) return;
+    setRevokingAll(true);
+    try {
+      await revokeAllOtherDeviceSessions(user.uid, currentSessionId);
+      setDeviceActionMsg('All other devices have been signed out.');
+      setTimeout(() => setDeviceActionMsg(null), 3000);
+    } catch (err) {
+      console.error('Error revoking other sessions:', err);
+    } finally {
+      setRevokingAll(false);
+    }
+  };
+
+  const formatSessionTime = (dateStr?: string) => {
+    if (!dateStr) return 'Active recently';
+    const diff = Math.max(0, Date.now() - new Date(dateStr).getTime());
+    if (diff < 60000) return 'Active just now';
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `Active ${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `Active ${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `Active ${days}d ago`;
+  };
 
   // Detect SSO vs Email provider
   const isGoogleUser = user?.providerData?.some((p) => p.providerId === 'google.com');
@@ -2258,39 +2330,188 @@ export default function AccountPage() {
                   </div>
                 </div>
 
-                {/* Section 3: Active Device Session */}
+                {/* Section 3: Active Device Sessions & QR Quick Login */}
                 <div className="space-y-4 pt-6 border-t border-neutral-200 dark:border-neutral-900">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
-                        Active Device Session
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                          Active Device Sessions
+                        </h3>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+                          {deviceSessions.length > 0 ? deviceSessions.length : 1} Connected
+                        </span>
+                      </div>
                       <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-0.5">
-                        Your authenticated DocStudio token on this browser.
+                        Devices and browsers authenticated to your DocStudio account on <span className="font-mono text-neutral-700 dark:text-neutral-300">docstudio.docdril.com</span>.
                       </p>
                     </div>
 
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={signOut}
-                      className="gap-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                      <span>Sign Out Here</span>
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setIsQRModalOpen(true)}
+                        className="gap-1.5 text-xs text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                        title="Generate instant QR code to log into another device"
+                      >
+                        <QrCode className="w-3.5 h-3.5" />
+                        <span>Quick Login (QR)</span>
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={signOut}
+                        className="gap-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>Sign Out Here</span>
+                      </Button>
+                    </div>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex items-center justify-between text-xs font-sans">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <div>
-                        <p className="font-bold text-neutral-900 dark:text-white">This Device (Current Session)</p>
-                        <p className="text-neutral-500 text-[11px]">Next.js Workspace • Firebase JWT Token Active</p>
-                      </div>
+                  {deviceActionMsg && (
+                    <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
+                      <span>{deviceActionMsg}</span>
                     </div>
-                    <span className="text-[11px] font-mono text-neutral-400">ONLINE</span>
+                  )}
+
+                  {/* Device Cards List */}
+                  <div className="space-y-3">
+                    {/* Current Device Session */}
+                    {(() => {
+                      const currentSession = deviceSessions.find((s) => s.id === currentSessionId);
+                      const currentDevName = currentSession?.deviceName || 'This Computer / Device';
+                      const currentLoc = currentSession?.location || 'Local Workspace (Connected)';
+                      const currentBrowser = currentSession?.browser || 'Web Browser';
+                      const currentOS = currentSession?.os || 'System';
+
+                      return (
+                        <div className="p-4 rounded-2xl bg-neutral-50/70 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-sans">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center text-neutral-700 dark:text-neutral-200 shadow-sm shrink-0">
+                              {currentSession?.deviceType === 'mobile' ? (
+                                <Smartphone className="w-4 h-4" />
+                              ) : currentSession?.deviceType === 'tablet' ? (
+                                <Tablet className="w-4 h-4" />
+                              ) : (
+                                <Laptop className="w-4 h-4" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="font-bold text-neutral-900 dark:text-white">
+                                  {currentDevName}
+                                </p>
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-mono font-semibold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                  THIS DEVICE
+                                </span>
+                              </div>
+                              <p className="text-neutral-500 text-[11px] mt-0.5">
+                                {currentBrowser} • {currentOS} • <span className="text-neutral-700 dark:text-neutral-300 font-medium">{currentLoc}</span>
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-neutral-100 dark:border-neutral-800">
+                            <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400 font-medium">ONLINE</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Other Active Devices */}
+                    {(() => {
+                      const otherSessions = deviceSessions.filter((s) => s.id !== currentSessionId);
+                      if (otherSessions.length === 0) {
+                        return (
+                          <div className="px-4 py-3 rounded-xl bg-neutral-50/40 dark:bg-neutral-900/20 border border-dashed border-neutral-200 dark:border-neutral-800 text-[11px] text-neutral-400 flex items-center justify-between">
+                            <span>No other active devices. You are securely signed in only on this device.</span>
+                            <button
+                              type="button"
+                              onClick={() => setIsQRModalOpen(true)}
+                              className="text-neutral-700 dark:text-neutral-300 hover:underline font-medium cursor-pointer"
+                            >
+                              + Link Phone / Browser via QR
+                            </button>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-2 pt-2">
+                          <div className="flex items-center justify-between px-1">
+                            <span className="text-[11px] uppercase tracking-wider font-semibold text-neutral-500">
+                              Other Active Devices ({otherSessions.length})
+                            </span>
+                            {otherSessions.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={handleRevokeAllOtherSessions}
+                                disabled={revokingAll}
+                                className="text-[11px] text-red-600 dark:text-red-400 hover:underline font-medium disabled:opacity-50"
+                              >
+                                {revokingAll ? 'Signing out...' : 'Sign Out All Other Devices'}
+                              </button>
+                            )}
+                          </div>
+
+                          {otherSessions.map((s) => (
+                            <div
+                              key={s.id}
+                              className="p-3.5 rounded-2xl bg-white dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-sans transition-all hover:border-neutral-300 dark:hover:border-neutral-700"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-600 dark:text-neutral-400 shrink-0">
+                                  {s.deviceType === 'mobile' ? (
+                                    <Smartphone className="w-4 h-4" />
+                                  ) : s.deviceType === 'tablet' ? (
+                                    <Tablet className="w-4 h-4" />
+                                  ) : (
+                                    <Laptop className="w-4 h-4" />
+                                  )}
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-semibold text-neutral-900 dark:text-white">
+                                      {s.deviceName}
+                                    </p>
+                                    <span className="text-[10px] text-neutral-400 font-mono">
+                                      {formatSessionTime(s.lastActiveAt)}
+                                    </span>
+                                  </div>
+                                  <p className="text-neutral-500 text-[11px] mt-0.5">
+                                    {s.browser} • {s.os} • <span className="text-neutral-600 dark:text-neutral-300">{s.location || 'Online Session'}</span>
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-end">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRevokeSession(s.id)}
+                                  disabled={revokingSessionId === s.id}
+                                  className="gap-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 h-8 px-2.5"
+                                >
+                                  {revokingSessionId === s.id ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  ) : (
+                                    <LogOut className="w-3.5 h-3.5" />
+                                  )}
+                                  <span>Sign Out</span>
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -2624,6 +2845,15 @@ export default function AccountPage() {
           userEmail={user?.email || ''}
           hasPassword={hasPasswordProvider}
           onConfirmDelete={handleConfirmDelete}
+        />
+
+        {/* Quick Login via QR Modal */}
+        <QuickLoginModal
+          isOpen={isQRModalOpen}
+          onClose={() => setIsQRModalOpen(false)}
+          userId={user?.uid || ''}
+          username={username || profile?.username || user?.displayName || 'user'}
+          userEmail={user?.email || ''}
         />
 
         {/* Credit Top-Up Modal */}
