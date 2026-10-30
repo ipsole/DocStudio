@@ -97,8 +97,8 @@ export default function AppsCatalogPage() {
         </p>
       </div>
 
-      {/* Filter Bar (Centered View) */}
-      <div className="pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4 border-b border-neutral-200 dark:border-neutral-800 pb-4">
+      {/* Filter Bar (Centered View, Clean Minimalist No Divider) */}
+      <div className="pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4 pb-2">
         {/* Category Pills with Smooth Sliding Indicator */}
         <div className="relative flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-1">
           {categoryIndicator.ready && (

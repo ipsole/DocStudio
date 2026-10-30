@@ -388,7 +388,7 @@ export default function HomePage() {
         {activeTab === 'softwares' && (
           <div id="softwares" className="space-y-6 animate-fadeIn">
             {/* Catalog Toolbar Header: Left-aligned Category Chips with Sliding Pill */}
-            <div className="flex items-center pb-3 border-b border-neutral-100 dark:border-neutral-900/80">
+            <div className="flex items-center pb-1">
               <div className="relative flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-0.5">
                 {/* Sliding Category Pill Indicator */}
                 {categoryIndicator.ready && (
