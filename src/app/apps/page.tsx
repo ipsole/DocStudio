@@ -106,8 +106,8 @@ export default function AppsCatalogPage() {
         </p>
       </div>
 
-      {/* Filter Bar (Centered View, Clean Minimalist No Divider) */}
-      <div className="pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4 pb-2">
+      {/* Filter Bar: Category Tabs to the Left, Search to the Right */}
+      <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-2">
         {/* Category Pills with Smooth Sliding Indicator */}
         <div className="relative flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-1">
           {categoryIndicator.ready && (
@@ -151,9 +151,9 @@ export default function AppsCatalogPage() {
           })}
         </div>
 
-        {/* Search Centered Alongside Tabs */}
-        <div className="relative w-full sm:w-56 md:w-60">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
+        {/* Search Right-Aligned */}
+        <div className="relative w-full sm:w-64 md:w-72 shrink-0">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
           <input
             type="text"
             value={searchQuery}
