@@ -89,9 +89,17 @@ export function Navbar() {
 
   // Sliding pill indicator for Navbar top navigation
   const navTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
-  const [navIndicator, setNavIndicator] = useState<{ left: number; width: number; ready: boolean }>({
+  const [navIndicator, setNavIndicator] = useState<{
+    left: number;
+    width: number;
+    top: number;
+    height: number;
+    ready: boolean;
+  }>({
     left: 0,
     width: 0,
+    top: 0,
+    height: 0,
     ready: false,
   });
 
@@ -110,6 +118,8 @@ export function Navbar() {
         setNavIndicator({
           left: activeEl.offsetLeft,
           width: activeEl.offsetWidth,
+          top: activeEl.offsetTop,
+          height: activeEl.offsetHeight,
           ready: true,
         });
       } else {
@@ -130,13 +140,15 @@ export function Navbar() {
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8">
         <div className="flex h-14 sm:h-16 items-center justify-between gap-4">
           {/* Left: Small Text Tabs (Home, Softwares, Pricings, Tutorials) */}
-          <div className="relative flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-1">
+          <div className="relative flex items-center gap-1 sm:gap-2 no-scrollbar py-1">
             {navIndicator.ready && (
               <div
-                className="absolute top-1 bottom-1 rounded-full bg-neutral-100 dark:bg-neutral-900 shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
+                className="absolute rounded-full bg-neutral-100 dark:bg-neutral-900 shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
                 style={{
                   left: `${navIndicator.left}px`,
                   width: `${navIndicator.width}px`,
+                  top: `${navIndicator.top}px`,
+                  height: `${navIndicator.height}px`,
                 }}
               />
             )}
