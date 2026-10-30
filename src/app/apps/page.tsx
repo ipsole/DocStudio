@@ -13,13 +13,16 @@ export default function AppsCatalogPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const categoryItems = React.useMemo(() => [
-    { id: 'all', label: 'All Suites', count: apps.length },
-    { id: 'creative', label: 'Creative & Design', count: apps.filter(a => a.category?.toLowerCase() === 'creative').length },
-    { id: 'animation', label: 'Animation & Motion', count: apps.filter(a => a.category?.toLowerCase() === 'animation').length },
-    { id: 'productivity', label: 'Productivity', count: apps.filter(a => a.category?.toLowerCase() === 'productivity').length },
-    { id: 'utilities', label: 'Utilities', count: apps.filter(a => a.category?.toLowerCase() === 'utilities').length },
-  ], [apps]);
+  const categoryItems = React.useMemo(() => {
+    const items = [
+      { id: 'all', label: 'All Suites', count: apps.length },
+      { id: 'creative', label: 'Creative & Design', count: apps.filter(a => a.category?.toLowerCase() === 'creative').length },
+      { id: 'animation', label: 'Animation & Motion', count: apps.filter(a => a.category?.toLowerCase() === 'animation').length },
+      { id: 'productivity', label: 'Productivity', count: apps.filter(a => a.category?.toLowerCase() === 'productivity').length },
+      { id: 'utilities', label: 'Utilities', count: apps.filter(a => a.category?.toLowerCase() === 'utilities').length },
+    ];
+    return items.filter((cat) => cat.id === 'all' || cat.count > 0);
+  }, [apps]);
 
   const categoryTabRefs = React.useRef<{ [key: string]: HTMLButtonElement | null }>({});
   const [categoryIndicator, setCategoryIndicator] = useState<{
@@ -72,7 +75,13 @@ export default function AppsCatalogPage() {
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', updateCategory);
     };
-  }, [selectedCategory, apps.length]);
+  }, [selectedCategory, categoryItems]);
+
+  useEffect(() => {
+    if (selectedCategory !== 'all' && !categoryItems.some((c) => c.id === selectedCategory)) {
+      setSelectedCategory('all');
+    }
+  }, [categoryItems, selectedCategory]);
 
   const filteredApps = apps.filter((app) => {
     const matchesCategory =

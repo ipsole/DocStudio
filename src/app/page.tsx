@@ -408,7 +408,7 @@ export default function HomePage() {
                   { id: 'creative', label: 'Creative', count: apps.filter(a => a.category?.toLowerCase() === 'creative').length },
                   { id: 'animation', label: 'Animation', count: apps.filter(a => a.category?.toLowerCase() === 'animation').length },
                   { id: 'productivity', label: 'Productivity', count: apps.filter(a => a.category?.toLowerCase() === 'productivity').length },
-                ].map((cat) => {
+                ].filter(cat => cat.id === 'all' || cat.count > 0).map((cat) => {
                   const isSelected = selectedCategory === cat.id;
                   return (
                     <button
