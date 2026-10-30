@@ -635,11 +635,32 @@ export default function AccountPage() {
     <ProtectedRoute>
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8 text-neutral-900 dark:text-white transition-colors duration-200">
         
-        {/* Top Header - Pure clean typography without dividing line */}
-        <div>
+        {/* Mobile Header (Settings title + Horizontal Tabs) */}
+        <div className="md:hidden space-y-4">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
             Settings
           </h1>
+          <div className="overflow-x-auto pb-2 -mx-4 px-4 flex items-center gap-2 scrollbar-none">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => handleTabChange(item.key)}
+                  className={`whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-sans font-medium flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
+                    isActive
+                      ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-sm'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white bg-neutral-100/80 dark:bg-neutral-900/60'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Global Feedback Banners */}
@@ -664,34 +685,17 @@ export default function AccountPage() {
           </div>
         )}
 
-        {/* Mobile Horizontal Tabs Pill Bar */}
-        <div className="md:hidden overflow-x-auto pb-2 -mx-4 px-4 flex items-center gap-2 scrollbar-none">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.key;
-            return (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => handleTabChange(item.key)}
-                className={`whitespace-nowrap px-3.5 py-2 rounded-xl text-xs font-sans font-medium flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
-                  isActive
-                    ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-sm'
-                    : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white bg-neutral-100/80 dark:bg-neutral-900/60'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
         {/* 2-Column Desktop Layout */}
         <div className="w-full flex flex-col md:flex-row gap-8 items-start">
           
-          {/* Left Navigation Sidebar */}
-          <aside className="hidden md:block w-64 shrink-0 space-y-4 sticky top-24">
+          {/* Left Navigation Sidebar - Sticky Locked in Viewport */}
+          <aside className="hidden md:block w-64 shrink-0 space-y-4 sticky top-20 self-start">
+            <div className="pb-1">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+                Settings
+              </h1>
+            </div>
+
             <nav className="p-2 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white/70 dark:bg-neutral-950/70 backdrop-blur-xl space-y-1 shadow-sm">
               {navItems.map((item) => {
                 const Icon = item.icon;
@@ -767,7 +771,7 @@ export default function AccountPage() {
           </aside>
 
           {/* Right Main Content Pane */}
-          <main className="w-full flex-1 min-w-0">
+          <main className="w-full flex-1 min-w-0 md:pt-[56px]">
 
             {/* TAB 1: Account */}
             {activeTab === 'profile' && (
