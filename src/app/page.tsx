@@ -138,6 +138,45 @@ export default function HomePage() {
     };
   }, [billingCycle, activeTab]);
 
+  const categoryTabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const [categoryIndicator, setCategoryIndicator] = useState<{
+    left: number;
+    width: number;
+    top: number;
+    height: number;
+    ready: boolean;
+  }>({
+    left: 0,
+    width: 0,
+    top: 0,
+    height: 0,
+    ready: false,
+  });
+
+  useEffect(() => {
+    const updateCategory = () => {
+      const activeEl = categoryTabRefs.current[selectedCategory];
+      if (activeEl) {
+        setCategoryIndicator({
+          left: activeEl.offsetLeft,
+          width: activeEl.offsetWidth,
+          top: activeEl.offsetTop,
+          height: activeEl.offsetHeight,
+          ready: true,
+        });
+      } else {
+        setCategoryIndicator((prev) => ({ ...prev, ready: false }));
+      }
+    };
+    updateCategory();
+    const raf = requestAnimationFrame(updateCategory);
+    window.addEventListener('resize', updateCategory);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', updateCategory);
+    };
+  }, [selectedCategory, activeTab, apps.length]);
+
   useEffect(() => {
     if (!user) {
       setUserSubs([]);
@@ -348,39 +387,56 @@ export default function HomePage() {
         {/* Tab 1: Softwares Catalog */}
         {activeTab === 'softwares' && (
           <div id="softwares" className="space-y-6 animate-fadeIn">
-            {/* Catalog Toolbar Header: Left-aligned Category Chips */}
+            {/* Catalog Toolbar Header: Left-aligned Category Chips with Sliding Pill */}
             <div className="flex items-center pb-3 border-b border-neutral-100 dark:border-neutral-900/80">
-              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5">
+              <div className="relative flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                {/* Sliding Category Pill Indicator */}
+                {categoryIndicator.ready && (
+                  <div
+                    className="absolute rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
+                    style={{
+                      left: `${categoryIndicator.left}px`,
+                      width: `${categoryIndicator.width}px`,
+                      top: `${categoryIndicator.top}px`,
+                      height: `${categoryIndicator.height}px`,
+                    }}
+                  />
+                )}
+
                 {[
                   { id: 'all', label: 'All Suites', count: apps.length },
                   { id: 'creative', label: 'Creative', count: apps.filter(a => a.category?.toLowerCase() === 'creative').length },
                   { id: 'animation', label: 'Animation', count: apps.filter(a => a.category?.toLowerCase() === 'animation').length },
                   { id: 'productivity', label: 'Productivity', count: apps.filter(a => a.category?.toLowerCase() === 'productivity').length },
-                ].map((cat) => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-3.5 py-1.5 rounded-full text-xs transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
-                      selectedCategory === cat.id
-                        ? 'bg-neutral-100 dark:bg-neutral-900 text-neutral-950 dark:text-white border border-neutral-200/90 dark:border-neutral-800 shadow-sm font-semibold'
-                        : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/60 dark:hover:bg-neutral-900/60 border border-transparent font-medium'
-                    }`}
-                  >
-                    <span>{cat.label}</span>
-                    {cat.count > 0 && (
-                      <span
-                        className={`text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full ${
-                          selectedCategory === cat.id
-                            ? 'bg-neutral-200/80 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100'
-                            : 'bg-neutral-100 dark:bg-neutral-900/60 text-neutral-400 dark:text-neutral-500'
-                        }`}
-                      >
-                        {cat.count}
-                      </span>
-                    )}
-                  </button>
-                ))}
+                ].map((cat) => {
+                  const isSelected = selectedCategory === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      ref={(el) => { categoryTabRefs.current[cat.id] = el; }}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`relative z-10 px-3.5 py-1.5 rounded-full text-xs transition-colors duration-200 cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                        isSelected
+                          ? 'text-neutral-950 dark:text-white font-semibold'
+                          : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white font-medium'
+                      }`}
+                    >
+                      <span>{cat.label}</span>
+                      {cat.count > 0 && (
+                        <span
+                          className={`text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded-full transition-colors ${
+                            isSelected
+                              ? 'bg-neutral-200/80 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100'
+                              : 'bg-neutral-100 dark:bg-neutral-900 text-neutral-400 dark:text-neutral-500'
+                          }`}
+                        >
+                          {cat.count}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
