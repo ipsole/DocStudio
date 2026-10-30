@@ -413,7 +413,7 @@ export default function HomePage() {
             <div className="text-center max-w-xl mx-auto space-y-5">
               <div className="space-y-2">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-sans text-neutral-950 dark:text-white tracking-tight">
-                  Transparent Pricing for Creative Scale
+                  Transparent Pricing
                 </h2>
                 <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-sans leading-relaxed">
                   One unified membership unlocks creative artboards, motion engines, and document pipelines across all Docdril products.

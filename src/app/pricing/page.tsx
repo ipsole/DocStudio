@@ -172,7 +172,7 @@ export default function PricingPage() {
         <div className="max-w-3xl mx-auto text-center space-y-5 pt-2 sm:pt-4">
           <div className="space-y-3">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
-              Transparent Pricing for Creative Scale
+              Transparent Pricing
             </h1>
             <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-sans max-w-2xl mx-auto leading-relaxed">
               One unified account gives you full access across all Docdril creative and document tools. Choose flexible monthly billing or save 20% with annual plans.
