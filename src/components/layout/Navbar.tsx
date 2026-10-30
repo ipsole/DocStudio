@@ -273,8 +273,7 @@ export function Navbar() {
                       </div>
 
                       <div className="flex items-center justify-between pt-0.5 text-[10px] font-sans">
-                        <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                        <span className="text-blue-600 dark:text-blue-400 font-semibold">
                           {activePlanName}
                         </span>
                         <Link
