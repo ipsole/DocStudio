@@ -663,33 +663,11 @@ export default function AccountPage() {
           </div>
         </div>
 
-        {/* Global Feedback Banners */}
-        {generalError && (
-          <div className="p-4 border border-red-300 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300 text-xs font-sans flex items-center gap-2 rounded-xl">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{generalError}</span>
-          </div>
-        )}
-
-        {profileSuccess && (
-          <div className="p-4 border border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 text-xs font-sans flex items-center gap-2 rounded-xl animate-fadeIn">
-            <CheckCircle className="w-4 h-4 shrink-0" />
-            <span>Profile details updated successfully.</span>
-          </div>
-        )}
-
-        {creditTopUpSuccess && (
-          <div className="p-4 border border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 text-xs font-sans flex items-center gap-2 rounded-xl animate-fadeIn">
-            <Sparkles className="w-4 h-4 shrink-0 text-amber-500" />
-            <span>{creditTopUpSuccess}</span>
-          </div>
-        )}
-
         {/* 2-Column Desktop Layout */}
         <div className="w-full flex flex-col md:flex-row gap-8 items-start">
           
-          {/* Left Navigation Sidebar - Sticky Locked in Viewport */}
-          <aside className="hidden md:block w-64 shrink-0 space-y-4 sticky top-20 self-start">
+          {/* Left Navigation Sidebar - Sticky Locked in Viewport from Scroll 0 */}
+          <aside className="hidden md:block w-64 shrink-0 space-y-4 sticky top-[112px] self-start">
             <div className="pb-1">
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
                 Settings
@@ -771,7 +749,29 @@ export default function AccountPage() {
           </aside>
 
           {/* Right Main Content Pane */}
-          <main className="w-full flex-1 min-w-0 md:pt-[56px]">
+          <main className="w-full flex-1 min-w-0 md:pt-[56px] space-y-6">
+
+            {/* Global Feedback Banners */}
+            {generalError && (
+              <div className="p-4 border border-red-300 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300 text-xs font-sans flex items-center gap-2 rounded-xl">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{generalError}</span>
+              </div>
+            )}
+
+            {profileSuccess && (
+              <div className="p-4 border border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 text-xs font-sans flex items-center gap-2 rounded-xl animate-fadeIn">
+                <CheckCircle className="w-4 h-4 shrink-0" />
+                <span>Profile details updated successfully.</span>
+              </div>
+            )}
+
+            {creditTopUpSuccess && (
+              <div className="p-4 border border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 text-xs font-sans flex items-center gap-2 rounded-xl animate-fadeIn">
+                <Sparkles className="w-4 h-4 shrink-0 text-amber-500" />
+                <span>{creditTopUpSuccess}</span>
+              </div>
+            )}
 
             {/* TAB 1: Account */}
             {activeTab === 'profile' && (
