@@ -168,12 +168,16 @@ export default function PricingPage() {
       )}
 
       {/* Hero Header */}
-      <div className="max-w-3xl mx-auto text-center space-y-3">
+      <div className="max-w-3xl mx-auto text-center space-y-3.5 pt-2 sm:pt-4">
+        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-sans font-semibold uppercase tracking-wider bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 shadow-sm">
+          <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+          <span>Transparent INR (₹) Pricing • Instant Activation</span>
+        </div>
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
-          Simple, Transparent Pricing in INR
+          Transparent Pricing for Creative Scale
         </h1>
         <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-sans max-w-2xl mx-auto leading-relaxed">
-          One unified account gives you full access across all Docdril creative and document tools. Choose a monthly plan or purchase extra on-demand credits that never expire.
+          One unified account gives you full access across all Docdril creative and document tools. Choose flexible monthly billing or save 20% with annual plans.
         </p>
       </div>
 
@@ -259,14 +263,14 @@ export default function PricingPage() {
                 }`}
               >
                 {isCurrentPlan ? (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 text-white text-[11px] font-sans font-bold uppercase tracking-wider rounded-full flex items-center gap-1 shadow-md">
-                    <Check className="w-3 h-3" />
-                    Active Plan
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-1 bg-blue-600 text-white text-[10px] sm:text-[11px] font-sans font-bold uppercase tracking-wider rounded-full flex items-center gap-1 shadow-md whitespace-nowrap">
+                    <Check className="w-3 h-3 shrink-0" />
+                    <span>Active Plan</span>
                   </span>
                 ) : plan.badge ? (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-neutral-950 dark:bg-white text-white dark:text-black text-[11px] font-sans font-bold uppercase tracking-wider rounded-full flex items-center gap-1 shadow-md">
-                    <Sparkles className="w-3 h-3 text-amber-400 dark:text-amber-500" />
-                    {plan.badge}
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-1 bg-neutral-950 dark:bg-white text-white dark:text-black text-[10px] sm:text-[11px] font-sans font-bold uppercase tracking-wider rounded-full flex items-center gap-1 shadow-md whitespace-nowrap">
+                    <Sparkles className="w-3 h-3 text-amber-400 dark:text-amber-500 shrink-0" />
+                    <span>{plan.badge}</span>
                   </span>
                 ) : null}
 

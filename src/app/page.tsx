@@ -410,12 +410,16 @@ export default function HomePage() {
         {/* Tab 2: Pricings in INR */}
         {activeTab === 'pricings' && (
           <div id="pricings" className="space-y-10 animate-fadeIn pt-2">
-            <div className="text-center max-w-xl mx-auto space-y-1">
-              <h2 className="text-2xl sm:text-3xl font-bold font-sans text-neutral-950 dark:text-white">
-                Unified Ecosystem Subscriptions
+            <div className="text-center max-w-xl mx-auto space-y-2.5">
+              <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-sans font-semibold uppercase tracking-wider bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 shadow-sm">
+                <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+                <span>Transparent INR (₹) Pricing</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold font-sans text-neutral-950 dark:text-white tracking-tight">
+                Transparent Pricing for Creative Scale
               </h2>
-              <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-sans">
-                Subscribe once in INR (₹) to unlock creative and document generation suites across all subdomains.
+              <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-sans leading-relaxed">
+                One unified membership unlocks creative artboards, motion engines, and document pipelines across all Docdril products.
               </p>
             </div>
 
@@ -501,14 +505,14 @@ export default function HomePage() {
                     }`}
                   >
                     {isCurrentPlan ? (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 text-white text-[11px] font-sans font-bold uppercase tracking-wider rounded-full flex items-center gap-1 shadow-sm">
-                        <Check className="w-3 h-3" />
-                        Active Plan
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-1 bg-blue-600 text-white text-[10px] sm:text-[11px] font-sans font-bold uppercase tracking-wider rounded-full flex items-center gap-1 shadow-sm whitespace-nowrap">
+                        <Check className="w-3 h-3 shrink-0" />
+                        <span>Active Plan</span>
                       </span>
                     ) : plan.badge ? (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-neutral-950 dark:bg-white text-white dark:text-black text-[11px] font-sans font-bold uppercase tracking-wider rounded-full flex items-center gap-1 shadow-sm">
-                        <Sparkles className="w-3 h-3 text-amber-400 dark:text-amber-500" />
-                        {plan.badge}
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-1 bg-neutral-950 dark:bg-white text-white dark:text-black text-[10px] sm:text-[11px] font-sans font-bold uppercase tracking-wider rounded-full flex items-center gap-1.5 shadow-sm whitespace-nowrap">
+                        <Sparkles className="w-3 h-3 text-amber-400 dark:text-amber-500 shrink-0" />
+                        <span>{plan.badge}</span>
                       </span>
                     ) : null}
 
