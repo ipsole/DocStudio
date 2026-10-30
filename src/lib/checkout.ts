@@ -28,6 +28,7 @@ interface CheckoutOptions {
   userId: string;
   userEmail: string;
   userName?: string;
+  userPhone?: string;
   quantity?: number;
   gstin?: string;
   businessName?: string;
@@ -44,6 +45,7 @@ export async function openRazorpayCheckout({
   userId,
   userEmail,
   userName,
+  userPhone,
   quantity = 1,
   gstin,
   businessName,
@@ -64,7 +66,7 @@ export async function openRazorpayCheckout({
     const res = await fetch('/api/billing/create-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itemId, itemType, userId, userEmail, userName, quantity, gstin, businessName }),
+      body: JSON.stringify({ itemId, itemType, userId, userEmail, userName, userPhone, quantity, gstin, businessName }),
     });
 
     const data = await res.json();
@@ -97,9 +99,11 @@ export async function openRazorpayCheckout({
       name: 'DocStudio',
       description: data.itemName,
       order_id: data.orderId,
+      customer_id: data.customerId || undefined,
       prefill: {
         name: businessName || userName || '',
         email: userEmail || '',
+        contact: userPhone || '',
         method: preferredMethod || undefined,
       },
       notes: {

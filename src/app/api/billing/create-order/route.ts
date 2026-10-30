@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const { itemId, itemType, gstin, businessName } = body;
+    const { itemId, itemType, gstin, businessName, userName, userPhone } = body;
     const rawQuantity = Number(body.quantity) || 1;
     const quantity = Math.max(1, Math.min(7, Math.floor(rawQuantity)));
 
@@ -85,12 +85,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create Razorpay Order
+    // Resolve or create Razorpay Customer ID for tokenized saved cards
     const razorpay = getRazorpayClient();
+    let customerId: string | undefined;
+
+    const { firestore } = getFirebaseAdmin();
+    if (firestore && userId) {
+      try {
+        const userDoc = await firestore.collection('users').doc(userId).get();
+        if (userDoc.exists && userDoc.data()?.razorpayCustomerId) {
+          customerId = userDoc.data()?.razorpayCustomerId;
+        } else {
+          const cleanPhone = userPhone ? String(userPhone).replace(/[^\d+]/g, '') : undefined;
+          const customer = await razorpay.customers.create({
+            name: userName || 'DocStudio User',
+            email: userEmail || undefined,
+            contact: cleanPhone || undefined,
+            fail_existing: 0,
+            notes: { userId },
+          });
+          if (customer?.id) {
+            customerId = customer.id;
+            await firestore.collection('users').doc(userId).set(
+              { razorpayCustomerId: customer.id },
+              { merge: true }
+            );
+          }
+        }
+      } catch (custErr) {
+        console.warn('[Billing API] Razorpay customer create/lookup warning:', custErr);
+      }
+    }
+
+    // Create Razorpay Order
     const amountInPaise = Math.round(amountInInr * 100);
     const receiptNumber = `INV-${Date.now().toString().slice(-6)}`;
 
-    const order = await razorpay.orders.create({
+    const orderPayload: Parameters<typeof razorpay.orders.create>[0] & { customer_id?: string } = {
       amount: amountInPaise,
       currency: 'INR',
       receipt: receiptNumber,
@@ -105,7 +136,13 @@ export async function POST(request: NextRequest) {
         gstin: typeof gstin === 'string' ? gstin.trim().toUpperCase() : '',
         businessName: typeof businessName === 'string' ? businessName.trim() : '',
       },
-    });
+    };
+
+    if (customerId) {
+      orderPayload.customer_id = customerId;
+    }
+
+    const order = await razorpay.orders.create(orderPayload);
 
     return NextResponse.json({
       success: true,
@@ -116,6 +153,7 @@ export async function POST(request: NextRequest) {
       keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
       itemName,
       receiptNumber,
+      customerId,
     });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Failed to create payment order.';

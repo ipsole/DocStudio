@@ -16,6 +16,7 @@ import {
   AlertCircle,
   FileText,
   Sparkles,
+  Phone,
 } from 'lucide-react';
 
 interface CheckoutDetailsModalProps {
@@ -43,6 +44,7 @@ export function CheckoutDetailsModal({
 }: CheckoutDetailsModalProps) {
   const [billingName, setBillingName] = useState(userName || '');
   const [billingEmail, setBillingEmail] = useState(userEmail || '');
+  const [billingPhone, setBillingPhone] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [gstin, setGstin] = useState('');
   const [saveDetails, setSaveDetails] = useState(true);
@@ -64,12 +66,14 @@ export function CheckoutDetailsModal({
       setBillingEmail(userEmail || '');
       setQuantity(Math.max(1, Math.min(7, initialQuantity)));
 
-      // Load remembered GSTIN and Saved Payment Method
+      // Load remembered GSTIN, Phone and Saved Payment Method
       if (typeof window !== 'undefined' && userId) {
         const savedGstin = localStorage.getItem(`docstudio_gstin_${userId}`);
         if (savedGstin) setGstin(savedGstin);
         const savedBusiness = localStorage.getItem(`docstudio_business_${userId}`);
         if (savedBusiness) setBusinessName(savedBusiness);
+        const savedPhone = localStorage.getItem(`docstudio_phone_${userId}`);
+        if (savedPhone) setBillingPhone(savedPhone);
 
         try {
           const rawMethod = localStorage.getItem(`docstudio_saved_payment_method_${userId}`);
@@ -105,6 +109,7 @@ export function CheckoutDetailsModal({
     if (saveDetails && typeof window !== 'undefined' && userId) {
       if (gstin) localStorage.setItem(`docstudio_gstin_${userId}`, gstin.trim().toUpperCase());
       if (businessName) localStorage.setItem(`docstudio_business_${userId}`, businessName.trim());
+      if (billingPhone) localStorage.setItem(`docstudio_phone_${userId}`, billingPhone.trim());
     }
 
     setStatus('opening');
@@ -120,6 +125,7 @@ export function CheckoutDetailsModal({
       userId,
       userEmail: billingEmail.trim() || userEmail,
       userName: billingName.trim() || userName,
+      userPhone: billingPhone.trim() || undefined,
       quantity: effectiveQty,
       businessName: businessName.trim() || undefined,
       gstin: gstin.trim().toUpperCase() || undefined,
@@ -334,20 +340,37 @@ export function CheckoutDetailsModal({
                   />
                 </div>
 
-                {/* Email */}
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
-                    <Mail className="w-3.5 h-3.5 text-neutral-400" />
-                    <span>Receipt Email</span>
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={billingEmail}
-                    onChange={(e) => setBillingEmail(e.target.value)}
-                    placeholder="name@example.com"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white transition-all"
-                  />
+                {/* Email & Phone */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5 text-neutral-400" />
+                      <span>Receipt Email</span>
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={billingEmail}
+                      onChange={(e) => setBillingEmail(e.target.value)}
+                      placeholder="name@example.com"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-neutral-400" />
+                      <span>Mobile Phone</span>
+                      <span className="text-[10px] text-neutral-400">(Saved Cards)</span>
+                    </label>
+                    <input
+                      type="tel"
+                      value={billingPhone}
+                      onChange={(e) => setBillingPhone(e.target.value)}
+                      placeholder="+91 98765 43210"
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-xs text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-neutral-900 dark:focus:ring-white transition-all font-mono"
+                    />
+                  </div>
                 </div>
 
                 {/* Optional Company & GSTIN */}
