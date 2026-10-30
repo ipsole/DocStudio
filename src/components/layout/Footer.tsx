@@ -58,7 +58,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-neutral-200 dark:border-neutral-900 flex flex-col sm:flex-row items-center justify-between gap-4 font-sans text-xs text-neutral-500">
-          <p>© {new Date().getFullYear()} Docdril Inc. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Docdril™. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <span>DocStudio Core v1.0.0</span>
             <span>docdril.com</span>
