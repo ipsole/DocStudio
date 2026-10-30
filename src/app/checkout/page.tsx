@@ -333,22 +333,18 @@ function CheckoutContent() {
         {/* LEFT COLUMN: Order Summary & Item Breakdown (col-span-5, Golden Premium Edition) */}
         <div className="lg:col-span-5 order-2 lg:order-1 space-y-6">
           <div className="rounded-3xl p-6 sm:p-7 space-y-6 border border-amber-200/90 dark:border-amber-800/50 bg-amber-50/40 dark:bg-amber-950/20 shadow-sm">
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-1.5 text-[11px] font-sans font-bold uppercase tracking-wider text-amber-800 dark:text-amber-400">
-                <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                <span>Order Summary</span>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-                <h2 className="text-xl sm:text-2xl font-bold font-sans text-neutral-950 dark:text-white">
-                  {selectedItem.name}
-                </h2>
-                {'badge' in selectedItem && selectedItem.badge ? (
-                  <span className="inline-flex items-center text-[10px] sm:text-[11px] font-semibold px-2.5 py-1 rounded-full bg-neutral-950 text-white dark:bg-white dark:text-black whitespace-nowrap shrink-0 leading-none">
+            <div className="space-y-2.5">
+              <h2 className="text-2xl sm:text-3xl lg:text-[2rem] font-bold font-sans text-neutral-950 dark:text-white tracking-tight leading-tight">
+                {selectedItem.name}
+              </h2>
+              {'badge' in selectedItem && selectedItem.badge ? (
+                <div>
+                  <span className="inline-flex items-center text-xs font-bold px-3 py-1 rounded-full bg-amber-400 text-neutral-950 dark:bg-amber-400 dark:text-neutral-950 shadow-sm whitespace-nowrap shrink-0 leading-none tracking-wide">
                     {selectedItem.badge}
                   </span>
-                ) : null}
-              </div>
-              <p className="text-xs text-neutral-600 dark:text-neutral-300 font-sans">
+                </div>
+              ) : null}
+              <p className="text-xs text-neutral-600 dark:text-neutral-300 font-sans pt-0.5">
                 {selectedItem.description}
               </p>
             </div>
