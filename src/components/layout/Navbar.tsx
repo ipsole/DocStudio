@@ -210,7 +210,7 @@ export function Navbar() {
                       {/* Progress bar */}
                       <div className="w-full h-1.5 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                          className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-blue-400 dark:to-indigo-400 rounded-full transition-all duration-500"
                           style={{ width: `${Math.max(6, creditsPercentage)}%` }}
                         />
                       </div>

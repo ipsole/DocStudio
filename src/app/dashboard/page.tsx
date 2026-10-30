@@ -299,7 +299,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
               {/* Visual Enterprise Usage Bar */}
               <div className="w-full h-1.5 bg-neutral-100 dark:bg-neutral-900 rounded-full overflow-hidden mt-3 mb-1">
                 <div
-                  className="h-full bg-emerald-500 dark:bg-emerald-400 rounded-full"
+                  className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-blue-400 dark:to-indigo-400 rounded-full transition-all duration-500"
                   style={{
                     width: `${Math.min(100, Math.max(0, ((subscriptions.length > 0 ? totalCreditsRemaining : 175) / (subscriptions.length > 0 ? totalCreditsMax : 175)) * 100))}%`,
                   }}

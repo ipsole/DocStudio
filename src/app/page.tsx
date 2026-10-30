@@ -389,14 +389,14 @@ export default function HomePage() {
                     key={plan.id}
                     className={`relative flex flex-col justify-between rounded-3xl border p-6 sm:p-7 transition-all ${
                       isCurrentPlan
-                        ? 'border-emerald-500/80 dark:border-emerald-500/80 bg-emerald-500/[0.03] dark:bg-emerald-950/20 shadow-xl ring-2 ring-emerald-500/20'
+                        ? 'border-blue-500/80 dark:border-blue-500/80 bg-blue-500/[0.04] dark:bg-blue-950/20 shadow-xl ring-2 ring-blue-500/25'
                         : plan.popular
                         ? 'border-neutral-950 dark:border-white bg-neutral-50/80 dark:bg-neutral-950 shadow-lg ring-1 ring-neutral-950/10 dark:ring-white/20'
                         : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/60 shadow-sm'
                     }`}
                   >
                     {isCurrentPlan ? (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-600 text-white text-[11px] font-sans font-bold uppercase tracking-wider rounded-full flex items-center gap-1 shadow-sm">
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 text-white text-[11px] font-sans font-bold uppercase tracking-wider rounded-full flex items-center gap-1 shadow-sm">
                         <Check className="w-3 h-3" />
                         Active Plan
                       </span>
@@ -452,9 +452,9 @@ export default function HomePage() {
                       {isCurrentPlan ? (
                         <Link
                           href="/account#subscriptions"
-                          className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25 transition-all"
+                          className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30 hover:bg-blue-500/25 transition-all"
                         >
-                          <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                          <Check className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                           <span>Current Plan</span>
                         </Link>
                       ) : isIncluded || isDowngrade ? (

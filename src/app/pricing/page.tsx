@@ -207,14 +207,14 @@ export default function PricingPage() {
                 key={plan.id}
                 className={`relative flex flex-col justify-between rounded-3xl border p-6 sm:p-8 transition-all ${
                   isCurrentPlan
-                    ? 'border-emerald-500/80 dark:border-emerald-500/80 bg-emerald-500/[0.03] dark:bg-emerald-950/20 shadow-xl ring-2 ring-emerald-500/20'
+                    ? 'border-blue-500/80 dark:border-blue-500/80 bg-blue-500/[0.04] dark:bg-blue-950/20 shadow-xl ring-2 ring-blue-500/25'
                     : plan.popular
                     ? 'border-neutral-950 dark:border-white bg-neutral-50/80 dark:bg-neutral-950 shadow-xl ring-1 ring-neutral-950/10 dark:ring-white/20'
                     : 'border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/60 shadow-sm hover:shadow-md'
                 }`}
               >
                 {isCurrentPlan ? (
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-600 text-white text-[11px] font-sans font-bold uppercase tracking-wider rounded-full flex items-center gap-1 shadow-md">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-600 text-white text-[11px] font-sans font-bold uppercase tracking-wider rounded-full flex items-center gap-1 shadow-md">
                     <Check className="w-3 h-3" />
                     Active Plan
                   </span>
@@ -273,7 +273,7 @@ export default function PricingPage() {
                     onClick={() => handleSelectPlan(plan)}
                     className={`w-full py-3 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
                       isCurrentPlan
-                        ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25'
+                        ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30 hover:bg-blue-500/25'
                         : isIncluded || isDowngrade
                         ? 'bg-neutral-100 dark:bg-neutral-900 text-neutral-500 border border-neutral-200 dark:border-neutral-800 cursor-default'
                         : plan.popular
@@ -283,7 +283,7 @@ export default function PricingPage() {
                   >
                     {isCurrentPlan ? (
                       <>
-                        <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                        <Check className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                         <span>Current Plan</span>
                       </>
                     ) : isIncluded || isDowngrade ? (
