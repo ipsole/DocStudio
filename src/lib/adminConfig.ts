@@ -1,11 +1,17 @@
 /**
  * Admin Configuration for DocStudio
- * Dedicated Super Administrator: izackstudio1@gmail.com
+ * Dedicated Super Administrators: izackstudio1@gmail.com, itpiyu@gmail.com
  */
+
+export const SUPER_ADMIN_EMAILS = [
+  'izackstudio1@gmail.com',
+  'itpiyu@gmail.com',
+];
 
 export const SUPER_ADMIN_EMAIL = 'izackstudio1@gmail.com';
 
 export function isSuperAdminEmail(email?: string | null): boolean {
   if (!email) return false;
-  return email.trim().toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+  const clean = email.trim().toLowerCase();
+  return SUPER_ADMIN_EMAILS.includes(clean);
 }

@@ -1,4 +1,4 @@
-import { DocApp } from '@/types';
+import { DocApp, Coupon } from '@/types';
 
 /**
  * Demonstration catalog records for development and testing.
@@ -86,4 +86,36 @@ export const CATEGORIES = [
   { id: 'animation', label: 'Animation & Motion' },
   { id: 'productivity', label: 'Productivity' },
   { id: 'utilities', label: 'Utilities' },
+];
+
+export const DEFAULT_COUPONS: Coupon[] = [
+  {
+    id: 'WELCOME20',
+    code: 'WELCOME20',
+    description: '20% off all purchases across Docdril ecosystem',
+    discountType: 'percentage',
+    discountValue: 20,
+    targetType: 'all',
+    singleUsePerUser: true,
+    currentUses: 0,
+    active: true,
+    expiresAt: null,
+    createdAt: 1793350151176,
+    createdBy: 'izackstudio1@gmail.com',
+  },
+  {
+    id: 'PIYU95',
+    code: 'PIYU95',
+    description: 'VIP 95% discount exclusive pass',
+    discountType: 'percentage',
+    discountValue: 95,
+    targetType: 'user',
+    targetValue: 'itpiyu@gmail.com',
+    singleUsePerUser: true,
+    currentUses: 0,
+    active: true,
+    expiresAt: 1793664000000,
+    createdAt: 1793350139144,
+    createdBy: 'izackstudio1@gmail.com',
+  },
 ];

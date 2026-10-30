@@ -36,9 +36,27 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const createdBy = authCheck.email || 'izackstudio1@gmail.com';
     const saved = await saveCouponAdmin({ ...body, createdBy });
-    return NextResponse.json({ success: true, data: saved });
+    return NextResponse.json({ success: true, data: saved, message: `Coupon "${saved.code}" saved successfully.` });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Failed to save coupon';
+    return NextResponse.json({ success: false, error: message }, { status: 400 });
+  }
+}
+
+// PUT: Edit/Update existing coupon
+export async function PUT(req: NextRequest) {
+  const authCheck = await verifyAdminRequest(req);
+  if (!authCheck.isAuthorized) {
+    return NextResponse.json({ success: false, error: authCheck.error }, { status: 403 });
+  }
+
+  try {
+    const body = await req.json();
+    const createdBy = authCheck.email || 'izackstudio1@gmail.com';
+    const saved = await saveCouponAdmin({ ...body, createdBy });
+    return NextResponse.json({ success: true, data: saved, message: `Coupon "${saved.code}" updated successfully.` });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Failed to update coupon';
     return NextResponse.json({ success: false, error: message }, { status: 400 });
   }
 }

@@ -45,6 +45,7 @@ export default function AdminPage() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [couponsLoading, setCouponsLoading] = useState(false);
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [couponSaving, setCouponSaving] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
@@ -69,6 +70,46 @@ export default function AdminPage() {
     maxTotalUses: '',
     expiresAt: '',
   });
+
+  const openCreateCouponModal = () => {
+    setEditingCoupon(null);
+    setCouponFormData({
+      code: '',
+      description: '',
+      discountType: 'percentage',
+      discountValue: 20,
+      targetType: 'all',
+      targetValue: '',
+      singleUsePerUser: true,
+      maxTotalUses: '',
+      expiresAt: '',
+    });
+    setIsCouponModalOpen(true);
+  };
+
+  const openEditCouponModal = (coupon: Coupon) => {
+    setEditingCoupon(coupon);
+    let expiresStr = '';
+    if (coupon.expiresAt) {
+      const d = new Date(coupon.expiresAt);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      expiresStr = `${year}-${month}-${day}`;
+    }
+    setCouponFormData({
+      code: coupon.code,
+      description: coupon.description || '',
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      targetType: coupon.targetType,
+      targetValue: coupon.targetValue || '',
+      singleUsePerUser: coupon.singleUsePerUser ?? true,
+      maxTotalUses: coupon.maxTotalUses ? String(coupon.maxTotalUses) : '',
+      expiresAt: expiresStr,
+    });
+    setIsCouponModalOpen(true);
+  };
 
   // Form modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -150,7 +191,7 @@ export default function AdminPage() {
     loadAdminCoupons();
   }, [user]);
 
-  const handleCreateCoupon = async (e: React.FormEvent) => {
+  const handleSaveCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     setCouponSaving(true);
@@ -159,6 +200,7 @@ export default function AdminPage() {
       const token = await user.getIdToken();
       const payload = {
         code: couponFormData.code.trim().toUpperCase(),
+        originalCode: editingCoupon ? editingCoupon.code : undefined,
         description: couponFormData.description.trim(),
         discountType: couponFormData.discountType,
         discountValue: Number(couponFormData.discountValue),
@@ -169,8 +211,11 @@ export default function AdminPage() {
         expiresAt: couponFormData.expiresAt ? new Date(couponFormData.expiresAt).getTime() : null,
       };
 
-      const res = await fetch('/api/admin/coupons', {
-        method: 'POST',
+      const url = '/api/admin/coupons';
+      const method = editingCoupon ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -180,15 +225,20 @@ export default function AdminPage() {
 
       const data = await res.json();
       if (!data.success) {
-        throw new Error(data.error || 'Failed to create coupon.');
+        throw new Error(data.error || 'Failed to save coupon.');
       }
 
-      setSuccessMsg(`Coupon "${payload.code}" created successfully!`);
+      setSuccessMsg(
+        editingCoupon
+          ? `Coupon "${payload.code}" updated successfully!`
+          : `Coupon "${payload.code}" created successfully!`
+      );
       setTimeout(() => setSuccessMsg(null), 4000);
       setIsCouponModalOpen(false);
+      setEditingCoupon(null);
       await loadAdminCoupons();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error creating coupon.');
+      setError(err instanceof Error ? err.message : 'Error saving coupon.');
     } finally {
       setCouponSaving(false);
     }
@@ -391,20 +441,7 @@ export default function AdminPage() {
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => {
-                  setCouponFormData({
-                    code: '',
-                    description: '',
-                    discountType: 'percentage',
-                    discountValue: 20,
-                    targetType: 'all',
-                    targetValue: '',
-                    singleUsePerUser: true,
-                    maxTotalUses: '',
-                    expiresAt: '',
-                  });
-                  setIsCouponModalOpen(true);
-                }}
+                onClick={openCreateCouponModal}
                 className="gap-1.5"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -742,14 +779,24 @@ export default function AdminPage() {
                             </button>
                           </td>
                           <td className="py-3 px-4 text-right">
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteCoupon(coupon.code)}
-                              className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 dark:text-red-400 transition-colors cursor-pointer"
-                              title="Delete coupon"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => openEditCouponModal(coupon)}
+                                className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
+                                title="Edit coupon"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteCoupon(coupon.code)}
+                                className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/50 text-red-600 dark:text-red-400 transition-colors cursor-pointer"
+                                title="Delete coupon"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -765,20 +812,7 @@ export default function AdminPage() {
                   <Button
                     variant="primary"
                     size="sm"
-                    onClick={() => {
-                      setCouponFormData({
-                        code: '',
-                        description: '',
-                        discountType: 'percentage',
-                        discountValue: 20,
-                        targetType: 'all',
-                        targetValue: '',
-                        singleUsePerUser: true,
-                        maxTotalUses: '',
-                        expiresAt: '',
-                      });
-                      setIsCouponModalOpen(true);
-                    }}
+                    onClick={openCreateCouponModal}
                   >
                     Create Your First Coupon
                   </Button>
@@ -795,22 +829,25 @@ export default function AdminPage() {
               <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 pb-4">
                 <div className="space-y-0.5">
                   <h3 className="font-light text-2xl tracking-[-0.03em] uppercase text-neutral-950 dark:text-white font-sans">
-                    Create Discount Coupon
+                    {editingCoupon ? `Edit Coupon: ${editingCoupon.code}` : 'Create Discount Coupon'}
                   </h3>
                   <p className="text-xs text-neutral-500 font-sans">
-                    Authorized Super Admin: {SUPER_ADMIN_EMAIL}
+                    Authorized Super Admin: {user?.email || SUPER_ADMIN_EMAIL}
                   </p>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setIsCouponModalOpen(false)}
+                  onClick={() => {
+                    setIsCouponModalOpen(false);
+                    setEditingCoupon(null);
+                  }}
                   className="font-mono text-sm font-bold text-neutral-400 hover:text-black dark:hover:text-white cursor-pointer"
                 >
                   ✕
                 </button>
               </div>
 
-              <form onSubmit={handleCreateCoupon} className="space-y-4">
+              <form onSubmit={handleSaveCoupon} className="space-y-4">
                 {/* Coupon Code */}
                 <div>
                   <label className="block font-sans text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
@@ -1008,7 +1045,10 @@ export default function AdminPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => setIsCouponModalOpen(false)}
+                    onClick={() => {
+                      setIsCouponModalOpen(false);
+                      setEditingCoupon(null);
+                    }}
                   >
                     Cancel
                   </Button>
@@ -1018,7 +1058,7 @@ export default function AdminPage() {
                     size="sm"
                     isLoading={couponSaving}
                   >
-                    Save & Activate Coupon
+                    {editingCoupon ? 'Update Coupon' : 'Save & Activate Coupon'}
                   </Button>
                 </div>
               </form>

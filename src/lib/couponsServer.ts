@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { getFirebaseAdmin } from './firebase/admin';
 import { Coupon, CouponRedemption } from '@/types';
+import { DEFAULT_COUPONS } from '@/lib/seedData';
 
 const COUPONS_COLLECTION = 'coupons';
 const REDEMPTIONS_COLLECTION = 'coupon_redemptions';
@@ -61,13 +62,18 @@ function writeLocalRedemptions(redemptions: CouponRedemption[]): void {
 }
 
 /**
- * List all coupons from Firestore, with local JSON persistence fallback
+ * List all coupons from Firestore, with local JSON persistence and built-in DEFAULT_COUPONS fallback
  */
 export async function listCouponsAdmin(): Promise<Coupon[]> {
   const localCoupons = readLocalCoupons();
   const { firestore } = getFirebaseAdmin();
 
+  // If Firestore is unconfigured or unavailable, use local cache or fallback to DEFAULT_COUPONS
   if (!firestore) {
+    if (localCoupons.length === 0) {
+      writeLocalCoupons(DEFAULT_COUPONS);
+      return DEFAULT_COUPONS;
+    }
     return localCoupons;
   }
 
@@ -77,7 +83,39 @@ export async function listCouponsAdmin(): Promise<Coupon[]> {
       .orderBy('createdAt', 'desc')
       .get();
 
-    const remoteCoupons = snap.docs.map((d) => d.data() as Coupon);
+    let remoteCoupons = snap.docs.map((d) => d.data() as Coupon);
+
+    // Check if system initialization marker exists
+    let hasBeenInitialized = false;
+    try {
+      const metaDoc = await firestore.collection('system').doc('coupons_init').get();
+      hasBeenInitialized = metaDoc.exists;
+    } catch {
+      // ignore
+    }
+
+    // Auto-seed DEFAULT_COUPONS if Firestore has 0 coupons and was never initialized
+    if (remoteCoupons.length === 0 && !hasBeenInitialized && localCoupons.length === 0) {
+      try {
+        const batch = firestore.batch();
+        for (const coupon of DEFAULT_COUPONS) {
+          batch.set(firestore.collection(COUPONS_COLLECTION).doc(coupon.code), coupon);
+        }
+        batch.set(
+          firestore.collection('system').doc('coupons_init'),
+          {
+            initializedAt: Date.now(),
+            initialCount: DEFAULT_COUPONS.length,
+          },
+          { merge: true }
+        );
+        await batch.commit();
+        remoteCoupons = [...DEFAULT_COUPONS];
+      } catch (seedErr) {
+        console.warn('[CouponsServer] Auto-seed default coupons to Firestore failed:', seedErr);
+        remoteCoupons = [...DEFAULT_COUPONS];
+      }
+    }
 
     // Merge remote and local (remote takes precedence, local fills any not yet synced)
     const remoteCodes = new Set(remoteCoupons.map((c) => c.code));
@@ -88,31 +126,60 @@ export async function listCouponsAdmin(): Promise<Coupon[]> {
       }
     }
 
+    if (merged.length === 0 && !hasBeenInitialized) {
+      writeLocalCoupons(DEFAULT_COUPONS);
+      return DEFAULT_COUPONS;
+    }
+
     // Keep local cache up to date
     writeLocalCoupons(merged);
     return merged;
   } catch (err) {
-    console.warn('[CouponsServer] Firestore query error in listCouponsAdmin, using local fallback:', err);
+    console.warn('[CouponsServer] Firestore query error in listCouponsAdmin, using fallback:', err);
+    if (localCoupons.length === 0) {
+      return DEFAULT_COUPONS;
+    }
     return localCoupons;
   }
 }
 
 /**
  * Create or update a coupon
+ * If originalCode is supplied and different from code, the previous coupon code is replaced cleanly.
  */
-export async function saveCouponAdmin(data: Partial<Coupon> & { code: string; createdBy: string }): Promise<Coupon> {
+export async function saveCouponAdmin(
+  data: Partial<Coupon> & { code: string; createdBy: string; originalCode?: string }
+): Promise<Coupon> {
   const cleanCode = data.code.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
   if (!cleanCode) throw new Error('Coupon code is required');
 
+  const originalCodeClean = data.originalCode
+    ? data.originalCode.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '')
+    : undefined;
+
+  const { firestore } = getFirebaseAdmin();
   const localCoupons = readLocalCoupons();
-  const existingLocal = localCoupons.find((c) => c.code === cleanCode);
+
+  // If code was renamed during edit, remove the old code first
+  if (originalCodeClean && originalCodeClean !== cleanCode) {
+    const withoutOld = localCoupons.filter((c) => c.code !== originalCodeClean);
+    writeLocalCoupons(withoutOld);
+    if (firestore) {
+      try {
+        await firestore.collection(COUPONS_COLLECTION).doc(originalCodeClean).delete();
+      } catch (err) {
+        console.warn('[CouponsServer] Error deleting previous coupon code during rename:', err);
+      }
+    }
+  }
+
+  const lookupKey = originalCodeClean || cleanCode;
+  const existingLocal = localCoupons.find((c) => c.code === lookupKey);
 
   let existingRemoteData: Coupon | undefined;
-  const { firestore } = getFirebaseAdmin();
-
   if (firestore) {
     try {
-      const snap = await firestore.collection(COUPONS_COLLECTION).doc(cleanCode).get();
+      const snap = await firestore.collection(COUPONS_COLLECTION).doc(lookupKey).get();
       if (snap.exists) {
         existingRemoteData = snap.data() as Coupon;
       }
@@ -141,7 +208,7 @@ export async function saveCouponAdmin(data: Partial<Coupon> & { code: string; cr
   };
 
   // 1. Persist to local JSON fallback immediately
-  const updatedLocal = localCoupons.filter((c) => c.code !== cleanCode);
+  const updatedLocal = localCoupons.filter((c) => c.code !== cleanCode && c.code !== originalCodeClean);
   updatedLocal.unshift(coupon);
   writeLocalCoupons(updatedLocal);
 
@@ -149,6 +216,13 @@ export async function saveCouponAdmin(data: Partial<Coupon> & { code: string; cr
   if (firestore) {
     try {
       await firestore.collection(COUPONS_COLLECTION).doc(cleanCode).set(coupon, { merge: true });
+      await firestore.collection('system').doc('coupons_init').set(
+        {
+          initializedAt: Date.now(),
+          lastUpdated: cleanCode,
+        },
+        { merge: true }
+      );
     } catch (err) {
       console.warn('[CouponsServer] Firestore write failed in saveCouponAdmin (persisted to local):', err);
     }
@@ -195,6 +269,14 @@ export async function deleteCouponAdmin(code: string): Promise<void> {
   if (firestore) {
     try {
       await firestore.collection(COUPONS_COLLECTION).doc(cleanCode).delete();
+      // Ensure coupons_init marker exists so deleting coupons doesn't trigger auto-reseed
+      await firestore.collection('system').doc('coupons_init').set(
+        {
+          initializedAt: Date.now(),
+          lastDeleted: cleanCode,
+        },
+        { merge: true }
+      );
     } catch (err) {
       console.warn('[CouponsServer] Firestore delete error in deleteCouponAdmin:', err);
     }
@@ -250,6 +332,11 @@ export async function validateCouponServer({
   if (!coupon) {
     const local = readLocalCoupons();
     coupon = local.find((c) => c.code === cleanCode);
+  }
+
+  // Fall back to DEFAULT_COUPONS if unseeded
+  if (!coupon) {
+    coupon = DEFAULT_COUPONS.find((c) => c.code === cleanCode);
   }
 
   if (!coupon) {
