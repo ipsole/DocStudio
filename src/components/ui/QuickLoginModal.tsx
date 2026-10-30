@@ -19,6 +19,8 @@ import {
   Copy,
   Check,
   ExternalLink,
+  Wifi,
+  Laptop,
   Globe,
 } from 'lucide-react';
 
@@ -29,6 +31,8 @@ interface QuickLoginModalProps {
   username: string;
   userEmail: string;
 }
+
+type TargetMode = 'network' | 'localhost' | 'production';
 
 export function QuickLoginModal({
   isOpen,
@@ -44,16 +48,44 @@ export function QuickLoginModal({
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
 
-  // Host mode: 'local' for localhost testing vs 'prod' for docstudio.docdril.com
+  // Host info from server (local Wi-Fi IP vs localhost vs production)
+  const [hostInfo, setHostInfo] = useState<{
+    localIp: string;
+    localNetworkUrl: string;
+    localhostUrl: string;
+    prodUrl: string;
+  }>({
+    localIp: 'localhost',
+    localNetworkUrl: 'http://localhost:3001',
+    localhostUrl: 'http://localhost:3001',
+    prodUrl: 'https://docstudio.docdril.com',
+  });
+
   const isLocalEnv =
     typeof window !== 'undefined' &&
     (window.location.hostname === 'localhost' ||
       window.location.hostname === '127.0.0.1' ||
-      window.location.hostname.endsWith('.local'));
+      window.location.hostname.startsWith('192.168.') ||
+      window.location.hostname.startsWith('10.'));
 
-  const [hostMode, setHostMode] = useState<'local' | 'prod'>(isLocalEnv ? 'local' : 'prod');
+  // Default to network IP in dev so iPhone on same Wi-Fi can open it immediately
+  const [targetMode, setTargetMode] = useState<TargetMode>(isLocalEnv ? 'network' : 'production');
 
   const activeTokenRef = useRef<string | null>(null);
+
+  // Load host info
+  useEffect(() => {
+    if (!isOpen) return;
+
+    fetch('/api/auth/qr/host-info')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.localIp) {
+          setHostInfo(data);
+        }
+      })
+      .catch(() => {});
+  }, [isOpen]);
 
   const generateSession = useCallback(async () => {
     if (!userId) return;
@@ -131,14 +163,17 @@ export function QuickLoginModal({
 
   if (!isOpen) return null;
 
-  // Determine target base URL based on toggle
-  const localOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001';
-  const prodOrigin = 'https://docstudio.docdril.com';
-  const selectedBaseUrl = hostMode === 'local' ? localOrigin : prodOrigin;
+  // Determine active base URL
+  let activeBaseUrl = hostInfo.prodUrl;
+  if (targetMode === 'network') {
+    activeBaseUrl = hostInfo.localNetworkUrl;
+  } else if (targetMode === 'localhost') {
+    activeBaseUrl = hostInfo.localhostUrl;
+  }
 
   const cleanHandle = username ? username.replace('@', '') : 'user';
   const qrUrl = tokenId
-    ? `${selectedBaseUrl}/auth/quick-login?token=${tokenId}&u=${encodeURIComponent(cleanHandle)}`
+    ? `${activeBaseUrl}/auth/quick-login?token=${tokenId}&u=${encodeURIComponent(cleanHandle)}`
     : '';
 
   const formatTimer = (totalSec: number) => {
@@ -171,7 +206,7 @@ export function QuickLoginModal({
                 Instant QR Login
               </h3>
               <p className="text-[11px] text-neutral-500 font-sans">
-                Scan or paste link to login instantly
+                Camera scan on phone or open link on browser
               </p>
             </div>
           </div>
@@ -199,47 +234,66 @@ export function QuickLoginModal({
                 Authorized on <span className="font-semibold text-neutral-800 dark:text-neutral-200">{connectedDevice}</span>
               </p>
               <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-2 font-medium">
-                Session active on {hostMode === 'local' ? 'localhost' : 'docstudio.docdril.com'}
+                Signed in securely as @{cleanHandle}
               </p>
             </div>
           </div>
         ) : (
           <>
-            {/* Host Target Switcher (Localhost vs Production) */}
-            <div className="flex items-center justify-between p-1 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-[11px] font-medium">
+            {/* Target Mode Switcher */}
+            <div className="flex items-center justify-between p-1 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-[11px] font-medium gap-1">
               <button
                 type="button"
-                onClick={() => setHostMode('local')}
-                className={`flex-1 py-1 px-2 rounded-lg transition-colors cursor-pointer text-center ${
-                  hostMode === 'local'
+                onClick={() => setTargetMode('network')}
+                className={`flex-1 py-1 px-1.5 rounded-lg transition-colors cursor-pointer text-center flex items-center justify-center gap-1 ${
+                  targetMode === 'network'
                     ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-sm font-semibold'
                     : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
                 }`}
+                title="Use Wi-Fi LAN IP so your iPhone camera can reach this computer directly"
               >
-                Localhost (Dev)
+                <Wifi className="w-3 h-3 text-emerald-500" />
+                <span>Phone (Wi-Fi)</span>
               </button>
+
               <button
                 type="button"
-                onClick={() => setHostMode('prod')}
-                className={`flex-1 py-1 px-2 rounded-lg transition-colors cursor-pointer text-center ${
-                  hostMode === 'prod'
+                onClick={() => setTargetMode('localhost')}
+                className={`flex-1 py-1 px-1.5 rounded-lg transition-colors cursor-pointer text-center flex items-center justify-center gap-1 ${
+                  targetMode === 'localhost'
                     ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-sm font-semibold'
                     : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
                 }`}
+                title="Use localhost for testing in incognito or another browser on this computer"
               >
-                docstudio.docdril.com
+                <Laptop className="w-3 h-3" />
+                <span>Localhost</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTargetMode('production')}
+                className={`flex-1 py-1 px-1.5 rounded-lg transition-colors cursor-pointer text-center flex items-center justify-center gap-1 ${
+                  targetMode === 'production'
+                    ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                    : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+                }`}
+                title="Target docstudio.docdril.com"
+              >
+                <Globe className="w-3 h-3 text-blue-500" />
+                <span>Production</span>
               </button>
             </div>
 
-            {/* QR Code Container */}
+            {/* QR Code Container with High-Contrast White Card */}
             <div className="relative flex flex-col items-center justify-center p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-950/60 border border-neutral-100 dark:border-neutral-800/80">
               {isGenerating ? (
-                <div className="w-[220px] h-[220px] flex flex-col items-center justify-center gap-2 text-neutral-400">
+                <div className="w-[230px] h-[230px] flex flex-col items-center justify-center gap-2 text-neutral-400">
                   <RefreshCw className="w-6 h-6 animate-spin" />
-                  <span className="text-xs">Generating secure code...</span>
+                  <span className="text-xs">Generating ISO QR Code...</span>
                 </div>
               ) : isExpired ? (
-                <div className="w-[220px] h-[220px] flex flex-col items-center justify-center gap-3 text-center px-4 bg-white dark:bg-neutral-900 rounded-xl">
+                <div className="w-[230px] h-[230px] flex flex-col items-center justify-center gap-3 text-center px-4 bg-white dark:bg-neutral-900 rounded-2xl">
                   <Clock className="w-8 h-8 text-neutral-400" />
                   <div>
                     <p className="text-xs font-bold text-neutral-900 dark:text-white">QR Code Expired</p>
@@ -258,14 +312,14 @@ export function QuickLoginModal({
                 </div>
               ) : (
                 <>
-                  <QRCodeSvg value={qrUrl} size={220} />
-                  {/* Subtle target badge below QR */}
+                  <QRCodeSvg value={qrUrl} size={230} />
+                  {/* Target Badge */}
                   <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-mono font-medium text-neutral-600 dark:text-neutral-400">
                     <Shield className="w-3 h-3 text-emerald-500" />
                     <span>@{cleanHandle}</span>
                     <span className="text-neutral-300 dark:text-neutral-700">•</span>
                     <span className="text-[10px] text-neutral-400 truncate max-w-[150px]">
-                      {hostMode === 'local' ? localOrigin.replace(/^https?:\/\//, '') : 'docstudio.docdril.com'}
+                      {activeBaseUrl.replace(/^https?:\/\//, '')}
                     </span>
                   </div>
                 </>
@@ -304,19 +358,25 @@ export function QuickLoginModal({
                 }}
                 disabled={!tokenId || isExpired}
                 className="gap-1.5 text-xs font-sans h-8"
-                title="Open login link in a new tab"
+                title="Test authentication in a new browser tab"
               >
                 <ExternalLink className="w-3.5 h-3.5" />
                 <span>Test Tab</span>
               </Button>
             </div>
 
-            {/* Instructions & Live Timer */}
-            <div className="space-y-2">
+            {/* Helper Description & Timer */}
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs font-sans">
                 <div className="flex items-center gap-1.5 text-neutral-500">
                   <Smartphone className="w-3.5 h-3.5" />
-                  <span>Scan with camera or test via link</span>
+                  <span>
+                    {targetMode === 'network'
+                      ? 'Point iPhone camera at QR code'
+                      : targetMode === 'production'
+                      ? 'Scan with iPhone or Android'
+                      : 'Paste link in incognito tab'}
+                  </span>
                 </div>
 
                 {!isExpired && (
@@ -333,9 +393,11 @@ export function QuickLoginModal({
                 )}
               </div>
 
-              <p className="text-[11px] text-neutral-400 dark:text-neutral-500 leading-relaxed text-center">
-                Instantly signs into DocStudio on another phone, tablet, or browser without passwords.
-              </p>
+              {targetMode === 'network' && (
+                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 leading-relaxed text-center font-medium">
+                  iPhone & computer must be on the same Wi-Fi network.
+                </p>
+              )}
             </div>
 
             {/* Bottom Actions */}
