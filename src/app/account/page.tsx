@@ -1408,7 +1408,7 @@ export default function AccountPage() {
                       Billing & Invoices
                     </h2>
                     <p className="mt-1 text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 font-sans">
-                      Manage payment methods, view official tax receipts, and access your Razorpay transaction history.
+                      Manage payment methods, view official tax receipts, and access your transaction history.
                     </p>
                   </div>
 
@@ -1537,7 +1537,7 @@ export default function AccountPage() {
                           Active Payment Channel & Stored Details
                         </h3>
                         <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
-                          Tokenized and securely processed through Razorpay. Compliant with RBI guidelines.
+                          Tokenized and securely processed. Compliant with RBI guidelines.
                         </p>
                       </div>
                     </div>
@@ -1570,13 +1570,13 @@ export default function AccountPage() {
                               </span>
                             </div>
                             <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-0.5">
-                              Pre-selected for 1-click Razorpay checkouts • Secured with RBI-compliant tokenization
+                              Pre-selected for 1-click checkout • Secured with RBI-compliant tokenization
                             </p>
                           </>
                         ) : (
                           <>
                             <p className="text-sm font-bold font-sans text-neutral-900 dark:text-white">
-                              Razorpay Standard Checkout
+                              Standard Checkout
                             </p>
                             <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-0.5">
                               No saved cards or UPI on file. UPI, Visa, Mastercard, RuPay & NetBanking entered securely at checkout.

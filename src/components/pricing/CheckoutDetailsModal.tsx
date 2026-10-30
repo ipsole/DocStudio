@@ -186,7 +186,7 @@ export function CheckoutDetailsModal({
                 Review & Billing Details
               </h2>
               <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
-                Secure checkout powered by Razorpay
+                Secure checkout
               </p>
             </div>
           </div>
@@ -493,7 +493,7 @@ export function CheckoutDetailsModal({
                           className="text-neutral-900 focus:ring-neutral-900"
                         />
                         <span className="text-xs text-neutral-600 dark:text-neutral-400">
-                          Use a different card, UPI or NetBanking in Razorpay
+                          Use a different card, UPI or NetBanking
                         </span>
                       </label>
                     </div>
@@ -526,7 +526,7 @@ export function CheckoutDetailsModal({
                 {status === 'opening' ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Launching Razorpay...</span>
+                    <span>Launching secure checkout...</span>
                   </>
                 ) : (
                   <>

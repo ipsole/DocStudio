@@ -132,7 +132,7 @@ export function InvoiceReceiptModal({ order, isOpen, onClose }: InvoiceReceiptMo
 
           <div className="flex items-center gap-2 text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
             <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-            <span>Securely processed and verified via Razorpay Payment Gateway.</span>
+            <span>Securely processed and verified.</span>
           </div>
         </div>
 

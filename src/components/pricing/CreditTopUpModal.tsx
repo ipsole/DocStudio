@@ -226,7 +226,7 @@ export function CreditTopUpModal({
                 </Button>
                 <div className="flex items-center justify-center gap-1.5 text-[11px] text-neutral-500 font-sans">
                   <ShieldCheck className="w-3.5 h-3.5 text-neutral-400" />
-                  <span>Instant UPI & Card checkout via Razorpay</span>
+                  <span>Instant UPI & Card checkout</span>
                 </div>
               </div>
             ) : (

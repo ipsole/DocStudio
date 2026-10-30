@@ -329,7 +329,7 @@ function CheckoutContent() {
   return (
     <div className="max-w-[1240px] mx-auto px-4 sm:px-6 md:px-8 pt-8 sm:pt-10 pb-16 space-y-8 animate-fadeIn">
       {/* Top Header & Breadcrumb */}
-      <div className="flex items-center justify-between pb-4 border-b border-neutral-200 dark:border-neutral-800">
+      <div>
         <Link
           href="/pricing"
           className="inline-flex items-center gap-2 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white transition-colors"
@@ -337,11 +337,6 @@ function CheckoutContent() {
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Pricing</span>
         </Link>
-
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-medium">
-          <ShieldCheck className="w-4 h-4" />
-          <span>256-bit SSL Encrypted Checkout</span>
-        </div>
       </div>
 
       {/* Main Grid: Left Order Summary, Right Billing Details Form */}
@@ -353,12 +348,12 @@ function CheckoutContent() {
               <span className="text-[11px] font-sans font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
                 Order Summary
               </span>
-              <div className="flex items-baseline justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
                 <h2 className="text-xl sm:text-2xl font-bold font-sans text-neutral-950 dark:text-white">
                   {selectedItem.name}
                 </h2>
                 {'badge' in selectedItem && selectedItem.badge ? (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-neutral-950 text-white dark:bg-white dark:text-black">
+                  <span className="inline-flex items-center text-[10px] sm:text-[11px] font-semibold px-2.5 py-1 rounded-full bg-neutral-950 text-white dark:bg-white dark:text-black whitespace-nowrap shrink-0 leading-none">
                     {selectedItem.badge}
                   </span>
                 ) : null}
@@ -643,7 +638,7 @@ function CheckoutContent() {
                   {status === 'opening' ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Connecting to Razorpay...</span>
+                      <span>Connecting to secure payment...</span>
                     </>
                   ) : status === 'verifying' ? (
                     <>
@@ -653,7 +648,7 @@ function CheckoutContent() {
                   ) : (
                     <>
                       <Lock className="w-4 h-4" />
-                      <span>Pay ₹{rawAmount} INR via Razorpay</span>
+                      <span>Pay ₹{rawAmount} INR</span>
                     </>
                   )}
                 </button>
@@ -662,7 +657,7 @@ function CheckoutContent() {
               {/* Footer Trust Text */}
               <div className="pt-2 text-center">
                 <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
-                  Payments are processed securely via Razorpay PCI-DSS certified gateway. Official GST invoice issued automatically.
+                  Payments are 256-bit encrypted and PCI-DSS compliant. Official GST invoice issued automatically.
                 </p>
               </div>
             </form>
