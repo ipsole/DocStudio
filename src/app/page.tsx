@@ -361,19 +361,19 @@ export default function HomePage() {
                     key={cat.id}
                     type="button"
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                    className={`px-3.5 py-1.5 rounded-full text-xs transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                       selectedCategory === cat.id
-                        ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-semibold shadow-sm'
-                        : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900'
+                        ? 'bg-neutral-100 dark:bg-neutral-900 text-neutral-950 dark:text-white border border-neutral-200/90 dark:border-neutral-800 shadow-sm font-semibold'
+                        : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100/60 dark:hover:bg-neutral-900/60 border border-transparent font-medium'
                     }`}
                   >
                     <span>{cat.label}</span>
                     {cat.count > 0 && (
                       <span
-                        className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md ${
+                        className={`text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full ${
                           selectedCategory === cat.id
-                            ? 'bg-white/20 text-white dark:bg-black/10 dark:text-neutral-950'
-                            : 'bg-neutral-200/70 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
+                            ? 'bg-neutral-200/80 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100'
+                            : 'bg-neutral-100 dark:bg-neutral-900/60 text-neutral-400 dark:text-neutral-500'
                         }`}
                       >
                         {cat.count}
