@@ -229,8 +229,18 @@ export async function POST(request: NextRequest) {
       try {
         const userDoc = await firestore.collection('users').doc(userId).get();
         if (userDoc.exists && userDoc.data()?.razorpayCustomerId) {
-          customerId = userDoc.data()?.razorpayCustomerId;
-        } else {
+          const storedId = userDoc.data()?.razorpayCustomerId;
+          // Verify customer ID exists on current active gateway (prevents test vs live mismatch)
+          try {
+            await razorpay.customers.fetch(storedId);
+            customerId = storedId;
+          } catch {
+            console.warn('[Billing API] Stored customer ID belongs to another gateway environment. Refreshing...');
+            customerId = undefined;
+          }
+        }
+
+        if (!customerId) {
           const cleanPhone = userPhone ? String(userPhone).replace(/[^\d+]/g, '') : undefined;
           const customer = await razorpay.customers.create({
             name: userName || 'DocStudio User',
