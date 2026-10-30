@@ -174,11 +174,11 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
   };
 
   return (
-    <div className="group relative flex flex-col rounded-xl border border-neutral-200 dark:border-neutral-800/80 bg-white dark:bg-neutral-950/80 p-3 hover:border-neutral-400 dark:hover:border-neutral-500 transition-all duration-300 shadow-sm hover:shadow-md dark:shadow-none backdrop-blur-xl">
-      {/* 1. Visual Thumbnail Preview Container */}
+    <div className="group relative flex flex-col rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800/80 bg-white dark:bg-neutral-950/80 hover:border-neutral-400 dark:hover:border-neutral-600 transition-all duration-300 shadow-sm hover:shadow-md dark:shadow-none backdrop-blur-xl">
+      {/* 1. Visual Thumbnail Preview Container (Flush edge-to-edge on top, left, and right) */}
       <Link
         href={`/apps/${app.slug}`}
-        className="relative block w-full aspect-[16/10] rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-900 bg-neutral-950"
+        className="relative block w-full aspect-[16/10] overflow-hidden border-b border-neutral-200 dark:border-neutral-800/80 bg-neutral-950"
       >
         {renderVisualMockup()}
 
@@ -204,58 +204,60 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
         </div>
       </Link>
 
-      {/* 2. Metadata Bar */}
-      <div className="pt-3.5 pb-1 px-1 flex items-center justify-between gap-3">
-        {/* Left: App Icon + Name + Team Badge */}
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-7 h-7 rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center shrink-0">
-            {renderSmallIcon()}
+      {/* 2. Metadata & Text Content Container */}
+      <div className="p-3.5 flex flex-col justify-between flex-1 space-y-2">
+        <div className="flex items-center justify-between gap-2.5">
+          {/* Left: App Icon + Name + Team Badge */}
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center shrink-0">
+              {renderSmallIcon()}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <Link
+                href={`/apps/${app.slug}`}
+                className="font-bold text-sm text-neutral-950 dark:text-white truncate tracking-tight hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
+              >
+                {app.name}
+              </Link>
+            </div>
+            <span className="font-mono text-[9px] font-bold uppercase tracking-wider bg-neutral-100 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 px-1.5 py-0.5 border border-neutral-200 dark:border-neutral-800 rounded shrink-0">
+              DOCDRIL
+            </span>
           </div>
-          <div className="flex flex-col min-w-0">
-            <Link
-              href={`/apps/${app.slug}`}
-              className="font-bold text-sm text-neutral-950 dark:text-white truncate tracking-tight hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
-            >
-              {app.name}
-            </Link>
+
+          {/* Right: Status badge & launch button */}
+          <div className="flex items-center gap-2 shrink-0">
+            {app.status === 'active' ? (
+              <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 px-2 py-0.5 rounded-full flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Active
+              </span>
+            ) : (
+              <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 px-2 py-0.5 rounded-full flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                Soon
+              </span>
+            )}
+
+            {showLaunchDirect && isLaunchable && (
+              <a
+                href={app.applicationUrl!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-neutral-500 hover:text-black dark:text-neutral-400 dark:hover:text-white p-1 transition-colors"
+                title="Launch Application"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            )}
           </div>
-          <span className="font-mono text-[9px] font-bold uppercase tracking-wider bg-neutral-100 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 px-1.5 py-0.5 border border-neutral-200 dark:border-neutral-800 rounded shrink-0">
-            DOCDRIL
-          </span>
         </div>
 
-        {/* Right: Status badge & launch button */}
-        <div className="flex items-center gap-2 shrink-0">
-          {app.status === 'active' ? (
-            <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 px-2 py-0.5 rounded-full flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Active
-            </span>
-          ) : (
-            <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 px-2 py-0.5 rounded-full flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-              Soon
-            </span>
-          )}
-
-          {showLaunchDirect && isLaunchable && (
-            <a
-              href={app.applicationUrl!}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-neutral-500 hover:text-black dark:text-neutral-400 dark:hover:text-white p-1 transition-colors"
-              title="Launch Application"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          )}
-        </div>
+        {/* 3. Short description in muted silver */}
+        <p className="text-xs text-neutral-600 dark:text-neutral-400 line-clamp-1 font-sans">
+          {app.shortDescription}
+        </p>
       </div>
-
-      {/* 3. Short description in muted silver */}
-      <p className="text-xs text-neutral-600 dark:text-neutral-400 line-clamp-1 mt-1 px-1 font-sans">
-        {app.shortDescription}
-      </p>
     </div>
   );
 }
