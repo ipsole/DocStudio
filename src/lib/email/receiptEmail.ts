@@ -65,10 +65,10 @@ export function generateReceiptHtml(order: OrderRecord, recipientName?: string):
 <body>
   <div class="container">
     <div class="header">
-      <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
+      <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 20px;">
         <tr>
-          <td style="width: 36px; height: 36px; background-color: #ffffff; border-radius: 10px; text-align: center; vertical-align: middle; padding: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.4);">
-            <img src="cid:docdrillogo" width="22" height="22" alt="Docdril" style="display: block; margin: 0 auto; width: 22px; height: 22px; border: 0;" />
+          <td style="vertical-align: middle; padding: 0;">
+            <img src="cid:docdrillogo" width="36" height="36" alt="Docdril Logo" style="display: block; width: 36px; height: 36px; border: 0;" />
           </td>
           <td style="padding-left: 12px; vertical-align: middle;">
             <span class="brand" style="display: block; line-height: 1.1;">DOCSTUDIO</span>
@@ -201,8 +201,8 @@ export async function sendPurchaseConfirmationEmail({
   const smtpPass = process.env.SMTP_PASSWORD;
   const smtpFrom = process.env.SMTP_FROM || '"DocStudio" <billing@docdril.com>';
 
-  // Check if logo exists for attachment
-  const logoPath = path.join(process.cwd(), 'public/docdril.svg');
+  // Check if white logo exists for attachment
+  const logoPath = path.join(process.cwd(), 'public/docdril-white.svg');
   const hasLogo = fs.existsSync(logoPath);
 
   // Check if live SMTP is configured

@@ -179,10 +179,8 @@ export function CheckoutDetailsModal({
       >
         {/* Header */}
         <div className="px-6 py-5 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-950/50">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-black flex items-center justify-center p-2 shadow-sm">
-              <DocdrilLogo size={20} className="w-5 h-5" fill="currentColor" />
-            </div>
+          <div className="flex items-center gap-3">
+            <DocdrilLogo size={36} className="w-9 h-9 shrink-0 text-neutral-950 dark:text-white" fill="currentColor" />
             <div>
               <h2 className="text-base font-bold text-neutral-900 dark:text-white font-sans">
                 Review & Billing Details

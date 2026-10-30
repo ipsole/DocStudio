@@ -192,8 +192,11 @@ export function generatePrintableInvoiceHtml(order: OrderRecord, recipientName?:
   <div class="invoice-wrapper">
     <div class="header-row">
       <div>
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-          <div style="width: 32px; height: 32px; background: #000; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 18px;">D</div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="36" height="36" style="width: 36px; height: 36px; display: block; flex-shrink: 0;">
+            <path fill="#000000" d="M693.93,490.77c-23.88-32.18-92.66-32.6-118.3-2.73-16.1,18.76-20.57,43-20.59,68.52l-.31,318.63-288.37-.27c-45.83-.04-80.84-37.91-80.93-83.27l.1-524.97c0-47.07,38.02-82.29,84.28-82.28l524.93.21c47.06.02,81.52,38.77,81.51,84.28l-.1,290.62-164.54-.35c-.21-27-3.67-48.71-17.66-68.39ZM710.52,322.32c44.91,10.64,84.33,33.21,113.39,68.86,18.85,23.13,29.29,49.32,39.77,76.86l.2-199.19c.21-42.3-31.95-72.18-73.59-72.16l-522.53.2c-40.46.02-70,32.45-69.99,72.01l.05,522.64c-.08,40.77,31.57,71.42,71.75,71.36l122.54-.19.06-310.61c0-37.14,5.58-71.14,18.79-105.35,47.54-123.13,182.7-149.91,299.57-124.42Z"></path>
+            <path fill="#000000" d="M779.82,611.35c51.45-3.53,92.64,35.28,96.08,83.63,3.53,49.62-34.02,92.27-82.71,96.14-49.46,3.94-92.41-32.74-97-81.03-4.75-49.96,31.47-95.16,83.63-98.74Z"></path>
+          </svg>
           <h1 class="brand-title">DOCSTUDIO</h1>
         </div>
         <p class="brand-sub">Cloud Document Pipelines & Creative Engines</p>
