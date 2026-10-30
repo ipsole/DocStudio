@@ -292,7 +292,8 @@ export default function HomePage() {
 
       {/* Tabs Selector Directly Below Login Screen */}
       <div id="ecosystem" className="relative z-10 w-full max-w-[1400px] mx-auto pt-2 space-y-6">
-        <div className="flex items-center justify-center">
+        {/* Master View Switcher (Softwares, Pricings, Tutorials) */}
+        <div className="flex items-center justify-center pt-2 pb-6">
           <div className="relative inline-flex p-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900/80 backdrop-blur-md">
             {/* Sliding Pill Indicator */}
             {ecosystemIndicator.ready && (
@@ -347,27 +348,45 @@ export default function HomePage() {
         {/* Tab 1: Softwares Catalog */}
         {activeTab === 'softwares' && (
           <div id="softwares" className="space-y-6 animate-fadeIn">
-            {/* Category Filter Pills */}
-            <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap">
-              {[
-                { id: 'all', label: 'All Softwares' },
-                { id: 'creative', label: 'Creative' },
-                { id: 'animation', label: 'Animation' },
-                { id: 'productivity', label: 'Productivity' },
-              ].map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3 py-1 rounded-full text-xs transition-colors cursor-pointer ${
-                    selectedCategory === cat.id
-                      ? 'bg-neutral-900 text-white dark:bg-white dark:text-black font-semibold'
-                      : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-900'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
+            {/* Catalog Toolbar Header: Left-aligned Category Chips + Right-aligned Live Count */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-neutral-100 dark:border-neutral-900/80">
+              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5">
+                {[
+                  { id: 'all', label: 'All Softwares', count: apps.length },
+                  { id: 'creative', label: 'Creative', count: apps.filter(a => a.category?.toLowerCase() === 'creative').length },
+                  { id: 'animation', label: 'Animation', count: apps.filter(a => a.category?.toLowerCase() === 'animation').length },
+                  { id: 'productivity', label: 'Productivity', count: apps.filter(a => a.category?.toLowerCase() === 'productivity').length },
+                ].map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                      selectedCategory === cat.id
+                        ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-semibold shadow-sm'
+                        : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900'
+                    }`}
+                  >
+                    <span>{cat.label}</span>
+                    {cat.count > 0 && (
+                      <span
+                        className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md ${
+                          selectedCategory === cat.id
+                            ? 'bg-white/20 text-white dark:bg-black/10 dark:text-neutral-950'
+                            : 'bg-neutral-200/70 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400'
+                        }`}
+                      >
+                        {cat.count}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <div className="text-xs text-neutral-500 dark:text-neutral-400 font-sans hidden sm:flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span>{filteredApps.length} {filteredApps.length === 1 ? 'Suite' : 'Suites'} Ready</span>
+              </div>
             </div>
 
             {loading ? (
