@@ -9,7 +9,7 @@ export const DEMO_APPS: DocApp[] = [
   {
     id: 'demo-canvas',
     slug: 'docdril-canvas',
-    name: 'Docdril Canvas (Demo)',
+    name: 'Docdril Canvas',
     shortDescription: 'Visual canvas & layout tool for designing modern assets and diagrams.',
     description: 'Docdril Canvas is a visual workspace designed for creative workflows. Build custom graphics, diagrams, and digital assets with intuitive vector controls, reusable components, and real-time collaboration.',
     category: 'creative',
@@ -27,7 +27,7 @@ export const DEMO_APPS: DocApp[] = [
   {
     id: 'demo-motion',
     slug: 'docdril-motion',
-    name: 'Docdril Motion (Demo)',
+    name: 'Docdril Motion',
     shortDescription: 'Slideshow and text animation engine for dynamic presentations.',
     description: 'Transform static slides and typography into kinetic motion sequences. Export to web formats, video, or embed directly into web apps with zero configuration.',
     category: 'animation',
@@ -45,7 +45,7 @@ export const DEMO_APPS: DocApp[] = [
   {
     id: 'demo-flow',
     slug: 'docdril-flow',
-    name: 'Docdril Flow (Demo)',
+    name: 'Docdril Flow',
     shortDescription: 'Productivity and workflow automation utility for document pipelines.',
     description: 'Automate repetitive document conversions, transformations, and asset packaging across your team. Connects seamlessly with DocStore shared accounts.',
     category: 'productivity',

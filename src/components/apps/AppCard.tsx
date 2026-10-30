@@ -157,8 +157,20 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
     }
   };
 
+  const cleanName = React.useMemo(() => {
+    let raw = (app.name || '')
+      .replace(/\(demo\)|\(beta\)|\(alpha\)/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const words = raw.split(' ').filter(Boolean);
+    if (words.length > 2) {
+      return words.slice(0, 2).join(' ');
+    }
+    return raw || app.name;
+  }, [app.name]);
+
   const renderSmallIcon = () => {
-    const iconClass = 'w-4 h-4 text-neutral-800 dark:text-white';
+    const iconClass = 'w-4.5 h-4.5 text-neutral-800 dark:text-neutral-200';
     switch (app.icon) {
       case 'Palette':
         return <Palette className={iconClass} />;
@@ -205,52 +217,29 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
       </Link>
 
       {/* 2. Metadata & Text Content Container */}
-      <div className="p-3.5 flex flex-col justify-between flex-1 space-y-2">
-        <div className="flex items-center justify-between gap-2.5">
-          {/* Left: App Icon + Name + Team Badge */}
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-md border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center shrink-0">
+      <div className="p-3.5 flex flex-col justify-between flex-1 space-y-1.5">
+        <div className="flex items-center justify-between gap-3">
+          {/* Left: Bare Icon + 1-2 Word Name */}
+          <Link
+            href={`/apps/${app.slug}`}
+            className="flex items-center gap-2 min-w-0 group/title"
+          >
+            <span className="shrink-0 text-neutral-800 dark:text-neutral-200 group-hover/title:text-black dark:group-hover/title:text-white transition-colors">
               {renderSmallIcon()}
-            </div>
-            <div className="flex flex-col min-w-0">
-              <Link
-                href={`/apps/${app.slug}`}
-                className="font-bold text-sm text-neutral-950 dark:text-white truncate tracking-tight hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors"
-              >
-                {app.name}
-              </Link>
-            </div>
-            <span className="font-mono text-[9px] font-bold uppercase tracking-wider bg-neutral-100 dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 px-1.5 py-0.5 border border-neutral-200 dark:border-neutral-800 rounded shrink-0">
-              DOCDRIL
             </span>
-          </div>
+            <span className="font-bold text-sm text-neutral-950 dark:text-white truncate tracking-tight group-hover/title:text-neutral-600 dark:group-hover/title:text-neutral-300 transition-colors">
+              {cleanName}
+            </span>
+          </Link>
 
-          {/* Right: Status badge & launch button */}
-          <div className="flex items-center gap-2 shrink-0">
-            {app.status === 'active' ? (
-              <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 px-2 py-0.5 rounded-full flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Active
-              </span>
-            ) : (
-              <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 px-2 py-0.5 rounded-full flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                Soon
-              </span>
-            )}
-
-            {showLaunchDirect && isLaunchable && (
-              <a
-                href={app.applicationUrl!}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-neutral-500 hover:text-black dark:text-neutral-400 dark:hover:text-white p-1 transition-colors"
-                title="Launch Application"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            )}
-          </div>
+          {/* Right: Explore Button */}
+          <Link
+            href={`/apps/${app.slug}`}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white transition-colors shrink-0 cursor-pointer"
+          >
+            <span>Explore</span>
+            <ArrowRight className="w-3 h-3" />
+          </Link>
         </div>
 
         {/* 3. Short description in muted silver */}
