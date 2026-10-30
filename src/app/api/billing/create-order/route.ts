@@ -112,8 +112,31 @@ export async function POST(request: NextRequest) {
             );
           }
         }
-      } catch (custErr) {
-        console.warn('[Billing API] Razorpay customer create/lookup warning:', custErr);
+      } catch (custErr: unknown) {
+        const errObj = custErr as { statusCode?: number; error?: { description?: string } };
+        if (errObj?.error?.description?.includes('already exists') || errObj?.statusCode === 400) {
+          try {
+            const list = await razorpay.customers.all({ count: 50 });
+            const cleanPhone = userPhone ? String(userPhone).replace(/[^\d+]/g, '') : undefined;
+            const existing = list.items.find(
+              (c) =>
+                (userEmail && c.email?.toLowerCase() === userEmail.toLowerCase()) ||
+                (cleanPhone && String(c.contact) === cleanPhone)
+            );
+            if (existing?.id) {
+              customerId = existing.id;
+              await firestore.collection('users').doc(userId).set(
+                { razorpayCustomerId: existing.id },
+                { merge: true }
+              );
+            }
+          } catch (listErr) {
+            console.warn('[Billing API] Error fetching existing Razorpay customer list:', listErr);
+          }
+        }
+        if (!customerId) {
+          console.warn('[Billing API] Razorpay customer create/lookup warning:', custErr);
+        }
       }
     }
 

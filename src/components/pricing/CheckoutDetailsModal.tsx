@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
 import { PricingPlan, CreditPack } from '@/lib/pricingData';
 import { openRazorpayCheckout } from '@/lib/checkout';
 import { OrderRecord, PaymentMethodSummary } from '@/types';
@@ -100,6 +101,8 @@ export function CheckoutDetailsModal({
   const credits = unitCredits * effectiveQty;
   const baseAmount = (rawAmount / 1.18).toFixed(2);
   const gstAmount = (rawAmount - Number(baseAmount)).toFixed(2);
+  const cgst = (Number(gstAmount) / 2).toFixed(2);
+  const sgst = (Number(gstAmount) - Number(cgst)).toFixed(2);
 
   const handleStartPayment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -177,8 +180,8 @@ export function CheckoutDetailsModal({
         {/* Header */}
         <div className="px-6 py-5 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between bg-neutral-50/50 dark:bg-neutral-950/50">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-black flex items-center justify-center font-bold text-sm shadow-sm">
-              DS
+            <div className="w-9 h-9 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-black flex items-center justify-center p-2 shadow-sm">
+              <DocdrilLogo size={20} className="w-5 h-5" fill="currentColor" />
             </div>
             <div>
               <h2 className="text-base font-bold text-neutral-900 dark:text-white font-sans">
@@ -263,6 +266,26 @@ export function CheckoutDetailsModal({
               </div>
             </div>
           )}
+
+          {/* Itemized GST & Tax Summary */}
+          <div className="p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-950/70 border border-neutral-200/80 dark:border-neutral-800 space-y-1.5 text-xs font-sans">
+            <div className="flex justify-between text-neutral-500 dark:text-neutral-400">
+              <span>Taxable Value (Base)</span>
+              <span className="font-mono text-neutral-800 dark:text-neutral-200">₹{baseAmount}</span>
+            </div>
+            <div className="flex justify-between text-neutral-500 dark:text-neutral-400">
+              <span>Central GST (CGST @ 9%)</span>
+              <span className="font-mono text-neutral-800 dark:text-neutral-200">₹{cgst}</span>
+            </div>
+            <div className="flex justify-between text-neutral-500 dark:text-neutral-400">
+              <span>State / UT GST (SGST @ 9%)</span>
+              <span className="font-mono text-neutral-800 dark:text-neutral-200">₹{sgst}</span>
+            </div>
+            <div className="pt-1.5 border-t border-neutral-200 dark:border-neutral-800 flex justify-between font-bold text-neutral-950 dark:text-white">
+              <span>Total Amount (SAC 998313)</span>
+              <span className="font-mono text-emerald-600 dark:text-emerald-400">₹{rawAmount} INR</span>
+            </div>
+          </div>
 
           {/* Verification States */}
           {status === 'verifying' && (
