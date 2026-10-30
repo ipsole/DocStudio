@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -80,37 +80,78 @@ export function Navbar() {
       : totalCreditsRemaining > 0
       ? 100
       : 0;
-  const activePlanName = React.useMemo(() => {
+  const activePlanName = useMemo(() => {
     if (!subscriptions || subscriptions.length === 0) return 'Starter';
     if (subscriptions.some((s) => s.plan === 'enterprise')) return 'Ultra';
     if (subscriptions.some((s) => s.plan === 'pro')) return 'Pro';
     return 'Starter';
   }, [subscriptions]);
 
+  // Sliding pill indicator for Navbar top navigation
+  const navTabRefs = useRef<{ [key: string]: HTMLAnchorElement | null }>({});
+  const [navIndicator, setNavIndicator] = useState<{ left: number; width: number; ready: boolean }>({
+    left: 0,
+    width: 0,
+    ready: false,
+  });
+
+  const activeTabName = useMemo(() => {
+    if (pathname === '/') return 'Home';
+    if (pathname?.startsWith('/apps')) return 'Softwares';
+    if (pathname?.startsWith('/pricing')) return 'Pricings';
+    if (pathname?.startsWith('/tutorials')) return 'Tutorials';
+    return '';
+  }, [pathname]);
+
+  useEffect(() => {
+    const updateNav = () => {
+      const activeEl = navTabRefs.current[activeTabName];
+      if (activeEl) {
+        setNavIndicator({
+          left: activeEl.offsetLeft,
+          width: activeEl.offsetWidth,
+          ready: true,
+        });
+      } else {
+        setNavIndicator((prev) => ({ ...prev, ready: false }));
+      }
+    };
+    updateNav();
+    const raf = requestAnimationFrame(updateNav);
+    window.addEventListener('resize', updateNav);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', updateNav);
+    };
+  }, [activeTabName]);
+
   return (
     <nav className="sticky top-0 z-50 w-full bg-white/80 dark:bg-black/80 backdrop-blur-md text-neutral-900 dark:text-white select-none transition-colors duration-200">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8">
         <div className="flex h-14 sm:h-16 items-center justify-between gap-4">
           {/* Left: Small Text Tabs (Home, Softwares, Pricings, Tutorials) */}
-          <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-1">
+          <div className="relative flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-1">
+            {navIndicator.ready && (
+              <div
+                className="absolute top-1 bottom-1 rounded-full bg-neutral-100 dark:bg-neutral-900 shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
+                style={{
+                  left: `${navIndicator.left}px`,
+                  width: `${navIndicator.width}px`,
+                }}
+              />
+            )}
             {NAV_TABS.map((tab) => {
-              const isActive =
-                tab.name === 'Home'
-                  ? pathname === '/'
-                  : tab.name === 'Softwares'
-                  ? pathname?.startsWith('/apps')
-                  : tab.name === 'Pricings'
-                  ? pathname?.startsWith('/pricing')
-                  : pathname?.startsWith('/tutorials');
+              const isActive = tab.name === activeTabName;
 
               return (
                 <Link
                   key={tab.name}
+                  ref={(el) => { navTabRefs.current[tab.name] = el; }}
                   href={tab.href}
-                  className={`px-3 py-1.5 rounded-full text-xs sm:text-sm transition-all whitespace-nowrap ${
+                  className={`relative z-10 px-3 py-1.5 rounded-full text-xs sm:text-sm transition-colors duration-200 whitespace-nowrap ${
                     isActive
-                      ? 'font-medium text-neutral-950 dark:text-white bg-neutral-100 dark:bg-neutral-900 shadow-sm'
-                      : 'text-neutral-500 hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100/60 dark:hover:bg-neutral-900/60'
+                      ? 'font-medium text-neutral-950 dark:text-white'
+                      : 'text-neutral-500 hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100/40 dark:hover:bg-neutral-900/40'
                   }`}
                 >
                   {tab.name}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -30,6 +30,34 @@ export default function PricingPage() {
     'pack-studio': 1,
     'pack-power': 1,
   });
+
+  // Sliding pill indicator for Billing Switcher
+  const billingTabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const [billingIndicator, setBillingIndicator] = useState<{ left: number; width: number; ready: boolean }>({
+    left: 0,
+    width: 0,
+    ready: false,
+  });
+
+  useEffect(() => {
+    const updateBilling = () => {
+      const activeEl = billingTabRefs.current[billingCycle];
+      if (activeEl) {
+        setBillingIndicator({
+          left: activeEl.offsetLeft,
+          width: activeEl.offsetWidth,
+          ready: true,
+        });
+      }
+    };
+    updateBilling();
+    const raf = requestAnimationFrame(updateBilling);
+    window.addEventListener('resize', updateBilling);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', updateBilling);
+    };
+  }, [billingCycle]);
 
   useEffect(() => {
     if (!user) {
@@ -152,30 +180,47 @@ export default function PricingPage() {
       {/* 1. Subscription Plans Section */}
       <div className="space-y-6">
         <div className="flex flex-col items-center justify-center gap-3">
-          <div className="inline-flex items-center p-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+          <div className="relative inline-flex items-center p-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+            {/* Sliding Billing Cycle Pill Indicator */}
+            {billingIndicator.ready && (
+              <div
+                className={`absolute top-1 bottom-1 rounded-full shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none ${
+                  billingCycle === 'yearly'
+                    ? 'bg-emerald-600'
+                    : 'bg-neutral-950 dark:bg-white'
+                }`}
+                style={{
+                  left: `${billingIndicator.left}px`,
+                  width: `${billingIndicator.width}px`,
+                }}
+              />
+            )}
+
             <button
+              ref={(el) => { billingTabRefs.current['monthly'] = el; }}
               type="button"
               onClick={() => setBillingCycle('monthly')}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              className={`relative z-10 px-4 py-1.5 rounded-full text-xs font-semibold transition-colors duration-200 cursor-pointer ${
                 billingCycle === 'monthly'
-                  ? 'bg-neutral-950 text-white dark:bg-white dark:text-black shadow-sm'
+                  ? 'text-white dark:text-black'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
               }`}
             >
               Monthly Billing
             </button>
             <button
+              ref={(el) => { billingTabRefs.current['yearly'] = el; }}
               type="button"
               onClick={() => setBillingCycle('yearly')}
-              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              className={`relative z-10 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-colors duration-200 cursor-pointer ${
                 billingCycle === 'yearly'
-                  ? 'bg-emerald-600 text-white shadow-sm'
+                  ? 'text-white'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
               }`}
             >
               <span>Yearly Billing</span>
               <span
-                className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full ${
+                className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full transition-colors ${
                   billingCycle === 'yearly'
                     ? 'bg-white/20 text-white'
                     : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800'

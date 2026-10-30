@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { getPublicApps } from '@/lib/firebase/db';
@@ -82,6 +82,61 @@ export default function HomePage() {
     'pack-studio': 1,
     'pack-power': 1,
   });
+
+  // Sliding pill indicators for Ecosystem Tabs and Billing Switcher
+  const ecosystemTabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const [ecosystemIndicator, setEcosystemIndicator] = useState<{ left: number; width: number; ready: boolean }>({
+    left: 0,
+    width: 0,
+    ready: false,
+  });
+
+  const billingTabRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+  const [billingIndicator, setBillingIndicator] = useState<{ left: number; width: number; ready: boolean }>({
+    left: 0,
+    width: 0,
+    ready: false,
+  });
+
+  useEffect(() => {
+    const updateEcosystem = () => {
+      const activeEl = ecosystemTabRefs.current[activeTab];
+      if (activeEl) {
+        setEcosystemIndicator({
+          left: activeEl.offsetLeft,
+          width: activeEl.offsetWidth,
+          ready: true,
+        });
+      }
+    };
+    updateEcosystem();
+    const raf = requestAnimationFrame(updateEcosystem);
+    window.addEventListener('resize', updateEcosystem);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', updateEcosystem);
+    };
+  }, [activeTab, apps.length]);
+
+  useEffect(() => {
+    const updateBilling = () => {
+      const activeEl = billingTabRefs.current[billingCycle];
+      if (activeEl) {
+        setBillingIndicator({
+          left: activeEl.offsetLeft,
+          width: activeEl.offsetWidth,
+          ready: true,
+        });
+      }
+    };
+    updateBilling();
+    const raf = requestAnimationFrame(updateBilling);
+    window.addEventListener('resize', updateBilling);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('resize', updateBilling);
+    };
+  }, [billingCycle, activeTab]);
 
   useEffect(() => {
     if (!user) {
@@ -238,35 +293,49 @@ export default function HomePage() {
       {/* Tabs Selector Directly Below Login Screen */}
       <div id="ecosystem" className="relative z-10 w-full max-w-[1400px] mx-auto pt-2 space-y-6">
         <div className="flex items-center justify-center">
-          <div className="inline-flex p-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900/80 backdrop-blur-md">
+          <div className="relative inline-flex p-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900/80 backdrop-blur-md">
+            {/* Sliding Pill Indicator */}
+            {ecosystemIndicator.ready && (
+              <div
+                className="absolute top-1 bottom-1 rounded-full bg-white dark:bg-neutral-950 shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
+                style={{
+                  left: `${ecosystemIndicator.left}px`,
+                  width: `${ecosystemIndicator.width}px`,
+                }}
+              />
+            )}
+
             <button
+              ref={(el) => { ecosystemTabRefs.current['softwares'] = el; }}
               type="button"
               onClick={() => handleTabChange('softwares')}
-              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium transition-all cursor-pointer ${
+              className={`relative z-10 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors duration-200 cursor-pointer ${
                 activeTab === 'softwares'
-                  ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                  ? 'text-neutral-950 dark:text-white font-semibold'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
               }`}
             >
               Softwares {apps.length > 0 && `(${apps.length})`}
             </button>
             <button
+              ref={(el) => { ecosystemTabRefs.current['pricings'] = el; }}
               type="button"
               onClick={() => handleTabChange('pricings')}
-              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium transition-all cursor-pointer ${
+              className={`relative z-10 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors duration-200 cursor-pointer ${
                 activeTab === 'pricings'
-                  ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                  ? 'text-neutral-950 dark:text-white font-semibold'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
               }`}
             >
               Pricings
             </button>
             <button
+              ref={(el) => { ecosystemTabRefs.current['tutorials'] = el; }}
               type="button"
               onClick={() => handleTabChange('tutorials')}
-              className={`px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium transition-all cursor-pointer ${
+              className={`relative z-10 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors duration-200 cursor-pointer ${
                 activeTab === 'tutorials'
-                  ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                  ? 'text-neutral-950 dark:text-white font-semibold'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
               }`}
             >
@@ -333,30 +402,47 @@ export default function HomePage() {
 
             {/* Monthly / Yearly Billing Toggle */}
             <div className="flex flex-col items-center justify-center gap-2.5">
-              <div className="inline-flex items-center p-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+              <div className="relative inline-flex items-center p-1 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+                {/* Sliding Billing Cycle Pill Indicator */}
+                {billingIndicator.ready && (
+                  <div
+                    className={`absolute top-1 bottom-1 rounded-full shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none ${
+                      billingCycle === 'yearly'
+                        ? 'bg-emerald-600'
+                        : 'bg-neutral-950 dark:bg-white'
+                    }`}
+                    style={{
+                      left: `${billingIndicator.left}px`,
+                      width: `${billingIndicator.width}px`,
+                    }}
+                  />
+                )}
+
                 <button
+                  ref={(el) => { billingTabRefs.current['monthly'] = el; }}
                   type="button"
                   onClick={() => setBillingCycle('monthly')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                  className={`relative z-10 px-4 py-1.5 rounded-full text-xs font-semibold transition-colors duration-200 cursor-pointer ${
                     billingCycle === 'monthly'
-                      ? 'bg-neutral-950 text-white dark:bg-white dark:text-black shadow-sm'
+                      ? 'text-white dark:text-black'
                       : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
                   }`}
                 >
                   Monthly Billing
                 </button>
                 <button
+                  ref={(el) => { billingTabRefs.current['yearly'] = el; }}
                   type="button"
                   onClick={() => setBillingCycle('yearly')}
-                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                  className={`relative z-10 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-colors duration-200 cursor-pointer ${
                     billingCycle === 'yearly'
-                      ? 'bg-emerald-600 text-white shadow-sm'
+                      ? 'text-white'
                       : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
                   }`}
                 >
                   <span>Yearly Billing</span>
                   <span
-                    className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full ${
+                    className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-full transition-colors ${
                       billingCycle === 'yearly'
                         ? 'bg-white/20 text-white'
                         : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800'
