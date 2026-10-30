@@ -14,6 +14,9 @@ function SignInForm() {
   const searchParams = useSearchParams();
   const wasDeactivated = searchParams?.get('deactivated') === 'true';
   const wasRevoked = searchParams?.get('revoked') === 'true';
+  const redirectParam = searchParams?.get('redirect');
+  const redirectUrl = redirectParam && redirectParam.startsWith('/') ? redirectParam : '/';
+
   const {
     user,
     loading: authLoading,
@@ -24,9 +27,9 @@ function SignInForm() {
 
   useEffect(() => {
     if (user && !authLoading) {
-      router.push('/');
+      router.push(redirectUrl);
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, router, redirectUrl]);
 
   // Email form state
   const [email, setEmail] = useState('');
@@ -44,7 +47,7 @@ function SignInForm() {
 
     try {
       await signIn(email.trim(), password);
-      router.push('/');
+      router.push(redirectUrl);
     } catch (err: unknown) {
       const fbErr = err as { code?: string; message?: string };
       if (
@@ -68,7 +71,7 @@ function SignInForm() {
     setGoogleLoading(true);
     try {
       await signInWithGoogle();
-      router.push('/');
+      router.push(redirectUrl);
     } catch (err: unknown) {
       const fbErr = err as { code?: string; message?: string };
       if (fbErr.code === 'auth/account-exists-with-different-credential') {

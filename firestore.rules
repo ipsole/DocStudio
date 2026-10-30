@@ -11,10 +11,11 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Admin authorization check: either via custom token claim or via an admin record
+    // Admin authorization check: via custom token claim, super admin email, or admins document
     function isAdmin() {
       return isAuthenticated() && (
         (request.auth.token.keys().hasAll(['admin']) && request.auth.token.admin == true) ||
+        (request.auth.token.keys().hasAll(['email']) && request.auth.token.email == 'izackstudio1@gmail.com') ||
         (exists(/databases/$(database)/documents/admins/$(request.auth.uid)))
       );
     }
@@ -26,6 +27,12 @@ service cloud.firestore {
       allow create: if isOwner(userId);
       allow update: if isOwner(userId);
       allow delete: if isOwner(userId) || isAdmin();
+
+      // Device Sessions Subcollection
+      // Users can list, create, update, and remotely revoke sessions for their own account.
+      match /sessions/{sessionId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
     }
 
     // 2. Usernames Collection (Handle Registry)
@@ -46,12 +53,16 @@ service cloud.firestore {
     }
 
     // 4. Subscriptions Collection (Product Quotas & Credits)
-    // Users can read their own subscriptions and initialize default subscriptions.
+    // Users can read their own subscriptions.
+    // Client initialization allows creating starter free subscriptions only.
+    // Plan upgrades and credit balance updates are reserved for server Admin SDK.
     match /subscriptions/{subscriptionId} {
       allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated() && (request.resource.data.userId == request.auth.uid || isAdmin());
-      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow delete: if isAdmin();
+      allow create: if isAuthenticated() && (
+        (request.resource.data.userId == request.auth.uid && request.resource.data.plan == 'free' && request.resource.data.creditsTotal <= 100) ||
+        isAdmin()
+      );
+      allow update, delete: if isAdmin();
     }
 
     // 5. Entitlements Collection (Software Access Grants)
@@ -69,7 +80,9 @@ service cloud.firestore {
 
     // 7. Account Tombstones (Anti-Abuse Ledger)
     match /account_tombstones/{tombstoneId} {
-      allow read, write: if isAuthenticated();
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
     }
 
     // 8. Admins Collection
@@ -79,9 +92,31 @@ service cloud.firestore {
     }
 
     // 9. Orders & Invoices Collection (Billing History)
+    // Users can read their own purchase history.
+    // Orders can only be created/updated by verified server Admin SDK.
     match /orders/{orderId} {
       allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow write: if isAuthenticated() && (request.resource.data.userId == request.auth.uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // 10. Coupons Collection (Promotional Codes)
+    match /coupons/{couponId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // 11. Coupon Redemptions Collection
+    match /coupon_redemptions/{redemptionId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // 12. QR Login Sessions (Cross-Device Quick Sign-In)
+    match /qr_logins/{sessionId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
     }
   }
 }

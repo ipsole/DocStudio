@@ -970,6 +970,51 @@ export async function saveOrderRecord(order: OrderRecord): Promise<void> {
   }
 }
 
+export interface PaginatedOrdersResult {
+  orders: OrderRecord[];
+  total: number;
+  totalPages: number;
+  page: number;
+}
+
+/**
+ * Fetch a single page of orders/invoices on demand (default limit: 5).
+ * Keeps other pages unfetched to minimize Firestore reads & network bandwidth.
+ */
+export async function getUserOrdersPaginated(
+  userId: string,
+  userEmail?: string,
+  page: number = 1,
+  limit: number = 5
+): Promise<PaginatedOrdersResult> {
+  if (typeof window !== 'undefined') {
+    try {
+      const emailParam = userEmail ? `&email=${encodeURIComponent(userEmail)}` : '';
+      const res = await fetch(
+        `/api/billing/orders?userId=${encodeURIComponent(userId)}${emailParam}&page=${page}&limit=${limit}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.orders)) {
+          return {
+            orders: data.orders,
+            total: typeof data.total === 'number' ? data.total : data.orders.length,
+            totalPages:
+              typeof data.totalPages === 'number'
+                ? data.totalPages
+                : Math.max(1, Math.ceil((data.total || data.orders.length) / limit)),
+            page: typeof data.page === 'number' ? data.page : page,
+          };
+        }
+      }
+    } catch (apiErr) {
+      console.warn('[DocStore DB] Paginated orders fetch error:', apiErr);
+    }
+  }
+
+  return { orders: [], total: 0, totalPages: 1, page: 1 };
+}
+
 /**
  * Fetch all orders/invoices for a given user.
  */
@@ -995,7 +1040,7 @@ export async function getUserOrders(userId: string, userEmail?: string): Promise
   if (typeof window !== 'undefined') {
     try {
       const emailParam = userEmail ? `&email=${encodeURIComponent(userEmail)}` : '';
-      const res = await fetch(`/api/billing/orders?userId=${encodeURIComponent(userId)}${emailParam}`);
+      const res = await fetch(`/api/billing/orders?userId=${encodeURIComponent(userId)}${emailParam}&all=true`);
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.orders)) {

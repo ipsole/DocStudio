@@ -4,15 +4,15 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { PRICING_PLANS, YEARLY_PRICING_PLANS, CREDIT_PACKS, PRICING_FAQS, CreditPack, PricingPlan } from '@/lib/pricingData';
+import { PRICING_PLANS, YEARLY_PRICING_PLANS, CREDIT_PACKS, ELITE_MEMBERSHIP, PRICING_FAQS, CreditPack, PricingPlan } from '@/lib/pricingData';
 import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
 import { getUserSubscriptions, getUserOrders } from '@/lib/firebase/db';
 import { AppSubscription, SubscriptionPlan, OrderRecord } from '@/types';
-import { Check, Sparkles, ArrowRight, Zap, HelpCircle, ShieldCheck, Plus, Loader2 } from 'lucide-react';
+import { Check, Sparkles, ArrowRight, Zap, HelpCircle, ShieldCheck, Plus, Loader2, Crown } from 'lucide-react';
 
 export default function PricingPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [selectedPack, setSelectedPack] = useState<CreditPack | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [successToast, setSuccessToast] = useState<string | null>(null);
@@ -110,6 +110,14 @@ export default function PricingPage() {
     });
     return hasAnnualDuration;
   }, [userOrders, userSubs]);
+
+  // Check if current user is an active Elite Member
+  const isEliteMember = useMemo(() => {
+    return Boolean(
+      profile?.isEliteMember &&
+      (profile?.eliteExpiresAt ? Number(profile.eliteExpiresAt) > Date.now() : true)
+    );
+  }, [profile]);
 
   const handleOpenTopUp = (pack: CreditPack) => {
     setSelectedPack(pack);
@@ -313,17 +321,39 @@ export default function PricingPage() {
                   </div>
 
                   <div className="flex items-baseline gap-2 pt-1 flex-wrap">
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-3xl sm:text-4xl lg:text-[2.65rem] font-extrabold text-neutral-950 dark:text-white font-sans tracking-tight">
-                        {plan.priceInr}
-                      </span>
-                      <span className="text-sm sm:text-base font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
-                        ({plan.priceUsd} USD)
-                      </span>
-                    </div>
-                    <span className="text-xs text-neutral-500 font-sans ml-0.5">
-                      {plan.period}
-                    </span>
+                    {isEliteMember && plan.rawPriceInr > 0 ? (
+                      <div className="space-y-1">
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          <span className="text-3xl sm:text-4xl lg:text-[2.65rem] font-extrabold text-amber-600 dark:text-amber-400 font-sans tracking-tight">
+                            ₹{(plan.rawPriceInr - Math.round(plan.rawPriceInr * 0.1)).toLocaleString()}
+                          </span>
+                          <span className="text-base sm:text-lg line-through text-neutral-400 dark:text-neutral-500 font-sans font-medium">
+                            {plan.priceInr}
+                          </span>
+                          <span className="text-xs text-neutral-500 font-sans ml-0.5">
+                            {plan.period}
+                          </span>
+                        </div>
+                        <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-[10px] font-bold font-sans">
+                          <Crown className="w-3 h-3" />
+                          <span>10% Elite Member Price</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-3xl sm:text-4xl lg:text-[2.65rem] font-extrabold text-neutral-950 dark:text-white font-sans tracking-tight">
+                            {plan.priceInr}
+                          </span>
+                          <span className="text-sm sm:text-base font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
+                            ({plan.priceUsd} USD)
+                          </span>
+                        </div>
+                        <span className="text-xs text-neutral-500 font-sans ml-0.5">
+                          {plan.period}
+                        </span>
+                      </>
+                    )}
                   </div>
 
                   <div className="p-3 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-xs font-sans">
@@ -379,7 +409,81 @@ export default function PricingPage() {
         </div>
       </div>
 
-      {/* 2. Additional Credit Top-Up Packs Section */}
+      {/* 2. Elite Members Annual Pass Privilege Section */}
+      <div id="elite-members" className="relative rounded-3xl border border-amber-500/30 dark:border-amber-500/30 bg-gradient-to-br from-amber-500/[0.08] via-amber-400/[0.03] to-neutral-50/50 dark:from-amber-400/[0.06] dark:via-neutral-950 dark:to-neutral-900/40 p-6 sm:p-10 shadow-lg overflow-hidden">
+        {/* Subtle decorative gold glow */}
+        <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-amber-500/10 dark:bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+          <div className="space-y-4 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-500/30">
+              <Crown className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+              <span>Elite Members Annual Pass</span>
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-neutral-950 dark:text-white font-sans tracking-tight">
+                Unlock 10% Off Everything Across DocStudio
+              </h2>
+              <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 font-sans leading-relaxed">
+                Become an Elite Member for just ₹199/year. Enjoy a guaranteed 10% discount on every monthly subscription renewal, annual tier upgrade, and credit top-up pack, plus receive 150 bonus credits deposited immediately into your vault.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 text-xs font-sans">
+              {ELITE_MEMBERSHIP.features.map((feature) => (
+                <div key={feature} className="flex items-center gap-2 text-neutral-700 dark:text-neutral-200">
+                  <div className="w-4 h-4 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center shrink-0">
+                    <Check className="w-2.5 h-2.5" />
+                  </div>
+                  <span>{feature}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col items-start lg:items-end justify-center gap-4 shrink-0 p-6 rounded-2xl bg-white/80 dark:bg-neutral-900/80 border border-neutral-200/80 dark:border-neutral-800 backdrop-blur-md shadow-sm">
+            <div className="text-left lg:text-right">
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl sm:text-4xl font-extrabold text-neutral-950 dark:text-white font-sans">
+                  {ELITE_MEMBERSHIP.priceInr}
+                </span>
+                <span className="text-xs sm:text-sm font-semibold text-neutral-500 font-sans">
+                  ({ELITE_MEMBERSHIP.priceUsd} USD)
+                </span>
+                <span className="text-xs text-neutral-500 font-sans">
+                  {ELITE_MEMBERSHIP.period}
+                </span>
+              </div>
+              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium font-sans mt-0.5">
+                ✨ +{ELITE_MEMBERSHIP.bonusCredits} Welcome Credits Included
+              </p>
+            </div>
+
+            {isEliteMember ? (
+              <div className="space-y-1.5 text-left lg:text-right">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs font-bold">
+                  <Crown className="w-4 h-4" />
+                  <span>You Are An Active Elite Member</span>
+                </div>
+                <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                  10% universal discount is active on all purchases
+                </p>
+              </div>
+            ) : (
+              <Link
+                href="/checkout?pass=elite-annual"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-neutral-950 font-bold text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all cursor-pointer"
+              >
+                <span>Join Elite Members</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Additional Credit Top-Up Packs Section */}
       <div id="credits" className="space-y-8 pt-4 scroll-mt-24">
         <div className="text-center max-w-2xl mx-auto space-y-2">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
@@ -425,15 +529,37 @@ export default function PricingPage() {
                 </p>
 
                 <div className="flex items-baseline gap-2 pt-1 flex-wrap">
-                  <span className="text-2xl sm:text-3xl font-extrabold text-neutral-950 dark:text-white font-sans tracking-tight">
-                    {pack.priceInr}
-                  </span>
-                  <span className="text-xs sm:text-sm font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
-                    ({pack.priceUsd} USD)
-                  </span>
-                  <span className="text-[11px] text-neutral-400 font-sans">
-                    • {pack.costPerCredit}
-                  </span>
+                  {isEliteMember ? (
+                    <div className="space-y-1">
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className="text-2xl sm:text-3xl font-extrabold text-amber-600 dark:text-amber-400 font-sans tracking-tight">
+                          ₹{pack.rawPriceInr - Math.round(pack.rawPriceInr * 0.1)}
+                        </span>
+                        <span className="text-sm line-through text-neutral-400 dark:text-neutral-500 font-sans font-medium">
+                          {pack.priceInr}
+                        </span>
+                        <span className="text-[11px] text-neutral-400 font-sans">
+                          • {pack.costPerCredit}
+                        </span>
+                      </div>
+                      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-[10px] font-bold font-sans">
+                        <Crown className="w-3 h-3" />
+                        <span>10% Elite Off</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="text-2xl sm:text-3xl font-extrabold text-neutral-950 dark:text-white font-sans tracking-tight">
+                        {pack.priceInr}
+                      </span>
+                      <span className="text-xs sm:text-sm font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
+                        ({pack.priceUsd} USD)
+                      </span>
+                      <span className="text-[11px] text-neutral-400 font-sans">
+                        • {pack.costPerCredit}
+                      </span>
+                    </>
+                  )}
                 </div>
 
                 <div className="border-t border-neutral-200/80 dark:border-neutral-800 pt-3 space-y-2 text-xs font-sans text-neutral-600 dark:text-neutral-400">
@@ -504,9 +630,15 @@ export default function PricingPage() {
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>
-                    Purchase ₹{pack.rawPriceInr * (packQuantities[pack.id] || 1)}
+                    Purchase ₹{
+                      (isEliteMember
+                        ? pack.rawPriceInr - Math.round(pack.rawPriceInr * 0.1)
+                        : pack.rawPriceInr) * (packQuantities[pack.id] || 1)
+                    }
                     {(packQuantities[pack.id] || 1) > 1
                       ? ` (+${pack.credits * (packQuantities[pack.id] || 1)} cr)`
+                      : isEliteMember
+                      ? ' (10% Elite Off)'
                       : ` (${pack.priceUsd})`}
                   </span>
                 </button>

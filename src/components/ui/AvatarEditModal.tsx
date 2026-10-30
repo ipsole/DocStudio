@@ -34,6 +34,16 @@ export function AvatarEditModal({
     }
   }, [isOpen, currentIcon, user, profile]);
 
+  // Close on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleSave = async () => {
@@ -48,55 +58,52 @@ export function AvatarEditModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 select-none animate-fadeIn">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-5 select-none">
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-black/60 dark:bg-black/75 backdrop-blur-sm transition-opacity animate-fadeIn"
       />
 
       {/* Modal Dialog */}
-      <div className="relative z-10 w-full max-w-2xl bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-6 text-neutral-900 dark:text-white max-h-[90vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800 shrink-0">
-          <div className="space-y-0.5">
-            <h3 className="text-lg font-bold font-sans tracking-tight">
-              Change Profile Avatar
-            </h3>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
-              Select your identity avatar across the DocStudio creative suite.
-            </p>
+      <div className="relative z-10 w-full max-w-lg h-[520px] max-h-[calc(100vh-2rem)] bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-3xl shadow-2xl text-neutral-900 dark:text-white flex flex-col overflow-hidden animate-modalPop">
+        {/* Header with Integrated Live Preview */}
+        <div className="px-5 sm:px-6 py-3.5 border-b border-neutral-100 dark:border-neutral-900 flex items-center justify-between shrink-0 bg-white dark:bg-neutral-950">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="relative shrink-0">
+              <UserAvatar
+                user={user}
+                profile={profile}
+                avatarIcon={selectedIcon}
+                size="md"
+                className="ring-2 ring-neutral-200 dark:ring-neutral-800"
+              />
+              <span className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded-full bg-emerald-500 text-[8px] font-bold text-white uppercase tracking-wider">
+                Live
+              </span>
+            </div>
+            <div className="space-y-0.5 min-w-0">
+              <h3 className="text-sm sm:text-base font-bold font-sans tracking-tight text-neutral-950 dark:text-white truncate">
+                Change Profile Avatar
+              </h3>
+              <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans truncate">
+                Select your persona across the DocStudio suite.
+              </p>
+            </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors cursor-pointer"
+            aria-label="Close avatar modal"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors cursor-pointer shrink-0 ml-2"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Live Preview */}
-        <div className="flex items-center gap-4 p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/80 dark:border-neutral-800 shrink-0">
-          <UserAvatar
-            user={user}
-            profile={profile}
-            avatarIcon={selectedIcon}
-            size="lg"
-          />
-          <div className="space-y-0.5">
-            <span className="text-xs font-bold text-neutral-950 dark:text-white font-sans">
-              Live Preview
-            </span>
-            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 font-sans">
-              This avatar will represent you in the navigation bar and comments.
-            </p>
-          </div>
-        </div>
-
         {/* Scrollable Picker Body */}
-        <div className="overflow-y-auto pr-1 flex-1 space-y-4">
+        <div className="p-5 sm:p-6 flex-1 min-h-0 overflow-y-auto space-y-4">
           <AvatarIconPicker
             selectedIcon={selectedIcon}
             onSelectIcon={(id) => setSelectedIcon(id)}
@@ -105,13 +112,13 @@ export function AvatarEditModal({
           />
         </div>
 
-        {/* Footer Actions */}
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-neutral-200 dark:border-neutral-800 shrink-0">
+        {/* Fixed Footer Actions - ALWAYS visible at the bottom of the dialog */}
+        <div className="px-5 sm:px-6 py-3 border-t border-neutral-100 dark:border-neutral-900 bg-neutral-50/70 dark:bg-neutral-900/40 flex items-center justify-end gap-2.5 shrink-0">
           <button
             type="button"
             onClick={onClose}
             disabled={saving}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
           >
             Cancel
           </button>
@@ -120,7 +127,7 @@ export function AvatarEditModal({
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-200 dark:text-black transition-all shadow-md cursor-pointer disabled:opacity-60"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-200 dark:text-black transition-all shadow-md cursor-pointer disabled:opacity-60 active:scale-95"
           >
             {saving ? (
               <>

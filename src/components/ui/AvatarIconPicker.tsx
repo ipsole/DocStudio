@@ -121,8 +121,8 @@ export function AvatarIconPicker({
 
       {/* 2. Style Categories Switcher */}
       <div className="space-y-3.5">
-        <div className="flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 pb-2">
-          <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="border-b border-neutral-200 dark:border-neutral-800 pb-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar scrollbar-none">
             {[
               { id: 'personas', label: 'Studio Personas', icon: Crown, count: 8 },
               { id: 'gradients', label: 'Gradient Monograms', icon: Layers, count: 6 },
@@ -135,7 +135,7 @@ export function AvatarIconPicker({
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id as TabType)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-sans font-semibold transition-all cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-sans font-semibold transition-all cursor-pointer shrink-0 ${
                     isActive
                       ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-sm'
                       : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900'

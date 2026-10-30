@@ -120,6 +120,13 @@ export function InvoiceReceiptModal({ order, isOpen, onClose }: InvoiceReceiptMo
               </p>
             </div>
 
+            {order.eliteDiscountAmount ? (
+              <div className="flex items-center justify-between text-xs font-sans text-amber-600 dark:text-amber-400 font-semibold">
+                <span>👑 Elite Members Discount (10%)</span>
+                <span className="font-mono">-₹{order.eliteDiscountAmount.toFixed(2)}</span>
+              </div>
+            ) : null}
+
             <div className="pt-3 border-t border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between text-xs font-sans">
               <span className="font-bold text-neutral-900 dark:text-white uppercase tracking-wider">
                 Total Charged

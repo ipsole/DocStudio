@@ -37,7 +37,7 @@ export function AppFilter({
       </div>
 
       {/* Category Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar scrollbar-none">
         {CATEGORIES.map((cat) => {
           const isSelected = selectedCategory === cat.id;
           return (

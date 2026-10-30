@@ -33,9 +33,40 @@ export function Navbar() {
   const { user, profile, isAdmin, signOut, loading } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const [hasSessionHint, setHasSessionHint] = useState(false);
   const [subscriptions, setSubscriptions] = useState<AppSubscription[]>([]);
+
+  // Close profile dropdown when tapping / clicking outside or pressing Escape
+  useEffect(() => {
+    if (!userDropdownOpen) return;
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        userDropdownRef.current &&
+        !userDropdownRef.current.contains(event.target as Node)
+      ) {
+        setUserDropdownOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setUserDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [userDropdownOpen]);
 
   useEffect(() => {
     setMounted(true);
@@ -145,10 +176,10 @@ export function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-white/80 dark:bg-black/80 backdrop-blur-md text-neutral-900 dark:text-white select-none transition-colors duration-200">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8">
-        <div className="flex h-14 sm:h-16 items-center justify-between gap-4">
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-6 md:px-8">
+        <div className="flex h-14 sm:h-16 items-center justify-between gap-1.5 sm:gap-4">
           {/* Left: Small Text Tabs (Home, Softwares, Pricings, Tutorials) */}
-          <div className="relative flex items-center gap-1 sm:gap-2 no-scrollbar py-1">
+          <div className="relative flex items-center gap-0.5 sm:gap-2 overflow-x-auto no-scrollbar py-1 min-w-0 flex-1">
             {navIndicator.ready && (
               <div
                 className="absolute rounded-full bg-neutral-100 dark:bg-neutral-900 shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
@@ -170,7 +201,7 @@ export function Navbar() {
                   href={tab.href}
                   prefetch={true}
                   onClick={() => setOptimisticTab(tab.name)}
-                  className={`relative z-10 px-3 py-1.5 rounded-full text-xs sm:text-sm transition-colors duration-200 whitespace-nowrap ${
+                  className={`relative z-10 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm transition-colors duration-200 whitespace-nowrap shrink-0 ${
                     isActive
                       ? 'font-medium text-neutral-950 dark:text-white'
                       : 'text-neutral-500 hover:text-neutral-950 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100/40 dark:hover:bg-neutral-900/40'
@@ -183,12 +214,12 @@ export function Navbar() {
           </div>
 
           {/* Right: Theme Mode Toggle & Account Icon */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Sleek Switch Mode Toggle Button (Icon switch only, no text) */}
             <button
               type="button"
               onClick={toggleTheme}
-              className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 border border-neutral-200 dark:border-neutral-800 transition-colors duration-200 ease-in-out cursor-pointer shadow-sm active:scale-95 ${
+              className={`relative inline-flex h-6 sm:h-7 w-11 sm:w-12 shrink-0 items-center rounded-full p-0.5 border border-neutral-200 dark:border-neutral-800 transition-colors duration-200 ease-in-out cursor-pointer shadow-sm active:scale-95 ${
                 theme === 'dark' ? 'bg-neutral-800 hover:bg-neutral-700' : 'bg-neutral-200/90 hover:bg-neutral-300/80'
               }`}
               aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
@@ -196,14 +227,14 @@ export function Navbar() {
             >
               <span className="sr-only">Toggle theme</span>
               <div
-                className={`flex h-6 w-6 items-center justify-center rounded-full bg-white dark:bg-neutral-950 shadow-sm transform transition-transform duration-200 ease-in-out ${
+                className={`flex h-5 w-5 sm:h-6 sm:w-6 items-center justify-center rounded-full bg-white dark:bg-neutral-950 shadow-sm transform transition-transform duration-200 ease-in-out ${
                   theme === 'dark' ? 'translate-x-5 text-neutral-200' : 'translate-x-0 text-neutral-800'
                 }`}
               >
                 {theme === 'dark' ? (
-                  <Moon className="w-3.5 h-3.5" />
+                  <Moon className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                 ) : (
-                  <Sun className="w-3.5 h-3.5" />
+                  <Sun className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                 )}
               </div>
             </button>
@@ -227,11 +258,15 @@ export function Navbar() {
             {!mounted ? (
               <div className="w-9 h-9" />
             ) : user ? (
-              <div className="relative">
+              <div ref={userDropdownRef} className="relative">
                 <button
                   type="button"
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="w-9 h-9 rounded-full border border-neutral-300 dark:border-neutral-800 hover:border-neutral-500 dark:hover:border-neutral-500 bg-neutral-100 dark:bg-neutral-950 flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 overflow-hidden shadow-sm"
+                  className={`w-9 h-9 rounded-full border bg-neutral-100 dark:bg-neutral-950 flex items-center justify-center transition-all cursor-pointer hover:scale-105 active:scale-95 overflow-hidden shadow-sm ${
+                    profile?.isEliteMember
+                      ? 'border-amber-500/80 ring-2 ring-amber-500/30'
+                      : 'border-neutral-300 dark:border-neutral-800 hover:border-neutral-500 dark:hover:border-neutral-500'
+                  }`}
                   aria-label="Account Menu"
                   title={profile?.displayName || user.email || 'My Account'}
                 >
@@ -245,15 +280,21 @@ export function Navbar() {
 
                 {userDropdownOpen && (
                   <div
-                    className="absolute right-0 mt-2 w-64 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl py-1.5 shadow-2xl z-50 text-neutral-800 dark:text-neutral-200 backdrop-blur-xl"
-                    onMouseLeave={() => setUserDropdownOpen(false)}
+                    className="absolute right-0 mt-2 w-64 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 rounded-xl py-1.5 shadow-2xl z-50 text-neutral-800 dark:text-neutral-200 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100"
                   >
                     <div className="px-4 py-3 border-b border-neutral-100 dark:border-neutral-900 bg-neutral-50/80 dark:bg-neutral-900/60 rounded-t-xl flex items-center gap-3">
                       <UserAvatar user={user} profile={profile} size="sm" />
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-neutral-950 dark:text-white truncate font-sans">
-                          {profile?.displayName || user.displayName || 'DocStudio User'}
-                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-xs font-bold text-neutral-950 dark:text-white truncate font-sans">
+                            {profile?.displayName || user.displayName || 'DocStudio User'}
+                          </p>
+                          {profile?.isEliteMember && (
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30 shrink-0">
+                              👑 Elite
+                            </span>
+                          )}
+                        </div>
                         <p className="text-[11px] text-neutral-500 dark:text-neutral-400 truncate font-mono flex items-center gap-1">
                           <span>@{profile?.username || user.email?.split('@')[0] || 'creator'}</span>
                           <VerifiedBadge size="sm" />
@@ -296,6 +337,33 @@ export function Navbar() {
                         </Link>
                       </div>
                     </div>
+
+                    {/* Elite Membership Status Pill */}
+                    {profile?.isEliteMember ? (
+                      <div className="mx-2 mb-2 px-2.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between text-[11px] font-sans">
+                        <span className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400">
+                          <span>👑</span>
+                          <span>Elite Member</span>
+                        </span>
+                        <span className="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400">
+                          10% Off Active
+                        </span>
+                      </div>
+                    ) : (
+                      <Link
+                        href="/pricing#elite-members"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="mx-2 mb-2 px-2.5 py-1.5 rounded-xl bg-neutral-100/60 dark:bg-neutral-900/60 hover:bg-amber-500/10 border border-neutral-200 dark:border-neutral-800 hover:border-amber-500/30 flex items-center justify-between text-[11px] font-sans transition-all group"
+                      >
+                        <span className="flex items-center gap-1.5 font-semibold text-neutral-700 dark:text-neutral-300 group-hover:text-amber-700 dark:group-hover:text-amber-400">
+                          <span>👑</span>
+                          <span>Elite Members</span>
+                        </span>
+                        <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                          10% Off Pass →
+                        </span>
+                      </Link>
+                    )}
 
                     <Link
                       href="/dashboard"
@@ -348,7 +416,7 @@ export function Navbar() {
               <Link href="/sign-in" title="Sign In">
                 <button
                   type="button"
-                  className="px-4 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/90 dark:bg-neutral-900/90 hover:bg-neutral-950 hover:text-white dark:hover:bg-white dark:hover:text-black text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition-all shadow-sm active:scale-[0.98] cursor-pointer"
+                  className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/90 dark:bg-neutral-900/90 hover:bg-neutral-950 hover:text-white dark:hover:bg-white dark:hover:text-black text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition-all shadow-sm active:scale-[0.98] cursor-pointer"
                 >
                   Sign In
                 </button>

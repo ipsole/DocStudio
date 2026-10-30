@@ -27,6 +27,29 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // 1.5 Rate Limiting on Coupon Validation (prevents promo code dictionary brute-forcing)
+  if (pathname.startsWith('/api/coupons/validate')) {
+    const rateCheck = checkRateLimit(ip, 'coupon-validate', 20, 60); // 20 attempts / min
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          valid: false,
+          error: 'RATE_LIMIT_EXCEEDED',
+          message: `Too many coupon code validation attempts. Please wait ${rateCheck.resetSeconds} seconds.`,
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateCheck.resetSeconds),
+            'X-RateLimit-Limit': String(rateCheck.limit),
+            'X-RateLimit-Remaining': '0',
+          },
+        }
+      );
+    }
+  }
+
   // 2. Rate Limiting on Authentication pages (brute force & credential stuffing protection)
   if (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up')) {
     const rateCheck = checkRateLimit(ip, 'auth-page', 20, 300); // 20 requests per 5 minutes
@@ -72,9 +95,9 @@ export const config = {
      * Match all request paths except for:
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico, sitemap.xml, robots.txt
+     * - favicon.ico, favicon.svg, icon.svg, sitemap.xml, robots.txt
      * - public assets like docdril.svg
      */
-    '/((?!_next/static|_next/image|favicon.ico|docdril.svg).*)',
+    '/((?!_next/static|_next/image|favicon.ico|favicon.svg|icon.svg|docdril.svg).*)',
   ],
 };

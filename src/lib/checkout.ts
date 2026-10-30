@@ -24,7 +24,7 @@ export function loadRazorpayScript(): Promise<boolean> {
 
 interface CheckoutOptions {
   itemId: string;
-  itemType: 'subscription' | 'credit_pack';
+  itemType: 'subscription' | 'credit_pack' | 'membership';
   userId: string;
   userEmail: string;
   userName?: string;
@@ -32,6 +32,7 @@ interface CheckoutOptions {
   quantity?: number;
   gstin?: string;
   businessName?: string;
+  couponCode?: string;
   preferredMethod?: 'card' | 'upi' | 'netbanking' | 'wallet';
   onVerifying?: () => void;
   onSuccess?: (order: OrderRecord) => void;
@@ -49,6 +50,7 @@ export async function openRazorpayCheckout({
   quantity = 1,
   gstin,
   businessName,
+  couponCode,
   preferredMethod,
   onVerifying,
   onSuccess,
@@ -56,22 +58,39 @@ export async function openRazorpayCheckout({
   onDismiss,
 }: CheckoutOptions): Promise<void> {
   try {
-    // 1. Load Razorpay script
-    const scriptLoaded = await loadRazorpayScript();
-    if (!scriptLoaded) {
-      throw new Error('Unable to connect to payment gateway. Please check your network connection.');
-    }
-
-    // 2. Create verified order on backend
+    // 1. Create verified order on backend
     const res = await fetch('/api/billing/create-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itemId, itemType, userId, userEmail, userName, userPhone, quantity, gstin, businessName }),
+      body: JSON.stringify({
+        itemId,
+        itemType,
+        userId,
+        userEmail,
+        userName,
+        userPhone,
+        quantity,
+        gstin,
+        businessName,
+        couponCode,
+      }),
     });
 
     const data = await res.json();
     if (!res.ok || !data.success) {
       throw new Error(data.message || 'Could not initiate payment order.');
+    }
+
+    // Free fulfillment (100% off coupon or zero-charge promotional tier)
+    if (data.isFree && data.order) {
+      onSuccess?.(data.order);
+      return;
+    }
+
+    // 2. Load Razorpay script
+    const scriptLoaded = await loadRazorpayScript();
+    if (!scriptLoaded) {
+      throw new Error('Unable to connect to payment gateway. Please check your network connection.');
     }
 
     // 3. Configure Razorpay Standard Checkout options
@@ -143,6 +162,8 @@ export async function openRazorpayCheckout({
               quantity,
               gstin,
               businessName,
+              couponCode: data.couponCode || couponCode,
+              discountAmount: data.discountAmount,
             }),
           });
 

@@ -11,36 +11,18 @@ export async function GET(request: NextRequest) {
     const orderId = searchParams.get('orderId');
     const receiptNumber = searchParams.get('receipt');
 
-    if (!orderId && !receiptNumber) {
-      return new NextResponse('Missing orderId or receipt query parameter.', { status: 400 });
+    if (!orderId || !receiptNumber) {
+      return new NextResponse('Both orderId and receipt parameters are required to securely locate the invoice.', { status: 400 });
     }
 
-    const { firestore } = getFirebaseAdmin();
+    const { firestore, auth: adminAuth } = getFirebaseAdmin();
     if (!firestore) {
       return new NextResponse('Database unavailable.', { status: 500 });
     }
 
-    let orderData: OrderRecord | null = null;
-
-    if (orderId) {
-      const doc = await firestore.collection('orders').doc(orderId).get();
-      if (doc.exists) {
-        orderData = doc.data() as OrderRecord;
-      }
-    }
-
-    if (!orderData && receiptNumber) {
-      const snapshot = await firestore
-        .collection('orders')
-        .where('receiptNumber', '==', receiptNumber)
-        .limit(1)
-        .get();
-      if (!snapshot.empty) {
-        orderData = snapshot.docs[0].data() as OrderRecord;
-      }
-    }
-
-    if (!orderData) {
+    // Look up order record by orderId
+    const doc = await firestore.collection('orders').doc(orderId).get();
+    if (!doc.exists) {
       return new NextResponse(
         `<html><body style="font-family: sans-serif; text-align: center; padding: 50px;">
           <h2>Invoice Not Found</h2>
@@ -49,6 +31,28 @@ export async function GET(request: NextRequest) {
         </body></html>`,
         { status: 404, headers: { 'Content-Type': 'text/html' } }
       );
+    }
+
+    const orderData = doc.data() as OrderRecord;
+
+    // Strict validation: receipt number must match the orderId record
+    if (orderData.receiptNumber !== receiptNumber) {
+      return new NextResponse('Security verification failed: receipt mismatch.', { status: 403 });
+    }
+
+    // If an authorization token is supplied, enforce ownership or admin privilege
+    const authHeader = request.headers.get('authorization');
+    if (authHeader && authHeader.startsWith('Bearer ') && adminAuth) {
+      try {
+        const idToken = authHeader.split('Bearer ')[1];
+        const decoded = await adminAuth.verifyIdToken(idToken);
+        const isSuperAdmin = decoded.email === 'izackstudio1@gmail.com' || decoded.admin === true;
+        if (!isSuperAdmin && decoded.uid !== orderData.userId) {
+          return new NextResponse('Access denied to this invoice.', { status: 403 });
+        }
+      } catch {
+        return new NextResponse('Invalid authorization credentials.', { status: 401 });
+      }
     }
 
     const invoiceHtml = generatePrintableInvoiceHtml(orderData, orderData.businessName || orderData.userEmail);

@@ -131,6 +131,12 @@ export function generateReceiptHtml(order: OrderRecord, recipientName?: string):
 
       <!-- Itemized Tax & GST Breakdown Table -->
       <table class="totals-table">
+        ${order.eliteDiscountAmount ? `
+        <tr>
+          <td style="color: #f59e0b; font-weight: 600;">👑 Elite Members Discount (10%)</td>
+          <td style="text-align: right; font-family: monospace; color: #f59e0b; font-weight: 600;">-₹${order.eliteDiscountAmount.toFixed(2)}</td>
+        </tr>
+        ` : ''}
         <tr>
           <td style="color: #a1a1aa;">Taxable Subtotal (Base)</td>
           <td style="text-align: right; font-family: monospace; color: #e4e4e7;">₹${baseAmount}</td>

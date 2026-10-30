@@ -39,6 +39,7 @@ import {
   subscribeToCurrentSessionStatus,
 } from '@/lib/firebase/db';
 import { getClientDeviceInfo } from '@/lib/device/deviceInfo';
+import { isSuperAdminEmail } from '@/lib/adminConfig';
 import { UserProfile } from '@/types';
 
 interface AuthContextType {
@@ -139,8 +140,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             currentUser.phoneNumber
           );
 
+          const isSuperAdmin = isSuperAdminEmail(currentUser.email);
           setProfile(userProfile);
-          setIsAdmin(hasAdminClaim || Boolean(userProfile?.isAdmin));
+          setIsAdmin(isSuperAdmin || hasAdminClaim || Boolean(userProfile?.isAdmin));
 
           // Register and heartbeat active device session
           const dev = getClientDeviceInfo();
@@ -414,6 +416,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setProfile(null);
     setIsAdmin(false);
+
+    if (typeof window !== 'undefined') {
+      window.location.href = '/sign-in';
+    }
   };
 
   const resetPassword = async (email: string) => {

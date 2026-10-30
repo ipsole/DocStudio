@@ -1,40 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
+import { verifyAdminRequest } from '@/lib/adminAuthHelper';
 import { SubscriptionPlan, SubscriptionStatus } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
 async function verifyAdmin(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  const adminSecret = req.headers.get('x-docstore-admin-secret');
-
-  if (process.env.DOCSTORE_ADMIN_SECRET && adminSecret === process.env.DOCSTORE_ADMIN_SECRET) {
-    return { isAuthorized: true, uid: 'bootstrap-admin' };
-  }
-
-  if (!authHeader?.startsWith('Bearer ')) {
-    return { isAuthorized: false, error: 'Unauthorized: Missing token' };
-  }
-
-  const token = authHeader.split('Bearer ')[1]?.trim();
-  const { auth: adminAuth, firestore: adminDb } = getFirebaseAdmin();
-  if (!adminAuth || !adminDb) {
-    return { isAuthorized: false, error: 'Admin database unavailable' };
-  }
-
-  try {
-    const decoded = await adminAuth.verifyIdToken(token);
-    if (decoded.admin === true) {
-      return { isAuthorized: true, uid: decoded.uid };
-    }
-    const adminDoc = await adminDb.collection('admins').doc(decoded.uid).get();
-    if (adminDoc.exists) {
-      return { isAuthorized: true, uid: decoded.uid };
-    }
-    return { isAuthorized: false, error: 'Forbidden: Admin privilege required' };
-  } catch {
-    return { isAuthorized: false, error: 'Invalid authentication token' };
-  }
+  return verifyAdminRequest(req);
 }
 
 // GET: List all user subscriptions

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
@@ -10,6 +10,20 @@ export const metadata: Metadata = {
   title: 'DocStudio | The Software Ecosystem of Docdril',
   description:
     'Discover, access, and manage the software ecosystem of Docdril through one unified account.',
+  icons: {
+    icon: [
+      { url: '/favicon.svg?v=3', type: 'image/svg+xml' },
+      { url: '/icon.svg?v=3', type: 'image/svg+xml' },
+    ],
+    shortcut: '/favicon.svg?v=3',
+    apple: '/favicon.svg?v=3',
+  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -20,6 +34,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
+        <link rel="shortcut icon" href="/favicon.svg?v=3" />
+        <link rel="apple-touch-icon" href="/favicon.svg?v=3" />
         <script
           dangerouslySetInnerHTML={{
             __html: `

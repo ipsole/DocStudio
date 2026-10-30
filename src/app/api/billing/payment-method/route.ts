@@ -6,27 +6,25 @@ export const dynamic = 'force-dynamic';
 
 export async function DELETE(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const queryUserId = searchParams.get('userId');
-
-    let userId = queryUserId;
     const authHeader = request.headers.get('authorization');
     const { auth: adminAuth, firestore } = getFirebaseAdmin();
 
-    if (authHeader && authHeader.startsWith('Bearer ') && adminAuth) {
-      const idToken = authHeader.split('Bearer ')[1];
-      try {
-        const decoded = await adminAuth.verifyIdToken(idToken);
-        userId = decoded.uid;
-      } catch (err) {
-        // Fall back to query param
-      }
+    if (!authHeader || !authHeader.startsWith('Bearer ') || !adminAuth) {
+      return NextResponse.json(
+        { success: false, error: 'UNAUTHORIZED', message: 'Bearer authentication token required.' },
+        { status: 401 }
+      );
     }
 
-    if (!userId) {
+    const idToken = authHeader.split('Bearer ')[1];
+    let userId: string;
+    try {
+      const decoded = await adminAuth.verifyIdToken(idToken);
+      userId = decoded.uid;
+    } catch {
       return NextResponse.json(
-        { success: false, error: 'MISSING_USER_ID', message: 'userId is required to wipe payment method.' },
-        { status: 400 }
+        { success: false, error: 'INVALID_TOKEN', message: 'Authentication token is invalid or expired.' },
+        { status: 401 }
       );
     }
 
@@ -62,17 +60,38 @@ export async function DELETE(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json().catch(() => ({}));
-    const { userId, paymentMethod } = body;
+    const authHeader = request.headers.get('authorization');
+    const { auth: adminAuth, firestore } = getFirebaseAdmin();
 
-    if (!userId || !paymentMethod) {
+    if (!authHeader || !authHeader.startsWith('Bearer ') || !adminAuth) {
       return NextResponse.json(
-        { success: false, error: 'MISSING_PARAMS', message: 'userId and paymentMethod are required.' },
+        { success: false, error: 'UNAUTHORIZED', message: 'Bearer authentication token required.' },
+        { status: 401 }
+      );
+    }
+
+    const idToken = authHeader.split('Bearer ')[1];
+    let userId: string;
+    try {
+      const decoded = await adminAuth.verifyIdToken(idToken);
+      userId = decoded.uid;
+    } catch {
+      return NextResponse.json(
+        { success: false, error: 'INVALID_TOKEN', message: 'Authentication token is invalid or expired.' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const { paymentMethod } = body;
+
+    if (!paymentMethod) {
+      return NextResponse.json(
+        { success: false, error: 'MISSING_PARAMS', message: 'paymentMethod is required.' },
         { status: 400 }
       );
     }
 
-    const { firestore } = getFirebaseAdmin();
     if (!firestore) {
       return NextResponse.json(
         { success: false, error: 'DATABASE_UNAVAILABLE', message: 'Firestore Admin not initialized.' },

@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Loader2, ShieldAlert } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
+import { isSuperAdminEmail } from '@/lib/adminConfig';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -19,55 +20,24 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
 
   useEffect(() => {
     if (!loading && !user && isConfigured) {
-      router.push('/sign-in');
+      router.replace(`/sign-in?redirect=${encodeURIComponent(pathname)}`);
     }
   }, [user, loading, router, pathname, isConfigured]);
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
         <Loader2 className="w-8 h-8 animate-spin text-neutral-400" />
         <p className="font-mono text-xs uppercase tracking-wider text-neutral-400">
-          Verifying identity session...
+          {loading ? 'Verifying identity session...' : 'Redirecting to login...'}
         </p>
       </div>
     );
   }
 
-  if (!isConfigured) {
-    return (
-      <div className="max-w-xl mx-auto my-16 p-8 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 rounded-xl space-y-4 text-neutral-900 dark:text-white shadow-sm">
-        <h3 className="font-mono text-sm uppercase tracking-wider font-bold text-neutral-950 dark:text-white">
-          Firebase Configuration Notice
-        </h3>
-        <p className="text-xs text-neutral-600 dark:text-neutral-400 font-sans leading-relaxed">
-          Firebase credentials are not fully populated in <code className="bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-800 dark:text-neutral-300 px-1.5 py-0.5 font-mono rounded">.env.local</code>.
-        </p>
-        <div className="pt-2">
-          <Link href="/">
-            <Button variant="secondary" size="sm">
-              Return to Homepage
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const effectiveAdmin = isAdmin || isSuperAdminEmail(user?.email);
 
-  if (!user) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 text-center px-4">
-        <p className="font-mono text-xs uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-          Authentication required to access this resource
-        </p>
-        <Link href={`/sign-in?redirect=${encodeURIComponent(pathname)}`}>
-          <Button variant="primary">Sign In to Continue</Button>
-        </Link>
-      </div>
-    );
-  }
-
-  if (requireAdmin && !isAdmin) {
+  if (requireAdmin && !effectiveAdmin) {
     return (
       <div className="max-w-lg mx-auto my-20 p-8 text-center bg-white dark:bg-neutral-950/80 border border-neutral-200 dark:border-neutral-800 rounded-xl space-y-4 text-neutral-900 dark:text-white shadow-xl">
         <div className="w-12 h-12 border border-neutral-300 dark:border-neutral-700 bg-amber-50 dark:bg-neutral-900 text-amber-600 dark:text-amber-400 rounded-full mx-auto flex items-center justify-center mb-2">

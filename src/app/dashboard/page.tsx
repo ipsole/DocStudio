@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -109,6 +109,14 @@ export default function DashboardPage() {
     (acc, sub) => acc + (sub.creditsTotal || 0),
     0
   );
+
+  // Determine active plan name based on user subscriptions
+  const activePlanName = useMemo(() => {
+    if (!subscriptions || subscriptions.length === 0) return 'Starter';
+    if (subscriptions.some((s) => s.plan === 'enterprise')) return 'Ultra';
+    if (subscriptions.some((s) => s.plan === 'pro')) return 'Pro';
+    return 'Starter';
+  }, [subscriptions]);
 
   const filteredApps = apps.filter((app) => {
     if (selectedCategory === 'all') return true;
@@ -247,18 +255,24 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
             </div>
 
             <div>
-              <div className="text-2xl sm:text-3xl font-bold font-sans text-neutral-950 dark:text-white truncate">
-                {isAdmin ? 'Enterprise Admin Pass' : 'DocStudio Pro Pass'}
+              <div className="text-xl sm:text-2xl font-bold font-sans text-neutral-950 dark:text-white leading-tight">
+                {isAdmin
+                  ? 'Enterprise Admin'
+                  : activePlanName === 'Ultra'
+                  ? 'DocStudio Ultra'
+                  : activePlanName === 'Pro'
+                  ? 'DocStudio Pro'
+                  : 'DocStudio Starter'}
               </div>
               <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 truncate font-sans">
-                {user?.email} • All tools unlocked
+                {user?.email} • {activePlanName === 'Starter' ? 'Free Starter Tier' : 'All tools unlocked'}
               </p>
             </div>
 
             <div className="pt-2 border-t border-neutral-100 dark:border-neutral-900 flex items-center justify-between text-xs">
               <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5 font-sans text-[11px]">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-dot" />
-                Active Subscription
+                {activePlanName === 'Starter' ? 'Active Starter Tier' : 'Active Subscription'}
               </span>
               <Link
                 href="/pricing"
@@ -403,81 +417,88 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
           </div>
         </section>
 
-        {/* 4. Subdomain Developer Hub & Integration Guide */}
-        <section className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl overflow-hidden shadow-sm animate-fade-in-up animation-delay-300">
-          <div
-            onClick={() => setShowApiDocs(!showApiDocs)}
-            className="p-5 sm:p-6 cursor-pointer flex items-center justify-between hover:bg-neutral-50/80 dark:hover:bg-neutral-900/50 transition-colors select-none"
-          >
-            <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white rounded-xl flex items-center justify-center shrink-0">
-                <Globe className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="font-sans text-sm font-bold text-neutral-950 dark:text-white">
-                  Subdomain Single Sign-On & Credit Verification API
-                </h3>
-                <p className="font-sans text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                  How <code className="font-mono text-neutral-900 dark:text-neutral-200">canvas.docdril.com</code>, <code className="font-mono text-neutral-900 dark:text-neutral-200">motion.docdril.com</code>, & future apps authenticate & deduct credits
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 text-xs font-sans font-medium text-neutral-500 dark:text-neutral-400">
-              <span className="hidden sm:inline">
-                {showApiDocs ? 'Hide Integration Guide' : 'View Integration Guide'}
-              </span>
-              {showApiDocs ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </div>
-          </div>
-
-          {showApiDocs && (
-            <div className="border-t border-neutral-200 dark:border-neutral-800 p-6 sm:p-8 space-y-6 bg-neutral-50/40 dark:bg-neutral-900/30">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs font-sans text-neutral-700 dark:text-neutral-300">
-                <div className="p-4 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 rounded-xl space-y-2">
-                  <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                    Endpoint 1: Session & Balance Check
-                  </span>
-                  <div className="font-mono font-semibold text-neutral-950 dark:text-white">
-                    POST /api/v1/auth/verify
-                  </div>
-                  <p className="leading-relaxed text-neutral-600 dark:text-neutral-400">
-                    Subdomain apps send the user Bearer ID Token to verify access. Returns user identity, plan status, and remaining generation credits.
-                  </p>
+        {/* 4. Subdomain Developer Hub & Integration Guide (Admin Only) */}
+        {isAdmin && (
+          <section className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl overflow-hidden shadow-sm animate-fade-in-up animation-delay-300">
+            <div
+              onClick={() => setShowApiDocs(!showApiDocs)}
+              className="p-5 sm:p-6 cursor-pointer flex items-center justify-between hover:bg-neutral-50/80 dark:hover:bg-neutral-900/50 transition-colors select-none"
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white rounded-xl flex items-center justify-center shrink-0">
+                  <Globe className="w-4 h-4" />
                 </div>
-
-                <div className="p-4 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 rounded-xl space-y-2">
-                  <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                    Endpoint 2: Atomic Credit Consumption
-                  </span>
-                  <div className="font-mono font-semibold text-neutral-950 dark:text-white">
-                    POST /api/v1/credits/consume
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-sans text-sm font-bold text-neutral-950 dark:text-white">
+                      Subdomain Single Sign-On & Credit Verification API
+                    </h3>
+                    <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-700 font-medium">
+                      Admin Guide
+                    </span>
                   </div>
-                  <p className="leading-relaxed text-neutral-600 dark:text-neutral-400">
-                    Whenever a user generates content in a subdomain tool, calls this endpoint to decrement credits atomically. Returns 402 if quota exhausted.
+                  <p className="font-sans text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                    How <code className="font-mono text-neutral-900 dark:text-neutral-200">canvas.docdril.com</code>, <code className="font-mono text-neutral-900 dark:text-neutral-200">motion.docdril.com</code>, & future apps authenticate & deduct credits
                   </p>
                 </div>
               </div>
 
-              {/* Code Snippet Box */}
-              <div className="relative border border-neutral-300 dark:border-neutral-800 bg-neutral-900 dark:bg-black text-neutral-100 dark:text-neutral-200 p-5 rounded-xl font-mono text-[11px] overflow-x-auto leading-relaxed">
-                <button
-                  type="button"
-                  onClick={() => copyCode(exampleVerifyCode)}
-                  className="absolute top-4 right-4 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 px-2.5 py-1 text-[10px] uppercase tracking-wider flex items-center gap-1.5 transition-colors rounded-lg"
-                >
-                  {copiedSnippet ? (
-                    <CheckCircle className="w-3 h-3 text-emerald-400" />
-                  ) : (
-                    <Copy className="w-3 h-3" />
-                  )}
-                  <span>{copiedSnippet ? 'Copied' : 'Copy Snippet'}</span>
-                </button>
-                <pre>{exampleVerifyCode}</pre>
+              <div className="flex items-center gap-2 text-xs font-sans font-medium text-neutral-500 dark:text-neutral-400">
+                <span className="hidden sm:inline">
+                  {showApiDocs ? 'Hide Integration Guide' : 'View Integration Guide'}
+                </span>
+                {showApiDocs ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </div>
             </div>
-          )}
-        </section>
+
+            {showApiDocs && (
+              <div className="border-t border-neutral-200 dark:border-neutral-800 p-6 sm:p-8 space-y-6 bg-neutral-50/40 dark:bg-neutral-900/30">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs font-sans text-neutral-700 dark:text-neutral-300">
+                  <div className="p-4 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 rounded-xl space-y-2">
+                    <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                      Endpoint 1: Session & Balance Check
+                    </span>
+                    <div className="font-mono font-semibold text-neutral-950 dark:text-white">
+                      POST /api/v1/auth/verify
+                    </div>
+                    <p className="leading-relaxed text-neutral-600 dark:text-neutral-400">
+                      Subdomain apps send the user Bearer ID Token to verify access. Returns user identity, plan status, and remaining generation credits.
+                    </p>
+                  </div>
+
+                  <div className="p-4 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/60 rounded-xl space-y-2">
+                    <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                      Endpoint 2: Atomic Credit Consumption
+                    </span>
+                    <div className="font-mono font-semibold text-neutral-950 dark:text-white">
+                      POST /api/v1/credits/consume
+                    </div>
+                    <p className="leading-relaxed text-neutral-600 dark:text-neutral-400">
+                      Whenever a user generates content in a subdomain tool, calls this endpoint to decrement credits atomically. Returns 402 if quota exhausted.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Code Snippet Box */}
+                <div className="relative border border-neutral-300 dark:border-neutral-800 bg-neutral-900 dark:bg-black text-neutral-100 dark:text-neutral-200 p-5 rounded-xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+                  <button
+                    type="button"
+                    onClick={() => copyCode(exampleVerifyCode)}
+                    className="absolute top-4 right-4 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 px-2.5 py-1 text-[10px] uppercase tracking-wider flex items-center gap-1.5 transition-colors rounded-lg"
+                  >
+                    {copiedSnippet ? (
+                      <CheckCircle className="w-3 h-3 text-emerald-400" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
+                    <span>{copiedSnippet ? 'Copied' : 'Copy Snippet'}</span>
+                  </button>
+                  <pre>{exampleVerifyCode}</pre>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
       </div>
     </ProtectedRoute>
   );

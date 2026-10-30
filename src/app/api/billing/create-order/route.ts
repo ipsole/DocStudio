@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getRazorpayClient } from '@/lib/razorpay';
-import { PRICING_PLANS, CREDIT_PACKS, ALL_PRICING_PLANS } from '@/lib/pricingData';
+import { PRICING_PLANS, CREDIT_PACKS, ALL_PRICING_PLANS, ELITE_MEMBERSHIP } from '@/lib/pricingData';
+import { validateCouponServer, recordCouponRedemptionAdmin } from '@/lib/couponsServer';
+import {
+  recordOrderAdmin,
+  upgradeUserPlanAdmin,
+  addSharedCreditsAdmin,
+  activateEliteMembershipAdmin,
+  isUserEliteAdmin,
+  sanitizeForFirestore,
+} from '@/lib/billingServer';
+import { sendPurchaseConfirmationEmail } from '@/lib/email/receiptEmail';
+import { OrderRecord, SubscriptionPlan } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,9 +82,19 @@ export async function POST(request: NextRequest) {
       amountInInr = pack.rawPriceInr * quantity;
       creditsAllotment = pack.credits * quantity;
       itemName = quantity > 1 ? `${pack.name} (Qty: ${quantity} • +${creditsAllotment} Credits)` : pack.name;
+    } else if (itemType === 'membership') {
+      if (itemId !== ELITE_MEMBERSHIP.id) {
+        return NextResponse.json(
+          { success: false, error: 'INVALID_MEMBERSHIP', message: `Membership pass "${itemId}" does not exist.` },
+          { status: 400 }
+        );
+      }
+      amountInInr = ELITE_MEMBERSHIP.rawPriceInr;
+      itemName = `${ELITE_MEMBERSHIP.name} Annual Pass`;
+      creditsAllotment = ELITE_MEMBERSHIP.bonusCredits;
     } else {
       return NextResponse.json(
-        { success: false, error: 'INVALID_TYPE', message: 'itemType must be "subscription" or "credit_pack".' },
+        { success: false, error: 'INVALID_TYPE', message: 'itemType must be "subscription", "credit_pack", or "membership".' },
         { status: 400 }
       );
     }
@@ -83,6 +104,120 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'ZERO_AMOUNT', message: 'Free items do not require Razorpay checkout.' },
         { status: 400 }
       );
+    }
+
+    const originalAmountInr = amountInInr;
+
+    // Check if user is an active Elite Member to apply 10% universal discount
+    let isEliteDiscount = false;
+    let eliteDiscountAmount = 0;
+    const isElite = await isUserEliteAdmin(userId);
+
+    if (isElite && itemType !== 'membership') {
+      isEliteDiscount = true;
+      eliteDiscountAmount = Math.round(amountInInr * (ELITE_MEMBERSHIP.discountPercentage / 100));
+      amountInInr = Math.max(1, amountInInr - eliteDiscountAmount);
+    }
+
+    // Process coupon validation if supplied
+    const couponCode = typeof body.couponCode === 'string' ? body.couponCode.trim().toUpperCase() : undefined;
+    let discountAmount = 0;
+
+    if (couponCode) {
+      const val = await validateCouponServer({
+        code: couponCode,
+        userId,
+        userEmail,
+        username: userName,
+        amountInr: amountInInr,
+      });
+
+      if (!val.valid) {
+        return NextResponse.json(
+          { success: false, error: 'INVALID_COUPON', message: val.reason || 'Coupon code is invalid.' },
+          { status: 400 }
+        );
+      }
+
+      discountAmount = val.discountAmountInr || 0;
+      amountInInr = val.finalAmountInr || 0;
+    }
+
+    // 100% discount fulfillment (Zero cost)
+    if (amountInInr <= 0) {
+      const receiptNumber = `INV-PROMO-${Date.now().toString().slice(-6)}`;
+      const orderRecord: OrderRecord = {
+        id: `order_free_${Date.now()}`,
+        razorpayOrderId: `free_${Date.now()}`,
+        userId,
+        userEmail: userEmail || '',
+        amount: 0,
+        amountPaise: 0,
+        currency: 'INR',
+        status: 'paid',
+        itemType,
+        itemId,
+        itemName,
+        creditsAdded: creditsAllotment,
+        quantity,
+        paymentMethod: { type: 'other', wallet: '100% Promotional Discount' },
+        couponCode: couponCode || undefined,
+        discountAmount,
+        isEliteDiscount: isEliteDiscount || undefined,
+        eliteDiscountAmount: eliteDiscountAmount || undefined,
+        originalAmount: originalAmountInr,
+        receiptNumber,
+        gstin: typeof gstin === 'string' ? gstin.trim().toUpperCase() : undefined,
+        businessName: typeof businessName === 'string' ? businessName.trim() : undefined,
+        createdAt: Date.now(),
+        paidAt: Date.now(),
+      };
+
+      const sanitized = sanitizeForFirestore(orderRecord);
+      await recordOrderAdmin(sanitized);
+
+      if (itemType === 'subscription') {
+        const isUltra = itemId === 'enterprise' || itemId === 'ultra' || itemId === 'ultra-yearly';
+        const targetPlan: SubscriptionPlan = (isUltra ? 'enterprise' : 'pro') as SubscriptionPlan;
+        const isYearly = itemId.includes('yearly');
+        const periodDays = isYearly ? 365 : 30;
+        await upgradeUserPlanAdmin(userId, userEmail || '', targetPlan, creditsAllotment, periodDays);
+      } else if (itemType === 'credit_pack' && creditsAllotment > 0) {
+        await addSharedCreditsAdmin(userId, userEmail || '', creditsAllotment);
+      } else if (itemType === 'membership') {
+        await activateEliteMembershipAdmin(userId, userEmail || '', creditsAllotment);
+      }
+
+      if (couponCode) {
+        await recordCouponRedemptionAdmin({
+          code: couponCode,
+          userId,
+          userEmail: userEmail || '',
+          username: userName,
+          orderId: orderRecord.id,
+          discountAmountInr: discountAmount,
+        });
+      }
+
+      try {
+        if (userEmail) {
+          await sendPurchaseConfirmationEmail({
+            order: sanitized,
+            recipientEmail: userEmail,
+            recipientName: userName || undefined,
+          });
+        }
+      } catch (e) {
+        console.warn('[Billing API] Receipt email warning for promo order:', e);
+      }
+
+      return NextResponse.json({
+        success: true,
+        isFree: true,
+        order: orderRecord,
+        receiptNumber,
+        message: '100% promotional discount applied! Order activated without payment.',
+      });
     }
 
     // Resolve or create Razorpay Customer ID for tokenized saved cards
@@ -156,6 +291,11 @@ export async function POST(request: NextRequest) {
         itemName,
         creditsAllotment: String(creditsAllotment),
         quantity: String(quantity),
+        couponCode: couponCode || '',
+        discountAmount: String(discountAmount),
+        isEliteDiscount: isEliteDiscount ? 'true' : 'false',
+        eliteDiscountAmount: String(eliteDiscountAmount),
+        originalAmountInr: String(originalAmountInr),
         gstin: typeof gstin === 'string' ? gstin.trim().toUpperCase() : '',
         businessName: typeof businessName === 'string' ? businessName.trim() : '',
       },
@@ -177,6 +317,11 @@ export async function POST(request: NextRequest) {
       itemName,
       receiptNumber,
       customerId,
+      couponCode: couponCode || undefined,
+      discountAmount,
+      isEliteDiscount,
+      eliteDiscountAmount,
+      originalAmountInr,
     });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Failed to create payment order.';

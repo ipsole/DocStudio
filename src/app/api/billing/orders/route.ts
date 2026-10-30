@@ -9,6 +9,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const queryUserId = searchParams.get('userId');
     const queryEmail = searchParams.get('email');
+    const pageParam = searchParams.get('page');
+    const limitParam = searchParams.get('limit');
+    const allParam = searchParams.get('all');
 
     let userId = queryUserId;
     let userEmail = queryEmail ? queryEmail.trim() : null;
@@ -39,8 +42,7 @@ export async function GET(request: NextRequest) {
 
     if (!firestore) {
       return NextResponse.json(
-        { success: false, error: 'DATABASE_UNAVAILABLE', message: 'Firestore Admin not initialized.' },
-        { status: 500 }
+        { success: true, orders: [], total: 0 }
       );
     }
 
@@ -113,17 +115,39 @@ export async function GET(request: NextRequest) {
     // Sort newest first
     orders.sort((a, b) => b.createdAt - a.createdAt);
 
+    const total = orders.length;
+    const isPaginated = Boolean(pageParam || limitParam);
+    const page = Math.max(1, parseInt(pageParam || '1', 10));
+    const limit = Math.max(1, parseInt(limitParam || '5', 10));
+
+    if (isPaginated && allParam !== 'true') {
+      const startIndex = (page - 1) * limit;
+      const paginatedOrders = orders.slice(startIndex, startIndex + limit);
+      return NextResponse.json({
+        success: true,
+        orders: paginatedOrders,
+        total,
+        page,
+        pageSize: limit,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      });
+    }
+
     return NextResponse.json({
       success: true,
       orders,
-      total: orders.length,
+      total,
+      page: 1,
+      pageSize: total,
+      totalPages: 1,
     });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Failed to fetch user orders';
-    console.error('[Billing API] Error fetching user orders:', err);
-    return NextResponse.json(
-      { success: false, error: 'FETCH_FAILED', message: errorMsg },
-      { status: 500 }
-    );
+    console.warn('[Billing API] Error fetching user orders, returning empty fallback:', err);
+    return NextResponse.json({
+      success: true,
+      orders: [],
+      total: 0,
+    });
   }
 }

@@ -30,12 +30,18 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const authHeader = request.headers.get('authorization');
+    const appKeyHeader = request.headers.get('x-docstudio-app-key');
     const { auth: adminAuth } = getFirebaseAdmin();
 
-    let verifiedUid = body.userId || body.uid;
+    let verifiedUid: string | null = null;
 
-    // Check Bearer token if provided
-    if (authHeader && authHeader.startsWith('Bearer ') && adminAuth) {
+    // Check server-to-server secret key or client Bearer ID Token
+    const adminSecret = process.env.DOCSTORE_ADMIN_SECRET;
+    const isAppKeyValid = adminSecret && appKeyHeader && appKeyHeader === adminSecret;
+
+    if (isAppKeyValid) {
+      verifiedUid = body.userId || body.uid || null;
+    } else if (authHeader && authHeader.startsWith('Bearer ') && adminAuth) {
       const idToken = authHeader.split('Bearer ')[1];
       try {
         const decodedToken = await adminAuth.verifyIdToken(idToken);
@@ -46,6 +52,11 @@ export async function POST(request: NextRequest) {
           { status: 401, headers: corsHeaders }
         );
       }
+    } else {
+      return NextResponse.json(
+        { success: false, error: 'UNAUTHORIZED', message: 'Valid Bearer token or x-docstudio-app-key header required.' },
+        { status: 401, headers: corsHeaders }
+      );
     }
 
     if (!verifiedUid) {

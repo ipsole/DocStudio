@@ -1,36 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
+import { verifyAdminRequest } from '@/lib/adminAuthHelper';
 import { DEMO_APPS } from '@/lib/seedData';
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  const adminSecretHeader = req.headers.get('x-docstore-admin-secret');
-  const configuredSecret = process.env.DOCSTORE_ADMIN_SECRET;
-
-  let isAuthorized = false;
-
-  if (configuredSecret && adminSecretHeader && adminSecretHeader === configuredSecret) {
-    isAuthorized = true;
-  } else if (authHeader && authHeader.startsWith('Bearer ')) {
-    const token = authHeader.split('Bearer ')[1]?.trim();
-    const { auth: adminAuth, firestore: adminDb } = getFirebaseAdmin();
-    if (adminAuth && token) {
-      try {
-        const decoded = await adminAuth.verifyIdToken(token);
-        if (decoded.admin === true) {
-          isAuthorized = true;
-        } else if (adminDb) {
-          const snap = await adminDb.collection('admins').doc(decoded.uid).get();
-          if (snap.exists) isAuthorized = true;
-        }
-      } catch {
-        isAuthorized = false;
-      }
-    }
-  }
-
-  if (!isAuthorized) {
-    return NextResponse.json({ success: false, error: 'Unauthorized.' }, { status: 403 });
+  const authCheck = await verifyAdminRequest(req);
+  if (!authCheck.isAuthorized) {
+    return NextResponse.json({ success: false, error: authCheck.error }, { status: 403 });
   }
 
   const { firestore } = getFirebaseAdmin();

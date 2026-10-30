@@ -16,6 +16,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Loader2,
+  Crown,
 } from 'lucide-react';
 
 interface CreditTopUpModalProps {
@@ -31,11 +32,16 @@ export function CreditTopUpModal({
   onClose,
   onSuccess,
 }: CreditTopUpModalProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [purchased, setPurchased] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+
+  const isEliteUser = Boolean(
+    profile?.isEliteMember &&
+    (profile?.eliteExpiresAt ? Number(profile.eliteExpiresAt) > Date.now() : true)
+  );
 
   React.useEffect(() => {
     if (isOpen) {
@@ -168,15 +174,37 @@ export function CreditTopUpModal({
             <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 space-y-3">
               <div className="flex items-baseline justify-between flex-wrap gap-2">
                 <div className="flex items-baseline gap-1.5 flex-wrap">
-                  <span className="text-2xl sm:text-3xl font-extrabold font-sans tracking-tight text-neutral-950 dark:text-white">
-                    ₹{totalAmountInr}
-                  </span>
-                  <span className="text-xs sm:text-sm font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
-                    (${pack.rawPriceUsd * quantity} USD)
-                  </span>
-                  <span className="text-xs text-neutral-500 font-sans ml-1">
-                    {quantity > 1 ? `(${quantity} × ₹${pack.rawPriceInr})` : 'one-time payment'}
-                  </span>
+                  {isEliteUser ? (
+                    <div className="space-y-1">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl sm:text-3xl font-extrabold font-sans tracking-tight text-amber-600 dark:text-amber-400">
+                          ₹{totalAmountInr - Math.round(totalAmountInr * 0.1)}
+                        </span>
+                        <span className="text-sm line-through text-neutral-400 font-sans">
+                          ₹{totalAmountInr}
+                        </span>
+                        <span className="text-xs text-neutral-500 font-sans ml-1">
+                          {quantity > 1 ? `(${quantity} packs)` : 'one-time'}
+                        </span>
+                      </div>
+                      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-[10px] font-bold">
+                        <Crown className="w-3 h-3" />
+                        <span>10% Elite Discount</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="text-2xl sm:text-3xl font-extrabold font-sans tracking-tight text-neutral-950 dark:text-white">
+                        ₹{totalAmountInr}
+                      </span>
+                      <span className="text-xs sm:text-sm font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
+                        (${pack.rawPriceUsd * quantity} USD)
+                      </span>
+                      <span className="text-xs text-neutral-500 font-sans ml-1">
+                        {quantity > 1 ? `(${quantity} × ₹${pack.rawPriceInr})` : 'one-time payment'}
+                      </span>
+                    </>
+                  )}
                 </div>
                 <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-sans text-xs font-semibold">
                   +{totalCredits} Credits
@@ -222,7 +250,10 @@ export function CreditTopUpModal({
                   isLoading={loading}
                 >
                   <CreditCard className="w-4 h-4" />
-                  <span>Proceed to Pay ₹{totalAmountInr} (+{totalCredits} Credits)</span>
+                  <span>
+                    Proceed to Pay ₹{isEliteUser ? totalAmountInr - Math.round(totalAmountInr * 0.1) : totalAmountInr}{' '}
+                    (+{totalCredits} Credits)
+                  </span>
                 </Button>
                 <div className="flex items-center justify-center gap-1.5 text-[11px] text-neutral-500 font-sans">
                   <ShieldCheck className="w-3.5 h-3.5 text-neutral-400" />

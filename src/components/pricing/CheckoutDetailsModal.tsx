@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
-import { PricingPlan, CreditPack } from '@/lib/pricingData';
+import { PricingPlan, CreditPack, MembershipPass } from '@/lib/pricingData';
 import { openRazorpayCheckout } from '@/lib/checkout';
+import { auth } from '@/lib/firebase/client';
 import { OrderRecord, PaymentMethodSummary } from '@/types';
 import {
   X,
@@ -23,8 +24,8 @@ import {
 interface CheckoutDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  item: PricingPlan | CreditPack | null;
-  itemType: 'subscription' | 'credit_pack';
+  item: PricingPlan | CreditPack | MembershipPass | null;
+  itemType: 'subscription' | 'credit_pack' | 'membership';
   userId: string;
   userEmail: string;
   userName?: string;
@@ -97,7 +98,7 @@ export function CheckoutDetailsModal({
   const isCreditPack = itemType === 'credit_pack';
   const effectiveQty = isCreditPack ? Math.max(1, Math.min(7, quantity)) : 1;
   const rawAmount = item.rawPriceInr * effectiveQty;
-  const unitCredits = 'creditsAllotment' in item ? item.creditsAllotment : item.credits;
+  const unitCredits = 'creditsAllotment' in item ? item.creditsAllotment : 'bonusCredits' in item ? item.bonusCredits : item.credits;
   const credits = unitCredits * effectiveQty;
   const baseAmount = (rawAmount / 1.18).toFixed(2);
   const gstAmount = (rawAmount - Number(baseAmount)).toFixed(2);
@@ -139,26 +140,6 @@ export function CheckoutDetailsModal({
       onSuccess: async (order) => {
         setStatus('success');
         setConfirmedOrder(order);
-
-        // Store payment method if preference is checked
-        if (saveCardPreference && order.paymentMethod && order.paymentMethod.type !== 'other') {
-          if (typeof window !== 'undefined' && userId) {
-            try {
-              localStorage.setItem(
-                `docstudio_saved_payment_method_${userId}`,
-                JSON.stringify(order.paymentMethod)
-              );
-              await fetch('/api/billing/payment-method', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId, paymentMethod: order.paymentMethod }),
-              });
-            } catch {
-              // ignore
-            }
-          }
-        }
-
         onSuccess(order);
       },
       onError: (err) => {
@@ -210,7 +191,7 @@ export function CheckoutDetailsModal({
                   {item.name}
                 </span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-neutral-900 dark:bg-white text-white dark:text-black">
-                  {itemType === 'subscription' ? 'Plan' : effectiveQty > 1 ? `Pack × ${effectiveQty}` : 'Pack'}
+                  {itemType === 'subscription' ? 'Plan' : itemType === 'membership' ? 'Pass' : effectiveQty > 1 ? `Pack × ${effectiveQty}` : 'Pack'}
                 </span>
               </div>
               <div className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">

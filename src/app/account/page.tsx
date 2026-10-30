@@ -12,7 +12,6 @@ import { Badge } from '@/components/ui/Badge';
 import { AvatarEditModal } from '@/components/ui/AvatarEditModal';
 import { DeleteAccountModal } from '@/components/ui/DeleteAccountModal';
 import { DeactivateAccountModal } from '@/components/ui/DeactivateAccountModal';
-import { QuickLoginModal } from '@/components/ui/QuickLoginModal';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
 import { LinkPhoneModal } from '@/components/ui/LinkPhoneModal';
@@ -21,6 +20,7 @@ import {
   ensureDefaultUserSubscriptions,
   isUsernameAvailable,
   getUserOrders,
+  getUserOrdersPaginated,
   subscribeToDeviceSessions,
   revokeDeviceSession,
   revokeAllOtherDeviceSessions,
@@ -59,6 +59,10 @@ import {
   Sun,
   Moon,
   ChevronRight,
+  ChevronLeft,
+  ChevronDown,
+  ChevronUp,
+  AlertTriangle,
   Zap,
   Globe,
   Link2,
@@ -71,9 +75,9 @@ import {
   RefreshCw,
   Calendar,
   Trash2,
-  QrCode,
   Laptop,
   Tablet,
+  Crown,
 } from 'lucide-react';
 
 type TabKey = 'profile' | 'subscriptions' | 'billing' | 'security' | 'settings' | 'legal';
@@ -122,9 +126,14 @@ export default function AccountPage() {
   const [isTopUpOpen, setIsTopUpOpen] = useState(false);
   const [creditTopUpSuccess, setCreditTopUpSuccess] = useState<string | null>(null);
 
-  // Billing & Invoices state
+  // Billing & Invoices pagination state (5 items per page, lazy loaded)
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [ordersTotal, setOrdersTotal] = useState(0);
+  const [ordersTotalPages, setOrdersTotalPages] = useState(1);
+  const [ordersPageCache, setOrdersPageCache] = useState<Record<number, OrderRecord[]>>({});
+  const [cachedSubOrder, setCachedSubOrder] = useState<OrderRecord | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<OrderRecord | null>(null);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [gstin, setGstin] = useState('');
@@ -156,13 +165,13 @@ export default function AccountPage() {
   const [resetSent, setResetSent] = useState(false);
   const [generalError, setGeneralError] = useState<string | null>(null);
 
-  // Device Sessions & QR Login state
+  // Device Sessions state
   const [deviceSessions, setDeviceSessions] = useState<DeviceSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string>('');
-  const [isQRModalOpen, setIsQRModalOpen] = useState(false);
   const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null);
   const [revokingAll, setRevokingAll] = useState(false);
   const [deviceActionMsg, setDeviceActionMsg] = useState<string | null>(null);
+  const [isDangerZoneOpen, setIsDangerZoneOpen] = useState(false);
 
   // Subscribe to real-time active device sessions
   useEffect(() => {
@@ -319,21 +328,29 @@ export default function AccountPage() {
     };
   }, []);
 
-  // Load URL hash on initial mount
+  // Load URL hash on initial mount & handle hash change events
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const hash = window.location.hash.replace('#', '') as TabKey;
-      if (['profile', 'subscriptions', 'billing', 'security', 'settings', 'legal'].includes(hash)) {
-        setActiveTab(hash);
-      }
+      const handleHashSync = () => {
+        const hash = window.location.hash.replace('#', '') as TabKey;
+        if (['profile', 'subscriptions', 'billing', 'security', 'settings', 'legal'].includes(hash)) {
+          setActiveTab(hash);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      };
+
+      handleHashSync();
+      window.addEventListener('hashchange', handleHashSync);
+      return () => window.removeEventListener('hashchange', handleHashSync);
     }
   }, []);
 
-  // Update URL hash when tab changes
+  // Update URL hash when tab changes & scroll viewport to the top of settings
   const handleTabChange = (tab: TabKey) => {
     setActiveTab(tab);
     if (typeof window !== 'undefined') {
       window.history.replaceState(null, '', `#${tab}`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -429,15 +446,35 @@ export default function AccountPage() {
     }
   };
 
-  // Load user order receipts / invoices
-  const loadOrders = async () => {
+  // Load user order receipts / invoices on demand (5 items per page, lazy loaded)
+  const loadOrdersForPage = async (pageToLoad: number) => {
     if (!user) return;
+
+    // If page is already cached in memory, use it directly without network call
+    if (ordersPageCache[pageToLoad] && ordersPageCache[pageToLoad].length > 0) {
+      setOrders(ordersPageCache[pageToLoad]);
+      setOrdersPage(pageToLoad);
+      return;
+    }
+
     try {
       setOrdersLoading(true);
-      const userOrders = await getUserOrders(user.uid, user.email || '');
-      setOrders(userOrders);
+      const res = await getUserOrdersPaginated(user.uid, user.email || '', pageToLoad, 5);
+      setOrders(res.orders);
+      setOrdersPage(res.page);
+      setOrdersTotal(res.total);
+      setOrdersTotalPages(res.totalPages);
+      setOrdersPageCache((prev) => ({ ...prev, [res.page]: res.orders }));
+
+      // Cache the latest subscription order for renewal calculations
+      const foundSub =
+        res.orders.find((o) => o.itemType === 'subscription' && o.status === 'paid') ||
+        res.orders.find((o) => o.status === 'paid');
+      if (foundSub && !cachedSubOrder) {
+        setCachedSubOrder(foundSub);
+      }
     } catch (err) {
-      console.error('[Account] Error loading orders:', err);
+      console.error('[Account] Error loading paginated orders:', err);
     } finally {
       setOrdersLoading(false);
     }
@@ -445,17 +482,22 @@ export default function AccountPage() {
 
   useEffect(() => {
     loadSubscriptions();
-    loadOrders();
+    loadOrdersForPage(1);
     if (typeof window !== 'undefined' && user?.uid) {
       const savedGstin = localStorage.getItem(`docstudio_gstin_${user.uid}`);
       if (savedGstin) setGstin(savedGstin);
 
       try {
-        const rawMethod = localStorage.getItem(`docstudio_saved_payment_method_${user.uid}`);
-        if (rawMethod) {
-          setSavedPaymentMethod(JSON.parse(rawMethod));
-        } else if (profile?.savedPaymentMethod) {
-          setSavedPaymentMethod(profile.savedPaymentMethod);
+        const isWiped = localStorage.getItem(`docstudio_payment_method_wiped_${user.uid}`) === 'true';
+        if (isWiped) {
+          setSavedPaymentMethod(null);
+        } else {
+          const rawMethod = localStorage.getItem(`docstudio_saved_payment_method_${user.uid}`);
+          if (rawMethod) {
+            setSavedPaymentMethod(JSON.parse(rawMethod));
+          } else if (profile?.savedPaymentMethod) {
+            setSavedPaymentMethod(profile.savedPaymentMethod);
+          }
         }
       } catch {
         // ignore
@@ -463,27 +505,28 @@ export default function AccountPage() {
     }
   }, [user, profile]);
 
-  // If orders load and no explicit saved method was set, fallback to the latest paid order's method
-  useEffect(() => {
-    if (!savedPaymentMethod && orders.length > 0 && orders[0].paymentMethod && orders[0].paymentMethod.type !== 'other') {
-      setSavedPaymentMethod(orders[0].paymentMethod);
-    }
-  }, [orders, savedPaymentMethod]);
-
   // Handler to wipe / delete stored payment method
   const handleWipePaymentMethod = async () => {
     if (!user) return;
     try {
       setIsWipingPaymentMethod(true);
-      await fetch(`/api/billing/payment-method?userId=${encodeURIComponent(user.uid)}`, {
+      const token = await user.getIdToken();
+      await fetch('/api/billing/payment-method', {
         method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (typeof window !== 'undefined') {
         localStorage.removeItem(`docstudio_saved_payment_method_${user.uid}`);
+        localStorage.setItem(`docstudio_payment_method_wiped_${user.uid}`, 'true');
       }
       setSavedPaymentMethod(null);
+      if (profile) {
+        profile.savedPaymentMethod = null;
+      }
       setWipeConfirmOpen(false);
-      setWipeSuccessMsg('Stored payment method wiped securely.');
+      setWipeSuccessMsg('Payment details removed. Cards are kept only inside Razorpay.');
       setTimeout(() => setWipeSuccessMsg(null), 4000);
     } catch (err) {
       console.error('Error wiping payment method:', err);
@@ -656,35 +699,38 @@ export default function AccountPage() {
 
   // Active Plan & Subscription Lifecycle computation
   const activePlanTier: SubscriptionPlan = useMemo(() => {
+    if (isAdmin) return 'enterprise';
+    const allKnownOrders = cachedSubOrder ? [cachedSubOrder, ...orders] : orders;
     const hasEnterprise =
       subscriptions.some((s) => s.plan === 'enterprise') ||
-      orders.some(
+      allKnownOrders.some(
         (o) =>
           o.itemType === 'subscription' &&
-          (o.itemId === 'enterprise' || o.itemName.toLowerCase().includes('ultra')) &&
+          (o.itemId?.includes('enterprise') || o.itemId?.includes('ultra') || o.itemName?.toLowerCase().includes('ultra')) &&
           o.status === 'paid'
       );
     if (hasEnterprise) return 'enterprise';
 
     const hasPro =
       subscriptions.some((s) => s.plan === 'pro') ||
-      orders.some(
+      allKnownOrders.some(
         (o) =>
           o.itemType === 'subscription' &&
-          (o.itemId === 'pro' || o.itemName.toLowerCase().includes('pro')) &&
+          (o.itemId?.includes('pro') || o.itemName?.toLowerCase().includes('pro')) &&
           o.status === 'paid'
       );
     if (hasPro) return 'pro';
 
     return 'starter';
-  }, [subscriptions, orders]);
+  }, [isAdmin, subscriptions, orders, cachedSubOrder]);
 
   const latestSubOrder = useMemo(() => {
     return (
+      cachedSubOrder ||
       orders.find((o) => o.itemType === 'subscription' && o.status === 'paid') ||
       orders.find((o) => o.status === 'paid')
     );
-  }, [orders]);
+  }, [cachedSubOrder, orders]);
 
   const isYearlyPlan = useMemo(() => {
     return Boolean(
@@ -695,16 +741,25 @@ export default function AccountPage() {
     );
   }, [latestSubOrder]);
 
+  const isEliteUser = useMemo(() => {
+    return Boolean(
+      profile?.isEliteMember &&
+        (profile?.eliteExpiresAt ? Number(profile.eliteExpiresAt) > Date.now() : true)
+    );
+  }, [profile]);
+
   const planTierDisplayName =
-    activePlanTier === 'enterprise'
+    isAdmin
+      ? 'Enterprise Admin'
+      : activePlanTier === 'enterprise'
       ? isYearlyPlan
         ? 'DocStudio Ultra Annual'
-        : 'DocStudio Ultra Pass'
+        : 'DocStudio Ultra'
       : activePlanTier === 'pro'
       ? isYearlyPlan
         ? 'DocStudio Pro Annual'
-        : 'DocStudio Pro Pass'
-      : 'Starter (Free)';
+        : 'DocStudio Pro'
+      : 'DocStudio Starter';
 
   const planRenewalAmount =
     activePlanTier === 'enterprise'
@@ -730,12 +785,26 @@ export default function AccountPage() {
   // Sidebar navigation items
   const navItems: { key: TabKey; label: string; icon: React.ElementType; badge?: string }[] = [
     { key: 'profile', label: 'Account', icon: UserIconLucide },
-    { key: 'subscriptions', label: 'Subscriptions', icon: Layers, badge: `${totalCreditsRemaining} pts` },
-    { key: 'billing', label: 'Billing', icon: CreditCard, badge: orders.length > 0 ? `${orders.length}` : undefined },
+    { key: 'subscriptions', label: 'Subscriptions', icon: Layers },
+    { key: 'billing', label: 'Billing', icon: CreditCard },
     { key: 'security', label: 'Security', icon: KeyRound },
     { key: 'settings', label: 'Preferences', icon: Sliders },
     { key: 'legal', label: 'Terms', icon: FileText },
   ];
+
+  // Helper to show at most 3 page numbers at any time for transactions pagination
+  const getVisiblePages = (current: number, total: number) => {
+    if (total <= 3) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    if (current <= 2) {
+      return [1, 2, 3];
+    }
+    if (current >= total - 1) {
+      return [total - 2, total - 1, total];
+    }
+    return [current - 1, current, current + 1];
+  };
 
   return (
     <ProtectedRoute>
@@ -746,7 +815,7 @@ export default function AccountPage() {
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
             Settings
           </h1>
-          <div className="overflow-x-auto pb-2 -mx-4 px-4 flex items-center gap-2 scrollbar-none">
+          <div className="overflow-x-auto pb-2 -mx-4 px-4 flex items-center gap-2 no-scrollbar scrollbar-none">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.key;
@@ -880,6 +949,35 @@ export default function AccountPage() {
               <div className="p-4 border border-emerald-300 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 text-xs font-sans flex items-center gap-2 rounded-xl animate-fadeIn">
                 <Sparkles className="w-4 h-4 shrink-0 text-amber-500" />
                 <span>{creditTopUpSuccess}</span>
+              </div>
+            )}
+
+            {/* Dedicated Super Admin Banner for izackstudio1@gmail.com */}
+            {(isAdmin || user?.email?.toLowerCase() === 'izackstudio1@gmail.com') && (
+              <div className="p-4 rounded-2xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-white/10 dark:bg-black/10 flex items-center justify-center shrink-0">
+                    <Shield className="w-5 h-5 text-amber-400 dark:text-amber-600" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold font-sans flex items-center gap-1.5 flex-wrap">
+                      <span>Super Administrator Portal</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/20 dark:bg-black/20">
+                        izackstudio1@gmail.com
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-neutral-300 dark:text-neutral-600 font-sans">
+                      Dedicated controls for coupon creation, discount scope rules, and software catalog management.
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/admin"
+                  className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white text-black dark:bg-black dark:text-white hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center gap-1.5"
+                >
+                  <span>Open Admin Suite</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
               </div>
             )}
 
@@ -1327,38 +1425,170 @@ export default function AccountPage() {
                   </div>
                 </div>
 
-                {/* Section 1: Generation Credits Vault */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-4 h-4 text-amber-500" />
-                    <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
-                      Generation Credits Vault
-                    </h3>
-                  </div>
-
-                  <div className="p-5 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 space-y-3">
-                    <div className="flex items-baseline justify-between flex-wrap gap-2">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-extrabold font-mono text-neutral-950 dark:text-white">
-                          {subsLoading ? '...' : totalCreditsRemaining}
-                        </span>
-                        <span className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
-                          credits available / {totalCreditsMax} total monthly pool
+                {/* Top Section: Current Plan & Generation Credits Vault */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  {/* Card 1: Current Active Plan */}
+                  <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/40 flex flex-col justify-between space-y-4 shadow-sm dark:shadow-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center text-neutral-900 dark:text-white">
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                          Current Active Plan
                         </span>
                       </div>
-                      <span className="text-xs font-mono font-bold text-neutral-700 dark:text-neutral-300">
-                        {totalCreditsPercentage}% remaining
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider font-bold bg-neutral-200/80 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+                        {activePlanTier === 'starter' ? 'Free Tier' : isYearlyPlan ? 'Annual Plan' : 'Monthly Plan'}
                       </span>
                     </div>
 
-                    <div className="w-full h-2.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-blue-400 dark:to-indigo-400 rounded-full transition-all duration-500"
-                        style={{ width: `${totalCreditsPercentage}%` }}
-                      />
+                    <div>
+                      <div className="text-2xl sm:text-3xl font-bold font-sans text-neutral-950 dark:text-white leading-tight">
+                        {planTierDisplayName}
+                      </div>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1.5 font-sans leading-relaxed">
+                        {activePlanTier === 'starter'
+                          ? 'Standard creation quotas with core access across all Docdril creative pipelines.'
+                          : 'Full priority access unlocked across Canvas, Motion, and Document Engines.'}
+                      </p>
+                    </div>
+
+                    <div className="pt-3 border-t border-neutral-200/80 dark:border-neutral-800/80 flex items-center justify-between text-xs">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5 text-[11px] font-sans">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-dot" />
+                        {activePlanTier === 'starter' ? 'Active Starter Tier' : 'Active Subscription'}
+                      </span>
+                      <Link
+                        href="/pricing"
+                        className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-200 dark:text-black text-xs font-semibold shadow-sm transition-all active:scale-95 cursor-pointer"
+                      >
+                        <span>{activePlanTier === 'starter' ? 'Upgrade Plan' : 'Change Plan'}</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Generation Credits Vault */}
+                  <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/40 flex flex-col justify-between space-y-4 shadow-sm dark:shadow-none">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-amber-500/10 dark:bg-amber-400/10 border border-amber-500/20 dark:border-amber-400/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                          <Zap className="w-3.5 h-3.5" />
+                        </div>
+                        <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                          Generation Credits Vault
+                        </span>
+                      </div>
+                      <span className="text-xs font-mono font-bold text-neutral-700 dark:text-neutral-300">
+                        {totalCreditsPercentage}% available
+                      </span>
+                    </div>
+
+                    <div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-3xl sm:text-4xl font-extrabold font-mono text-neutral-950 dark:text-white">
+                          {subsLoading ? '...' : totalCreditsRemaining.toLocaleString()}
+                        </span>
+                        <span className="text-xs text-neutral-500 dark:text-neutral-400 font-sans">
+                          credits available / {totalCreditsMax.toLocaleString()} total pool
+                        </span>
+                      </div>
+
+                      <div className="w-full h-2 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden mt-3">
+                        <div
+                          className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-blue-400 dark:to-indigo-400 rounded-full transition-all duration-500"
+                          style={{ width: `${totalCreditsPercentage}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-neutral-200/80 dark:border-neutral-800/80 flex items-center justify-between text-xs">
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5 text-[11px] font-sans">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        Shared Across Ecosystem
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPack(CREDIT_PACKS[1]);
+                          setIsTopUpOpen(true);
+                        }}
+                        className="text-neutral-900 dark:text-white font-semibold hover:underline text-xs flex items-center gap-1 cursor-pointer"
+                      >
+                        <Sparkles className="w-3 h-3 text-amber-500" />
+                        <span>Top Up Credits +</span>
+                      </button>
                     </div>
                   </div>
                 </div>
+
+                {/* Elite Members Pass Status Card */}
+                {isEliteUser ? (
+                  <div className="p-5 sm:p-6 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/[0.08] via-amber-400/[0.03] to-transparent dark:from-amber-400/[0.05] dark:via-neutral-900/40 dark:to-neutral-900/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                    <div className="flex items-start sm:items-center gap-3.5">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 shrink-0 shadow-sm">
+                        <Crown className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-base font-bold text-neutral-950 dark:text-white font-sans">
+                            Elite Members Pass Active
+                          </h4>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider font-bold bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30">
+                            👑 10% Off Everything
+                          </span>
+                        </div>
+                        <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-0.5 font-sans">
+                          You save 10% automatically on every plan renewal and credit top-up across DocStudio.
+                          {profile?.eliteExpiresAt && (
+                            <span className="ml-1 text-neutral-500 dark:text-neutral-400 font-mono">
+                              • Valid until {new Date(Number(profile.eliteExpiresAt)).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-2">
+                      <Link
+                        href="/pricing#credits"
+                        className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-neutral-950 font-bold text-xs shadow-sm transition-all"
+                      >
+                        Shop with 10% Off
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-gradient-to-r from-amber-500/[0.04] via-transparent to-transparent flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                    <div className="flex items-start sm:items-center gap-3.5">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shrink-0">
+                        <Crown className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-base font-bold text-neutral-950 dark:text-white font-sans">
+                            Join Elite Members
+                          </h4>
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full uppercase tracking-wider font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                            ₹199 / Year
+                          </span>
+                        </div>
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5 font-sans">
+                          Save 10% on every subscription renewal and credit top-up, plus receive +150 welcome bonus credits.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-2">
+                      <Link
+                        href="/checkout?pass=elite-annual"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-200 dark:text-black font-semibold text-xs shadow-sm transition-all cursor-pointer"
+                      >
+                        <span>Get Elite Pass</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  </div>
+                )}
 
                 {/* Section 2: Active Software Subscriptions */}
                 <div className="space-y-4 pt-6 border-t border-neutral-200 dark:border-neutral-900">
@@ -1690,36 +1920,36 @@ export default function AccountPage() {
                         ) : (
                           <>
                             <p className="text-sm font-bold font-sans text-neutral-900 dark:text-white">
-                              Standard Checkout
+                              Direct Razorpay Secure Checkout
                             </p>
                             <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-0.5">
-                              No saved cards or UPI on file. UPI, Visa, Mastercard, RuPay & NetBanking entered securely at checkout.
+                              No card details are stored on DocStudio. Saved cards & UPI methods are managed securely and exclusively inside Razorpay's RBI-compliant vault.
                             </p>
                           </>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 self-end sm:self-auto">
+                    <div className="flex items-center gap-2.5 self-end sm:self-auto flex-wrap">
                       {savedPaymentMethod && (
                         <>
                           {wipeConfirmOpen ? (
-                            <div className="flex items-center gap-2 p-1.5 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900">
-                              <span className="text-[11px] font-medium text-red-700 dark:text-red-300 px-1">
-                                Wipe stored method?
+                            <div className="flex items-center gap-2 p-1.5 px-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-800">
+                              <span className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400">
+                                Remove saved payment method?
                               </span>
                               <button
                                 type="button"
                                 onClick={handleWipePaymentMethod}
                                 disabled={isWipingPaymentMethod}
-                                className="px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[11px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                                className="px-3 py-1 rounded-lg bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-black dark:hover:bg-neutral-900 dark:border dark:border-neutral-700 text-xs font-semibold transition-colors cursor-pointer"
                               >
-                                {isWipingPaymentMethod ? 'Wiping...' : 'Yes, Wipe'}
+                                {isWipingPaymentMethod ? 'Removing...' : 'Confirm'}
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setWipeConfirmOpen(false)}
-                                className="px-2 py-1 rounded-lg text-neutral-600 dark:text-neutral-400 text-[11px] hover:bg-neutral-200 dark:hover:bg-neutral-800 transition-colors"
+                                className="px-2 py-1 text-neutral-500 hover:text-neutral-950 dark:hover:text-white text-xs transition-colors cursor-pointer"
                               >
                                 Cancel
                               </button>
@@ -1728,17 +1958,16 @@ export default function AccountPage() {
                             <button
                               type="button"
                               onClick={() => setWipeConfirmOpen(true)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50/60 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 text-xs font-semibold transition-colors cursor-pointer"
+                              className="px-3.5 py-1.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-black dark:hover:bg-neutral-900 dark:border dark:border-neutral-800 text-xs font-medium transition-all shadow-sm active:scale-[0.98] cursor-pointer"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span>Wipe Stored Method</span>
+                              {savedPaymentMethod.type === 'card' ? 'Remove Card' : 'Remove Payment Method'}
                             </button>
                           )}
                         </>
                       )}
 
-                      <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-3 py-1.5 rounded-xl border border-emerald-200 dark:border-emerald-800">
-                        <ShieldCheck className="w-4 h-4" />
+                      <div className="flex items-center gap-1.5 text-xs font-medium text-neutral-500 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-900/80 px-3 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800">
+                        <ShieldCheck className="w-3.5 h-3.5 text-neutral-400 dark:text-neutral-500" />
                         <span>256-Bit SSL</span>
                       </div>
                     </div>
@@ -1758,12 +1987,12 @@ export default function AccountPage() {
                     </div>
                   </div>
 
-                  {ordersLoading ? (
+                  {ordersLoading && orders.length === 0 ? (
                     <div className="p-8 text-center text-xs text-neutral-500 font-sans flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span>Loading transaction receipts...</span>
                     </div>
-                  ) : orders.length === 0 ? (
+                  ) : !ordersLoading && orders.length === 0 ? (
                     <div className="p-10 rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-800 text-center space-y-3 bg-neutral-50/50 dark:bg-neutral-950/40">
                       <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center mx-auto text-neutral-400">
                         <Receipt className="w-6 h-6" />
@@ -1785,8 +2014,16 @@ export default function AccountPage() {
                       </Link>
                     </div>
                   ) : (
-                    <div className="border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden bg-white dark:bg-neutral-950">
-                      <div className="overflow-x-auto">
+                    <div className="border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden bg-white dark:bg-neutral-950 shadow-sm">
+                      <div className="overflow-x-auto relative">
+                        {ordersLoading && (
+                          <div className="absolute inset-0 bg-white/60 dark:bg-neutral-950/60 backdrop-blur-[1px] flex items-center justify-center z-10">
+                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 text-xs font-medium shadow-md">
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <span>Loading page {ordersPage}...</span>
+                            </div>
+                          </div>
+                        )}
                         <table className="w-full text-left border-collapse text-xs font-sans">
                           <thead>
                             <tr className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/60 text-neutral-500 dark:text-neutral-400 font-bold uppercase tracking-wider text-[10px]">
@@ -1856,6 +2093,61 @@ export default function AccountPage() {
                             })}
                           </tbody>
                         </table>
+                      </div>
+
+                      {/* Pagination Footer - Max 3 visible page numbers, on-demand loading */}
+                      <div className="px-4 py-3 border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-sans">
+                        <div className="text-neutral-500 dark:text-neutral-400 text-[11px] font-sans">
+                          Showing <span className="font-semibold text-neutral-900 dark:text-white">{orders.length > 0 ? (ordersPage - 1) * 5 + 1 : 0}</span> to{' '}
+                          <span className="font-semibold text-neutral-900 dark:text-white">{(ordersPage - 1) * 5 + orders.length}</span> of{' '}
+                          <span className="font-semibold text-neutral-900 dark:text-white">{ordersTotal}</span> transactions
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {/* Previous Page Arrow */}
+                          <button
+                            type="button"
+                            onClick={() => loadOrdersForPage(ordersPage - 1)}
+                            disabled={ordersPage <= 1 || ordersLoading}
+                            aria-label="Previous transactions"
+                            className="w-8 h-8 rounded-lg flex items-center justify-center border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+
+                          {/* Up to 3 Page Number Buttons */}
+                          {getVisiblePages(ordersPage, ordersTotalPages).map((p) => {
+                            const isActive = p === ordersPage;
+                            return (
+                              <button
+                                key={p}
+                                type="button"
+                                onClick={() => loadOrdersForPage(p)}
+                                disabled={ordersLoading}
+                                aria-label={`Page ${p}`}
+                                aria-current={isActive ? 'page' : undefined}
+                                className={`min-w-[32px] h-8 px-2.5 rounded-lg text-xs font-sans font-medium transition-all flex items-center justify-center cursor-pointer ${
+                                  isActive
+                                    ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-sm'
+                                    : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 border border-neutral-200 dark:border-neutral-800'
+                                }`}
+                              >
+                                {p}
+                              </button>
+                            );
+                          })}
+
+                          {/* Next Page Arrow */}
+                          <button
+                            type="button"
+                            onClick={() => loadOrdersForPage(ordersPage + 1)}
+                            disabled={ordersPage >= ordersTotalPages || ordersLoading}
+                            aria-label="Next transactions"
+                            className="w-8 h-8 rounded-lg flex items-center justify-center border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -2352,18 +2644,6 @@ export default function AccountPage() {
                         type="button"
                         variant="secondary"
                         size="sm"
-                        onClick={() => setIsQRModalOpen(true)}
-                        className="gap-1.5 text-xs text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                        title="Generate instant QR code to log into another device"
-                      >
-                        <QrCode className="w-3.5 h-3.5" />
-                        <span>Quick Login (QR)</span>
-                      </Button>
-
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
                         onClick={signOut}
                         className="gap-1.5 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30"
                       >
@@ -2431,15 +2711,8 @@ export default function AccountPage() {
                       const otherSessions = deviceSessions.filter((s) => s.id !== currentSessionId);
                       if (otherSessions.length === 0) {
                         return (
-                          <div className="px-4 py-3 rounded-xl bg-neutral-50/40 dark:bg-neutral-900/20 border border-dashed border-neutral-200 dark:border-neutral-800 text-[11px] text-neutral-400 flex items-center justify-between">
+                          <div className="px-4 py-3 rounded-xl bg-neutral-50/40 dark:bg-neutral-900/20 border border-dashed border-neutral-200 dark:border-neutral-800 text-[11px] text-neutral-400">
                             <span>No other active devices. You are securely signed in only on this device.</span>
-                            <button
-                              type="button"
-                              onClick={() => setIsQRModalOpen(true)}
-                              className="text-neutral-700 dark:text-neutral-300 hover:underline font-medium cursor-pointer"
-                            >
-                              + Link Phone / Browser via QR
-                            </button>
                           </div>
                         );
                       }
@@ -2517,69 +2790,116 @@ export default function AccountPage() {
                   </div>
                 </div>
 
-                {/* Section 4: Account Deactivation & Deletion */}
-                <div className="space-y-6 pt-6 border-t border-neutral-200 dark:border-neutral-900">
-                  {/* Subsection 4A: Deactivate Account (Temporary) */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
-                          Deactivate Account
-                        </h3>
-                        <span className="text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900">
-                          Temporary
-                        </span>
+                {/* Section 4: Danger Zone (Collapsible Destructive Actions) */}
+                <div className="pt-6 border-t border-neutral-200 dark:border-neutral-900">
+                  <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/40 overflow-hidden transition-all duration-200 shadow-sm dark:shadow-none">
+                    {/* Danger Zone Header / Trigger */}
+                    <div
+                      onClick={() => setIsDangerZoneOpen(!isDangerZoneOpen)}
+                      className="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer hover:bg-neutral-100/60 dark:hover:bg-neutral-900/70 transition-colors select-none"
+                    >
+                      <div className="flex items-start sm:items-center gap-3.5">
+                        <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center text-neutral-700 dark:text-neutral-300 shrink-0 mt-0.5 sm:mt-0">
+                          <AlertTriangle className="w-5 h-5 text-neutral-600 dark:text-neutral-400" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                              Danger Zone
+                            </h3>
+                            <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-neutral-200/80 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 border border-neutral-300/60 dark:border-neutral-700">
+                              Destructive
+                            </span>
+                          </div>
+                          <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-0.5 max-w-xl leading-relaxed">
+                            Irreversible or sensitive account operations. Temporarily pause all profile visibility or permanently expunge your account, credentials, and software subscription quotas.
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans max-w-xl leading-relaxed">
-                        Temporarily pause your account and hide your profile across the Docdril ecosystem. Your active subscriptions, software access, and generation credit balances are preserved safely until you sign back in to reactivate.
-                      </p>
+
+                      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                        <span className="text-xs font-semibold font-sans text-neutral-700 dark:text-neutral-300">
+                          {isDangerZoneOpen ? 'See less' : 'See more'}
+                        </span>
+                        <div className="w-7 h-7 rounded-lg border border-neutral-200 dark:border-neutral-800 flex items-center justify-center text-neutral-600 dark:text-neutral-400 bg-white dark:bg-neutral-950 shadow-sm">
+                          {isDangerZoneOpen ? (
+                            <ChevronUp className="w-4 h-4" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4" />
+                          )}
+                        </div>
+                      </div>
                     </div>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsDeactivateModalOpen(true)}
-                      className="shrink-0 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/50"
-                    >
-                      Deactivate Account
-                    </Button>
-                  </div>
+                    {/* Collapsible Content */}
+                    {isDangerZoneOpen && (
+                      <div className="border-t border-neutral-200 dark:border-neutral-800 p-5 sm:p-6 space-y-6 bg-white/70 dark:bg-neutral-950/70 animate-in fade-in duration-200">
+                        {/* Subsection 4A: Deactivate Account (Temporary) */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                                Deactivate Account
+                              </h4>
+                              <span className="text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-900">
+                                Temporary
+                              </span>
+                            </div>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans max-w-xl leading-relaxed">
+                              Temporarily pause your account and hide your profile across the Docdril ecosystem. Your active subscriptions, software access, and generation credit balances are preserved safely until you sign back in to reactivate.
+                            </p>
+                          </div>
 
-                  {/* Subsection 4B: Delete Account (Permanent) */}
-                  <div className="pt-4 border-t border-dashed border-neutral-200 dark:border-neutral-900 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
-                          Delete Account
-                        </h3>
-                        <span className="text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900">
-                          Permanent
-                        </span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsDeactivateModalOpen(true)}
+                            className="shrink-0 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/50"
+                          >
+                            Deactivate Account
+                          </Button>
+                        </div>
+
+                        {/* Subsection 4B: Delete Account (Permanent) */}
+                        <div className="pt-5 border-t border-dashed border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-bold uppercase tracking-wider font-sans text-neutral-950 dark:text-white">
+                                Delete Account
+                              </h4>
+                              <span className="text-[10px] font-sans font-semibold px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-950/60 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900">
+                                Permanent
+                              </span>
+                            </div>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans max-w-xl leading-relaxed">
+                              Permanently delete your profile, credentials, and active software subscriptions across the Docdril ecosystem.
+                            </p>
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="danger"
+                            size="sm"
+                            onClick={() => setIsDeleteModalOpen(true)}
+                            className="shrink-0"
+                          >
+                            Delete Account
+                          </Button>
+                        </div>
+
+                        {/* Data Governance & Permanent Erasure callout */}
+                        <div className="p-4 rounded-xl bg-neutral-100/70 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 text-xs font-sans text-neutral-600 dark:text-neutral-400 space-y-1.5">
+                          <p className="font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
+                            <Shield className="w-3.5 h-3.5 text-neutral-500" />
+                            <span>Data Governance & Permanent Erasure</span>
+                          </p>
+                          <p className="leading-relaxed">
+                            Once initiated, all account data, avatars, and generation credit pools are permanently expunged under GDPR Right to Erasure. This action cannot be reversed.
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans max-w-xl leading-relaxed">
-                        Permanently delete your profile, credentials, and active software subscriptions across the Docdril ecosystem.
-                      </p>
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="danger"
-                      size="sm"
-                      onClick={() => setIsDeleteModalOpen(true)}
-                      className="shrink-0"
-                    >
-                      Delete Account
-                    </Button>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 text-xs font-sans text-neutral-600 dark:text-neutral-400 space-y-1.5">
-                    <p className="font-semibold text-neutral-800 dark:text-neutral-200">
-                      Data Governance & Permanent Erasure
-                    </p>
-                    <p className="leading-relaxed">
-                      Once initiated, all account data, avatars, and generation credit pools are permanently expunged under GDPR Right to Erasure. This action cannot be reversed.
-                    </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -2849,15 +3169,6 @@ export default function AccountPage() {
           onConfirmDelete={handleConfirmDelete}
         />
 
-        {/* Quick Login via QR Modal */}
-        <QuickLoginModal
-          isOpen={isQRModalOpen}
-          onClose={() => setIsQRModalOpen(false)}
-          userId={user?.uid || ''}
-          username={username || profile?.username || user?.displayName || 'user'}
-          userEmail={user?.email || ''}
-        />
-
         {/* Credit Top-Up Modal */}
         <CreditTopUpModal
           pack={selectedPack}
@@ -2865,7 +3176,8 @@ export default function AccountPage() {
           onClose={() => setIsTopUpOpen(false)}
           onSuccess={async (addedCredits) => {
             await handleTopUpSuccess(addedCredits);
-            await loadOrders();
+            setOrdersPageCache({});
+            await loadOrdersForPage(1);
           }}
         />
 

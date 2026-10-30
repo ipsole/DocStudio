@@ -219,3 +219,81 @@ export async function addSharedCreditsAdmin(
     return false;
   }
 }
+
+/**
+ * Checks whether a user holds an active, unexpired Elite Membership.
+ */
+export async function isUserEliteAdmin(userId: string): Promise<boolean> {
+  const { firestore } = getFirebaseAdmin();
+  if (!firestore || !userId) return false;
+  try {
+    const userDoc = await firestore.collection('users').doc(userId).get();
+    if (!userDoc.exists) return false;
+    const data = userDoc.data();
+    if (!data?.isEliteMember) return false;
+    const expiresAt = Number(data.eliteExpiresAt) || 0;
+    return expiresAt > Date.now();
+  } catch (err) {
+    console.error('[DocStudio Billing Admin] Error checking elite membership:', err);
+    return false;
+  }
+}
+
+/**
+ * Activates or renews an annual Elite Membership for a user, adding welcome bonus credits.
+ */
+export async function activateEliteMembershipAdmin(
+  userId: string,
+  userEmail: string,
+  bonusCredits = 150
+): Promise<boolean> {
+  const { firestore } = getFirebaseAdmin();
+  if (!firestore) {
+    console.warn('[DocStudio Billing Admin] Firestore Admin not initialized. Skipping elite activation.');
+    return false;
+  }
+
+  const now = Date.now();
+  const oneYearFromNow = now + 365 * 24 * 60 * 60 * 1000;
+
+  try {
+    // 1. Update user profile document in users collection
+    const userRef = firestore.collection('users').doc(userId);
+    await userRef.set(
+      {
+        isEliteMember: true,
+        eliteExpiresAt: oneYearFromNow,
+        eliteJoinedAt: now,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    // 2. Add welcome bonus credits
+    if (bonusCredits > 0) {
+      await addSharedCreditsAdmin(userId, userEmail, bonusCredits);
+    }
+
+    // 3. Persist entitlement record for ecosystem SSO
+    const entRef = firestore.collection(ENTITLEMENTS_COLLECTION).doc(`${userId}_elite_membership`);
+    await entRef.set(
+      {
+        userId,
+        appId: 'all',
+        plan: 'elite',
+        status: 'active',
+        source: 'razorpay',
+        validUntil: oneYearFromNow,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    console.log(`[DocStudio Billing Admin] Successfully activated Elite Membership for user ${userId} (+${bonusCredits} credits)`);
+    return true;
+  } catch (err) {
+    console.error('[DocStudio Billing Admin] Error activating elite membership with Admin SDK:', err);
+    return false;
+  }
+}

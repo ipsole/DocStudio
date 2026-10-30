@@ -30,6 +30,46 @@ export interface CreditPack {
   popular?: boolean;
 }
 
+export interface MembershipPass {
+  id: string;
+  name: string;
+  tagline: string;
+  priceInr: string;
+  priceUsd: string;
+  rawPriceInr: number;
+  rawPriceUsd: number;
+  period: string;
+  discountPercentage: number;
+  bonusCredits: number;
+  badge?: string;
+  features: string[];
+  cta: string;
+  description: string;
+}
+
+export const ELITE_MEMBERSHIP: MembershipPass = {
+  id: 'elite-annual',
+  name: 'Elite Members',
+  tagline: 'Annual privilege pass unlocking 10% off everything across DocStudio.',
+  priceInr: '₹199',
+  priceUsd: '$2.40',
+  rawPriceInr: 199,
+  rawPriceUsd: 2.4,
+  period: '/ year',
+  discountPercentage: 10,
+  bonusCredits: 150,
+  badge: '👑 Annual Pass',
+  cta: 'Join Elite Members',
+  description: 'Enjoy a 10% universal discount on every purchase and renewal, plus 150 bonus credits instantly.',
+  features: [
+    '10% Universal Discount on all subscriptions & credit top-ups',
+    '150 Welcome bonus generation credits',
+    'Exclusive golden 👑 Elite profile badge',
+    'Priority GPU rendering queue during peak studio hours',
+    'Early access to newly launched Docdril tools & pipelines',
+  ],
+};
+
 export const PRICING_PLANS: PricingPlan[] = [
   {
     id: 'starter',
@@ -223,6 +263,11 @@ export const CREDIT_PACKS: CreditPack[] = [
 ];
 
 export const PRICING_FAQS = [
+  {
+    question: 'What is the "Elite Members" annual pass?',
+    answer:
+      'Elite Members is an annual membership priced at ₹199/year. Elite members enjoy an automatic 10% discount on all software subscriptions and credit top-ups across the Docdril ecosystem, receive 150 welcome bonus credits upon joining, and get a distinguished 👑 Elite profile badge.',
+  },
   {
     question: 'How do unified generation credits work across subdomains?',
     answer:

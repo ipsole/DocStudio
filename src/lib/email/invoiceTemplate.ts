@@ -278,6 +278,12 @@ export function generatePrintableInvoiceHtml(order: OrderRecord, recipientName?:
 
     <div class="totals-area">
       <table class="totals-table">
+        ${order.eliteDiscountAmount ? `
+        <tr>
+          <td style="color: #d97706; font-weight: 600;">👑 Elite Members Discount (10%)</td>
+          <td style="text-align: right; font-family: monospace; color: #d97706; font-weight: 600;">-₹${order.eliteDiscountAmount.toFixed(2)}</td>
+        </tr>
+        ` : ''}
         <tr>
           <td style="color: #71717a;">Taxable Subtotal</td>
           <td style="text-align: right; font-family: monospace; font-weight: 600;">₹${baseAmount}</td>

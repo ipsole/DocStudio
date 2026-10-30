@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { ALL_PRICING_PLANS, CREDIT_PACKS, PricingPlan, CreditPack } from '@/lib/pricingData';
+import { ALL_PRICING_PLANS, CREDIT_PACKS, ELITE_MEMBERSHIP, PricingPlan, CreditPack, MembershipPass } from '@/lib/pricingData';
 import { openRazorpayCheckout } from '@/lib/checkout';
 import { DocdrilLogo } from '@/components/ui/DocdrilLogo';
 import { OrderRecord, PaymentMethodSummary } from '@/types';
@@ -26,6 +26,9 @@ import {
   Zap,
   ArrowRight,
   RefreshCw,
+  Tag,
+  X,
+  Crown,
 } from 'lucide-react';
 
 function CheckoutContent() {
@@ -35,9 +38,23 @@ function CheckoutContent() {
 
   const planId = searchParams.get('plan');
   const packId = searchParams.get('pack');
+  const passId = searchParams.get('pass');
   const itemId = searchParams.get('item');
   const itemTypeParam = searchParams.get('type');
   const initialQtyParam = parseInt(searchParams.get('qty') || '1', 10);
+
+  const matchedPass: MembershipPass | null = React.useMemo(() => {
+    if (
+      passId === 'elite-annual' ||
+      itemId === 'elite-annual' ||
+      itemTypeParam === 'membership'
+    ) {
+      return ELITE_MEMBERSHIP;
+    }
+    return null;
+  }, [passId, itemId, itemTypeParam]);
+
+  const isMembership = Boolean(matchedPass);
 
   // Base tier detection for subscription plans ('starter' | 'pro' | 'ultra')
   const baseTier: 'starter' | 'pro' | 'ultra' = React.useMemo(() => {
@@ -56,6 +73,7 @@ function CheckoutContent() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>(initialCycle);
 
   const matchedPack: CreditPack | null = React.useMemo(() => {
+    if (isMembership) return null;
     if (packId) {
       return CREDIT_PACKS.find((p) => p.id === packId) || null;
     }
@@ -63,13 +81,13 @@ function CheckoutContent() {
       return CREDIT_PACKS.find((p) => p.id === itemId) || null;
     }
     return null;
-  }, [packId, itemId, itemTypeParam]);
+  }, [isMembership, packId, itemId, itemTypeParam]);
 
   const isCreditPack = Boolean(matchedPack);
 
   // Active plan dynamically switches between monthly and annual
   const currentPlan: PricingPlan | null = React.useMemo(() => {
-    if (isCreditPack) return null;
+    if (isCreditPack || isMembership) return null;
     if (billingCycle === 'yearly') {
       if (baseTier === 'ultra') return ALL_PRICING_PLANS.find((p) => p.id === 'ultra-yearly') || null;
       if (baseTier === 'starter') return ALL_PRICING_PLANS.find((p) => p.id === 'starter') || null;
@@ -79,17 +97,18 @@ function CheckoutContent() {
       if (baseTier === 'starter') return ALL_PRICING_PLANS.find((p) => p.id === 'starter') || null;
       return ALL_PRICING_PLANS.find((p) => p.id === 'pro') || null;
     }
-  }, [isCreditPack, billingCycle, baseTier]);
+  }, [isCreditPack, isMembership, billingCycle, baseTier]);
 
-  const selectedItem: PricingPlan | CreditPack | null = matchedPack || currentPlan;
+  const selectedItem: PricingPlan | CreditPack | MembershipPass | null = matchedPass || matchedPack || currentPlan;
 
   // Clean Plan Display Name: Always "DocStudio Pro" or "DocStudio Ultra" (without "Annual")
   const planDisplayName = React.useMemo(() => {
+    if (matchedPass) return `${matchedPass.name} Annual Pass`;
     if (matchedPack) return matchedPack.name;
     if (baseTier === 'ultra') return 'DocStudio Ultra';
     if (baseTier === 'starter') return 'DocStudio Starter';
     return 'DocStudio Pro';
-  }, [matchedPack, baseTier]);
+  }, [matchedPass, matchedPack, baseTier]);
 
   // Quantity state for credit packs (limit 1 to 7)
   const [quantity, setQuantity] = useState<number>(
@@ -139,19 +158,94 @@ function CheckoutContent() {
     }
   }, [user, profile]);
 
+  // Coupon / Promo Code State
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountType: 'percentage' | 'flat';
+    discountValue: number;
+    discountAmountInr: number;
+    finalAmountInr: number;
+    isFree: boolean;
+    message?: string;
+  } | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
+  const isEliteUser = Boolean(
+    profile?.isEliteMember &&
+    (profile?.eliteExpiresAt ? Number(profile.eliteExpiresAt) > Date.now() : true)
+  );
+
   // Price calculations
   const effectiveQty = isCreditPack ? Math.max(1, Math.min(7, quantity)) : 1;
   const rawAmount = selectedItem ? selectedItem.rawPriceInr * effectiveQty : 0;
+
+  // Elite 10% discount applies to all subscriptions & credit packs if user is active Elite
+  const eliteDiscountAmount = isEliteUser && !isMembership ? Math.round(rawAmount * 0.1) : 0;
+  const amountAfterElite = Math.max(0, rawAmount - eliteDiscountAmount);
+
+  const couponDiscountAmount = appliedCoupon ? appliedCoupon.discountAmountInr : 0;
+  const finalPayableAmount = Math.max(0, amountAfterElite - couponDiscountAmount);
+
   const unitCredits = selectedItem
     ? 'creditsAllotment' in selectedItem
       ? selectedItem.creditsAllotment
+      : 'bonusCredits' in selectedItem
+      ? selectedItem.bonusCredits
       : selectedItem.credits
     : 0;
   const totalCredits = unitCredits * effectiveQty;
-  const baseAmount = (rawAmount / 1.18).toFixed(2);
-  const gstAmount = (rawAmount - Number(baseAmount)).toFixed(2);
+  const baseAmount = (finalPayableAmount / 1.18).toFixed(2);
+  const gstAmount = (finalPayableAmount - Number(baseAmount)).toFixed(2);
   const cgst = (Number(gstAmount) / 2).toFixed(2);
   const sgst = (Number(gstAmount) - Number(cgst)).toFixed(2);
+
+  const handleApplyCoupon = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const clean = couponInput.trim().toUpperCase();
+    if (!clean) return;
+    setCouponLoading(true);
+    setCouponError(null);
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: clean,
+          userId: user?.uid,
+          userEmail: billingEmail.trim() || user?.email || '',
+          username: profile?.username || user?.displayName || '',
+          amountInr: rawAmount,
+        }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        setAppliedCoupon({
+          code: data.coupon.code,
+          discountType: data.coupon.discountType,
+          discountValue: data.coupon.discountValue,
+          discountAmountInr: data.discountAmountInr,
+          finalAmountInr: data.finalAmountInr,
+          isFree: data.isFree,
+          message: data.message,
+        });
+        setCouponError(null);
+      } else {
+        setCouponError(data.reason || 'Invalid promo code');
+      }
+    } catch {
+      setCouponError('Could not validate coupon. Please try again.');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput('');
+    setCouponError(null);
+  };
 
   // Dynamic GST determination:
   // Seller (DocStudio / Docdril) is located in Delhi (GST State Code: 07).
@@ -189,7 +283,7 @@ function CheckoutContent() {
 
     await openRazorpayCheckout({
       itemId: selectedItem.id,
-      itemType: isCreditPack ? 'credit_pack' : 'subscription',
+      itemType: isCreditPack ? 'credit_pack' : isMembership ? 'membership' : 'subscription',
       userId: user.uid,
       userEmail: billingEmail.trim() || user.email || '',
       userName: billingName.trim() || user.displayName || '',
@@ -197,6 +291,7 @@ function CheckoutContent() {
       quantity: effectiveQty,
       businessName: businessName.trim() || undefined,
       gstin: gstin.trim().toUpperCase() || undefined,
+      couponCode: appliedCoupon?.code,
       preferredMethod,
       onVerifying: () => {
         setStatus('verifying');
@@ -204,25 +299,6 @@ function CheckoutContent() {
       onSuccess: async (order) => {
         setStatus('success');
         setConfirmedOrder(order);
-
-        // Store payment method if requested
-        if (saveCardPreference && order.paymentMethod && order.paymentMethod.type !== 'other') {
-          if (typeof window !== 'undefined' && user.uid) {
-            try {
-              localStorage.setItem(
-                `docstudio_saved_payment_method_${user.uid}`,
-                JSON.stringify(order.paymentMethod)
-              );
-              await fetch('/api/billing/payment-method', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user.uid, paymentMethod: order.paymentMethod }),
-              });
-            } catch {
-              // ignore
-            }
-          }
-        }
       },
       onError: (err) => {
         setStatus('error');
@@ -234,39 +310,21 @@ function CheckoutContent() {
     });
   };
 
-  // 1. Loading auth state
-  if (authLoading) {
+  // 1. Loading auth state or Unauthenticated -> redirect immediately to main login page
+  useEffect(() => {
+    if (!authLoading && !user) {
+      const returnUrl = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/checkout';
+      router.replace(`/sign-in?redirect=${encodeURIComponent(returnUrl)}`);
+    }
+  }, [authLoading, user, router]);
+
+  if (authLoading || !user) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center p-6 space-y-4">
         <Loader2 className="w-8 h-8 animate-spin text-neutral-500" />
-        <p className="text-sm text-neutral-500 font-sans">Loading checkout session...</p>
-      </div>
-    );
-  }
-
-  // 2. Unauthenticated state
-  if (!user) {
-    const returnUrl = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/checkout';
-    return (
-      <div className="max-w-md mx-auto my-16 p-8 rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm text-center space-y-6">
-        <div className="w-12 h-12 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mx-auto text-neutral-900 dark:text-white">
-          <Lock className="w-6 h-6" />
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-xl font-bold font-sans text-neutral-950 dark:text-white">
-            Sign In to Complete Checkout
-          </h2>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 font-sans">
-            Please log in with your Docdril account to link your subscription and vault credits.
-          </p>
-        </div>
-        <Link
-          href={`/sign-in?redirect=${encodeURIComponent(returnUrl)}`}
-          className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider bg-neutral-950 hover:bg-neutral-800 text-white dark:bg-white dark:hover:bg-neutral-200 dark:text-black transition-colors"
-        >
-          <span>Continue to Sign In</span>
-          <ArrowRight className="w-4 h-4" />
-        </Link>
+        <p className="text-sm text-neutral-500 font-sans">
+          {authLoading ? 'Loading checkout session...' : 'Redirecting to login...'}
+        </p>
       </div>
     );
   }
@@ -375,7 +433,7 @@ function CheckoutContent() {
         <div className="lg:col-span-5 order-2 lg:order-1 space-y-6">
           <div className="rounded-3xl p-6 sm:p-7 space-y-6 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm">
             {/* Subscription Billing Cycle Switcher */}
-            {!isCreditPack && (
+            {!isCreditPack && !isMembership && (
               <div className="flex items-center justify-between pb-4 border-b border-neutral-100 dark:border-neutral-800">
                 <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 font-sans">
                   Billing Cycle
@@ -414,7 +472,13 @@ function CheckoutContent() {
               <h2 className="text-2xl sm:text-3xl lg:text-[2rem] font-bold font-sans text-neutral-950 dark:text-white tracking-tight leading-tight">
                 {planDisplayName}
               </h2>
-              {!isCreditPack && billingCycle === 'yearly' ? (
+              {isMembership ? (
+                <div>
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 shadow-sm whitespace-nowrap shrink-0 leading-none tracking-wide">
+                    👑 Annual Membership Pass • 10% Off Everything
+                  </span>
+                </div>
+              ) : !isCreditPack && billingCycle === 'yearly' ? (
                 <div>
                   <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-neutral-100 shadow-sm whitespace-nowrap shrink-0 leading-none tracking-wide">
                     Save 20% • 2 Months Free
@@ -434,10 +498,14 @@ function CheckoutContent() {
                 </div>
                 <div>
                   <div className="font-bold text-neutral-950 dark:text-white font-sans">
-                    {totalCredits.toLocaleString()} Total Credits
+                    {totalCredits.toLocaleString()} {isMembership ? 'Welcome Bonus Credits' : 'Total Credits'}
                   </div>
                   <div className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                    {isCreditPack ? 'Permanent top-up (Never expires)' : 'Shared cross-app monthly quota'}
+                    {isMembership
+                      ? 'Deposited immediately into your central vault'
+                      : isCreditPack
+                      ? 'Permanent top-up (Never expires)'
+                      : 'Shared cross-app monthly quota'}
                   </div>
                 </div>
               </div>
@@ -478,8 +546,95 @@ function CheckoutContent() {
               </div>
             )}
 
+            {/* Promo Code & Coupon Section */}
+            <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/50 p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-neutral-800 dark:text-neutral-200 flex items-center gap-1.5 font-sans">
+                  <Tag className="w-3.5 h-3.5 text-neutral-500" />
+                  Promo Code / Discount
+                </span>
+                {appliedCoupon && (
+                  <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium font-sans">
+                    Discount Applied
+                  </span>
+                )}
+              </div>
+
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-xs font-sans">
+                  <div className="space-y-0.5 min-w-0 pr-2">
+                    <div className="font-bold font-mono text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                      <span className="truncate">{appliedCoupon.code}</span>
+                    </div>
+                    <div className="text-[11px] text-emerald-600 dark:text-emerald-400">
+                      {appliedCoupon.message || `${appliedCoupon.discountValue}% discount`}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    className="p-1 rounded-lg hover:bg-emerald-200/50 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 transition-colors cursor-pointer shrink-0"
+                    title="Remove coupon"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleApplyCoupon();
+                        }
+                      }}
+                      placeholder="ENTER PROMO CODE"
+                      className="flex-1 px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-xs font-mono uppercase text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none focus:border-neutral-950 dark:focus:border-white transition-colors"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleApplyCoupon()}
+                      disabled={couponLoading || !couponInput.trim()}
+                      className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-200 text-white dark:text-black font-semibold text-xs transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shrink-0 flex items-center justify-center min-w-[64px]"
+                    >
+                      {couponLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Apply'}
+                    </button>
+                  </div>
+                  {couponError && (
+                    <p className="text-[11px] text-red-500 font-sans flex items-center gap-1 pt-0.5">
+                      <AlertCircle className="w-3 h-3 shrink-0" />
+                      <span>{couponError}</span>
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Official Itemized Tax & Price Breakdown */}
             <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-950/50 p-4 space-y-2.5 text-xs font-sans">
+              <div className="flex justify-between items-center text-neutral-600 dark:text-neutral-400">
+                <span>Original Subtotal</span>
+                <span className="font-mono">₹{rawAmount.toFixed(2)}</span>
+              </div>
+              {eliteDiscountAmount > 0 && (
+                <div className="flex justify-between items-center text-amber-600 dark:text-amber-400 font-semibold">
+                  <span className="flex items-center gap-1.5">
+                    <span>👑 Elite Members Discount (10%)</span>
+                  </span>
+                  <span className="font-mono">-₹{eliteDiscountAmount.toFixed(2)}</span>
+                </div>
+              )}
+              {appliedCoupon && (
+                <div className="flex justify-between items-center text-emerald-600 dark:text-emerald-400 font-semibold">
+                  <span>Discount ({appliedCoupon.code})</span>
+                  <span className="font-mono">-₹{couponDiscountAmount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center text-neutral-600 dark:text-neutral-400">
                 <span>Taxable Value (Base)</span>
                 <span className="font-mono">₹{baseAmount}</span>
@@ -513,7 +668,7 @@ function CheckoutContent() {
                 </div>
                 <div className="text-right">
                   <span className="text-xl sm:text-2xl font-extrabold text-neutral-950 dark:text-white font-sans tracking-tight">
-                    ₹{rawAmount} INR
+                    ₹{finalPayableAmount.toFixed(2)} INR
                   </span>
                 </div>
               </div>
@@ -724,10 +879,15 @@ function CheckoutContent() {
                       <RefreshCw className="w-4 h-4 animate-spin" />
                       <span>Verifying Payment Signature...</span>
                     </>
+                  ) : finalPayableAmount === 0 ? (
+                    <>
+                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                      <span>Activate Free with 100% Promo (₹0)</span>
+                    </>
                   ) : (
                     <>
                       <Lock className="w-4 h-4" />
-                      <span>Pay ₹{rawAmount} INR</span>
+                      <span>Pay ₹{finalPayableAmount.toFixed(2)} INR</span>
                     </>
                   )}
                 </button>

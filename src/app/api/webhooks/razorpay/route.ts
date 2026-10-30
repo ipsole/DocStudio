@@ -4,6 +4,7 @@ import {
   recordOrderAdmin,
   upgradeUserPlanAdmin,
   addSharedCreditsAdmin,
+  activateEliteMembershipAdmin,
   sanitizeForFirestore,
 } from '@/lib/billingServer';
 import { sendPurchaseConfirmationEmail } from '@/lib/email/receiptEmail';
@@ -16,20 +17,31 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text();
     const signature = request.headers.get('x-razorpay-signature');
 
+    if (!signature) {
+      console.error('[Razorpay Webhook] Missing x-razorpay-signature header.');
+      return NextResponse.json({ error: 'MISSING_SIGNATURE' }, { status: 400 });
+    }
+
     const webhookSecret =
       process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET || '';
 
-    // Verify webhook signature if secret is present
-    if (webhookSecret && signature) {
-      const expectedSignature = crypto
-        .createHmac('sha256', webhookSecret)
-        .update(rawBody)
-        .digest('hex');
+    if (!webhookSecret) {
+      console.error('[Razorpay Webhook] Webhook secret not configured on server.');
+      return NextResponse.json({ error: 'SERVER_MISCONFIGURED' }, { status: 500 });
+    }
 
-      if (expectedSignature !== signature) {
-        console.error('[Razorpay Webhook] Invalid signature received.');
-        return NextResponse.json({ error: 'INVALID_SIGNATURE' }, { status: 400 });
-      }
+    // Cryptographic HMAC SHA256 timing-safe signature verification
+    const expectedSignature = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(rawBody)
+      .digest('hex');
+
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expectedSignature);
+
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      console.error('[Razorpay Webhook] Invalid signature received.');
+      return NextResponse.json({ error: 'INVALID_SIGNATURE' }, { status: 400 });
     }
 
     const event = JSON.parse(rawBody);
@@ -95,6 +107,8 @@ export async function POST(request: NextRequest) {
           await upgradeUserPlanAdmin(userId, userEmail, targetPlan);
         } else if (itemType === 'credit_pack' && creditsAdded > 0) {
           await addSharedCreditsAdmin(userId, userEmail, creditsAdded);
+        } else if (itemType === 'membership') {
+          await activateEliteMembershipAdmin(userId, userEmail, creditsAdded || 150);
         }
       }
 

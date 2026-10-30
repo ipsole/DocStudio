@@ -36,6 +36,9 @@ export interface UserProfile {
   photoURL?: string | null;
   avatarIcon?: string | null;
   isAdmin?: boolean;
+  isEliteMember?: boolean;
+  eliteExpiresAt?: number | string | null;
+  eliteJoinedAt?: number | string | null;
   isDeactivated?: boolean;
   deactivatedAt?: string | number | null;
   savedPaymentMethod?: PaymentMethodSummary | null;
@@ -128,12 +131,17 @@ export interface OrderRecord {
   amountPaise: number;
   currency: 'INR';
   status: 'created' | 'paid' | 'failed';
-  itemType: 'subscription' | 'credit_pack';
+  itemType: 'subscription' | 'credit_pack' | 'membership';
   itemId: string;
   itemName: string;
   creditsAdded?: number;
   quantity?: number;
   paymentMethod?: PaymentMethodSummary;
+  couponCode?: string;
+  discountAmount?: number;
+  isEliteDiscount?: boolean;
+  eliteDiscountAmount?: number;
+  originalAmount?: number;
   receiptNumber: string;
   gstin?: string;
   businessName?: string;
@@ -189,4 +197,36 @@ export interface QRLoginSession {
     os?: string;
     location?: string;
   };
+}
+
+export type CouponDiscountType = 'percentage' | 'flat';
+export type CouponTargetType = 'all' | 'user';
+
+export interface Coupon {
+  id: string; // The coupon code (uppercase)
+  code: string; // Uppercase coupon code
+  description?: string;
+  discountType: CouponDiscountType; // 'percentage' (% off) or 'flat' (₹ INR off)
+  discountValue: number; // e.g. 50 (50% or ₹50)
+  targetType: CouponTargetType; // 'all' or 'user'
+  targetValue?: string; // target username (with or without @), email, or uid
+  singleUsePerUser: boolean; // true = user can only use once
+  maxTotalUses?: number; // optional total redemption limit
+  currentUses: number;
+  active: boolean;
+  expiresAt?: number | null;
+  createdAt: number;
+  createdBy: string;
+}
+
+export interface CouponRedemption {
+  id: string; // `${couponId}_${userId}`
+  couponId: string;
+  couponCode: string;
+  userId: string;
+  userEmail: string;
+  username?: string;
+  orderId?: string;
+  discountAmountInr: number;
+  redeemedAt: number;
 }
