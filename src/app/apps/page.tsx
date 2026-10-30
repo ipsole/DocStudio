@@ -97,10 +97,10 @@ export default function AppsCatalogPage() {
         </p>
       </div>
 
-      {/* Filter Bar */}
-      <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-neutral-200 dark:border-neutral-800 pb-4">
+      {/* Filter Bar (Centered View) */}
+      <div className="pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4 border-b border-neutral-200 dark:border-neutral-800 pb-4">
         {/* Category Pills with Smooth Sliding Indicator */}
-        <div className="relative flex items-center gap-1 sm:gap-1.5 overflow-x-auto w-full sm:w-auto no-scrollbar py-1">
+        <div className="relative flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-1">
           {categoryIndicator.ready && (
             <div
               className="absolute rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200/90 dark:border-neutral-800 shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
@@ -142,18 +142,16 @@ export default function AppsCatalogPage() {
           })}
         </div>
 
-        {/* Search pushed to corner (3 apps removed) */}
-        <div className="w-full sm:w-auto sm:ml-auto flex items-center justify-end">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search software..."
-              className="w-full pl-9 pr-3 py-1.5 border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 rounded-full focus:outline-none focus:border-neutral-950 dark:focus:border-white transition-colors"
-            />
-          </div>
+        {/* Search Centered Alongside Tabs */}
+        <div className="relative w-full sm:w-56 md:w-60">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search software..."
+            className="w-full pl-9 pr-3 py-1.5 border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 rounded-full focus:outline-none focus:border-neutral-950 dark:focus:border-white transition-colors"
+          />
         </div>
       </div>
 
