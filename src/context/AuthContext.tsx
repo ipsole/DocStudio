@@ -27,7 +27,8 @@ import {
   linkWithPhoneNumber,
   unlink,
 } from 'firebase/auth';
-import { auth, isFirebaseConfigured } from '@/lib/firebase/client';
+import { onSnapshot, doc } from 'firebase/firestore';
+import { auth, db, isFirebaseConfigured } from '@/lib/firebase/client';
 import {
   ensureUserProfile,
   updateUserProfile as dbUpdateUserProfile,
@@ -76,6 +77,7 @@ interface AuthContextType {
   deleteAccount: (password?: string) => Promise<void>;
   deactivateAccount: (password?: string) => Promise<void>;
   reactivateAccount: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -110,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
     let unsubSessionStatus: (() => void) | null = null;
+    let unsubUserDoc: (() => void) | null = null;
 
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
@@ -143,6 +146,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const isSuperAdmin = isSuperAdminEmail(currentUser.email);
           setProfile(userProfile);
           setIsAdmin(isSuperAdmin || hasAdminClaim || Boolean(userProfile?.isAdmin));
+
+          // Real-time synchronization of user membership, admin, and profile fields
+          if (db) {
+            try {
+              unsubUserDoc = onSnapshot(
+                doc(db, 'users', currentUser.uid),
+                (snap) => {
+                  if (snap.exists()) {
+                    const liveData = snap.data();
+                    setProfile((prev) => {
+                      if (!prev) return prev;
+                      return {
+                        ...prev,
+                        isEliteMember: Boolean(liveData.isEliteMember),
+                        eliteExpiresAt: liveData.eliteExpiresAt?.toMillis
+                          ? liveData.eliteExpiresAt.toMillis()
+                          : (liveData.eliteExpiresAt || null),
+                        eliteJoinedAt: liveData.eliteJoinedAt?.toMillis
+                          ? liveData.eliteJoinedAt.toMillis()
+                          : (liveData.eliteJoinedAt || null),
+                        isAdmin: Boolean(liveData.isAdmin ?? prev.isAdmin),
+                      };
+                    });
+                  }
+                },
+                (snapErr) => {
+                  console.warn('[AuthContext] Live profile sync notice:', snapErr);
+                }
+              );
+            } catch (snapInitErr) {
+              console.warn('[AuthContext] Error setting up live profile listener:', snapInitErr);
+            }
+          }
 
           // Register and heartbeat active device session
           const dev = getClientDeviceInfo();
@@ -205,6 +241,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       unsubscribe();
       if (unsubSessionStatus) {
         unsubSessionStatus();
+      }
+      if (unsubUserDoc) {
+        unsubUserDoc();
       }
     };
   }, [isConfigured]);
@@ -573,6 +612,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile((prev) => (prev ? { ...prev, isDeactivated: false, deactivatedAt: null } : null));
   };
 
+  const refreshProfile = async () => {
+    if (!user) return;
+    try {
+      const p = await ensureUserProfile(
+        user.uid,
+        user.email || '',
+        user.displayName,
+        user.photoURL,
+        user.phoneNumber
+      );
+      if (p) setProfile(p);
+    } catch (e) {
+      console.warn('[AuthContext] Error refreshing profile:', e);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -602,6 +657,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         deleteAccount,
         deactivateAccount,
         reactivateAccount,
+        refreshProfile,
       }}
     >
       {children}
