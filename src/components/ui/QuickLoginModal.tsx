@@ -16,7 +16,10 @@ import {
   Clock,
   Shield,
   Smartphone,
+  Copy,
+  Check,
   ExternalLink,
+  Globe,
 } from 'lucide-react';
 
 interface QuickLoginModalProps {
@@ -39,6 +42,16 @@ export function QuickLoginModal({
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
   const [connectedDevice, setConnectedDevice] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [copied, setCopied] = useState<boolean>(false);
+
+  // Host mode: 'local' for localhost testing vs 'prod' for docstudio.docdril.com
+  const isLocalEnv =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.endsWith('.local'));
+
+  const [hostMode, setHostMode] = useState<'local' | 'prod'>(isLocalEnv ? 'local' : 'prod');
 
   const activeTokenRef = useRef<string | null>(null);
 
@@ -75,6 +88,7 @@ export function QuickLoginModal({
       }
       setTokenId(null);
       setIsSuccess(false);
+      setCopied(false);
     }
   }, [isOpen, generateSession]);
 
@@ -117,17 +131,14 @@ export function QuickLoginModal({
 
   if (!isOpen) return null;
 
-  // Determine target URL with production domain docstudio.docdril.com fallback
-  const isProd = process.env.NODE_ENV === 'production';
-  const baseUrl = isProd
-    ? 'https://docstudio.docdril.com'
-    : typeof window !== 'undefined'
-    ? window.location.origin
-    : 'https://docstudio.docdril.com';
+  // Determine target base URL based on toggle
+  const localOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001';
+  const prodOrigin = 'https://docstudio.docdril.com';
+  const selectedBaseUrl = hostMode === 'local' ? localOrigin : prodOrigin;
 
   const cleanHandle = username ? username.replace('@', '') : 'user';
   const qrUrl = tokenId
-    ? `${baseUrl}/auth/quick-login?token=${tokenId}&u=${encodeURIComponent(cleanHandle)}`
+    ? `${selectedBaseUrl}/auth/quick-login?token=${tokenId}&u=${encodeURIComponent(cleanHandle)}`
     : '';
 
   const formatTimer = (totalSec: number) => {
@@ -136,11 +147,19 @@ export function QuickLoginModal({
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
+  const handleCopyLink = () => {
+    if (!qrUrl) return;
+    navigator.clipboard.writeText(qrUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  };
+
   const isExpired = secondsRemaining === 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-sm rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 font-sans space-y-5 overflow-hidden">
+      <div className="relative w-full max-w-sm rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 font-sans space-y-4 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -152,7 +171,7 @@ export function QuickLoginModal({
                 Instant QR Login
               </h3>
               <p className="text-[11px] text-neutral-500 font-sans">
-                Scan to login on another device
+                Scan or paste link to login instantly
               </p>
             </div>
           </div>
@@ -160,7 +179,7 @@ export function QuickLoginModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors"
+            className="p-1.5 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -177,15 +196,41 @@ export function QuickLoginModal({
                 Device Connected!
               </h4>
               <p className="text-xs text-neutral-500 mt-1">
-                Successfully authorized on <span className="font-semibold text-neutral-800 dark:text-neutral-200">{connectedDevice}</span>
+                Authorized on <span className="font-semibold text-neutral-800 dark:text-neutral-200">{connectedDevice}</span>
               </p>
               <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-2 font-medium">
-                Session active on docstudio.docdril.com
+                Session active on {hostMode === 'local' ? 'localhost' : 'docstudio.docdril.com'}
               </p>
             </div>
           </div>
         ) : (
           <>
+            {/* Host Target Switcher (Localhost vs Production) */}
+            <div className="flex items-center justify-between p-1 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-[11px] font-medium">
+              <button
+                type="button"
+                onClick={() => setHostMode('local')}
+                className={`flex-1 py-1 px-2 rounded-lg transition-colors cursor-pointer text-center ${
+                  hostMode === 'local'
+                    ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                    : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+                }`}
+              >
+                Localhost (Dev)
+              </button>
+              <button
+                type="button"
+                onClick={() => setHostMode('prod')}
+                className={`flex-1 py-1 px-2 rounded-lg transition-colors cursor-pointer text-center ${
+                  hostMode === 'prod'
+                    ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                    : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+                }`}
+              >
+                docstudio.docdril.com
+              </button>
+            </div>
+
             {/* QR Code Container */}
             <div className="relative flex flex-col items-center justify-center p-3 rounded-2xl bg-neutral-50 dark:bg-neutral-950/60 border border-neutral-100 dark:border-neutral-800/80">
               {isGenerating ? (
@@ -214,23 +259,64 @@ export function QuickLoginModal({
               ) : (
                 <>
                   <QRCodeSvg value={qrUrl} size={220} />
-                  {/* Subtle watermarked account badge below QR */}
+                  {/* Subtle target badge below QR */}
                   <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-mono font-medium text-neutral-600 dark:text-neutral-400">
                     <Shield className="w-3 h-3 text-emerald-500" />
                     <span>@{cleanHandle}</span>
                     <span className="text-neutral-300 dark:text-neutral-700">•</span>
-                    <span className="text-[10px] text-neutral-400">docstudio.docdril.com</span>
+                    <span className="text-[10px] text-neutral-400 truncate max-w-[150px]">
+                      {hostMode === 'local' ? localOrigin.replace(/^https?:\/\//, '') : 'docstudio.docdril.com'}
+                    </span>
                   </div>
                 </>
               )}
             </div>
 
+            {/* Quick Actions: Copy Link & Open Test Tab */}
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handleCopyLink}
+                disabled={!tokenId || isExpired}
+                className="flex-1 gap-1.5 text-xs font-sans h-8"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-500" />
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Link Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy Login URL</span>
+                  </>
+                )}
+              </Button>
+
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  if (qrUrl) window.open(qrUrl, '_blank');
+                }}
+                disabled={!tokenId || isExpired}
+                className="gap-1.5 text-xs font-sans h-8"
+                title="Open login link in a new tab"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Test Tab</span>
+              </Button>
+            </div>
+
             {/* Instructions & Live Timer */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex items-center justify-between text-xs font-sans">
                 <div className="flex items-center gap-1.5 text-neutral-500">
                   <Smartphone className="w-3.5 h-3.5" />
-                  <span>Point camera to scan</span>
+                  <span>Scan with camera or test via link</span>
                 </div>
 
                 {!isExpired && (
@@ -248,7 +334,7 @@ export function QuickLoginModal({
               </div>
 
               <p className="text-[11px] text-neutral-400 dark:text-neutral-500 leading-relaxed text-center">
-                Instantly signs in your secondary phone, tablet, or browser with encrypted one-time credentials. No password entry required.
+                Instantly signs into DocStudio on another phone, tablet, or browser without passwords.
               </p>
             </div>
 
@@ -267,7 +353,7 @@ export function QuickLoginModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                className="text-[11px] font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer"
               >
                 Done
               </button>

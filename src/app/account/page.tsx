@@ -25,7 +25,7 @@ import {
   revokeDeviceSession,
   revokeAllOtherDeviceSessions,
 } from '@/lib/firebase/db';
-import { getOrCreateSessionId } from '@/lib/device/deviceInfo';
+import { getOrCreateSessionId, getClientDeviceInfo } from '@/lib/device/deviceInfo';
 import { AppSubscription, OrderRecord, SubscriptionPlan, PaymentMethodSummary, DeviceSession } from '@/types';
 import { VerifiedBadge } from '@/components/ui/VerifiedBadge';
 import { InvoiceReceiptModal } from '@/components/billing/InvoiceReceiptModal';
@@ -2343,7 +2343,7 @@ export default function AccountPage() {
                         </span>
                       </div>
                       <p className="text-xs text-neutral-500 dark:text-neutral-400 font-sans mt-0.5">
-                        Devices and browsers authenticated to your DocStudio account on <span className="font-mono text-neutral-700 dark:text-neutral-300">docstudio.docdril.com</span>.
+                        Connected sessions across <span className="font-mono text-neutral-700 dark:text-neutral-300">docstudio.docdril.com</span> and local development.
                       </p>
                     </div>
 
@@ -2384,19 +2384,21 @@ export default function AccountPage() {
                   <div className="space-y-3">
                     {/* Current Device Session */}
                     {(() => {
+                      const liveInfo = typeof window !== 'undefined' ? getClientDeviceInfo() : null;
                       const currentSession = deviceSessions.find((s) => s.id === currentSessionId);
-                      const currentDevName = currentSession?.deviceName || 'This Computer / Device';
+                      const currentDevName = currentSession?.deviceName || liveInfo?.deviceName || 'Apple Mac (Chrome)';
+                      const currentBrowser = currentSession?.browser || liveInfo?.browser || 'Google Chrome';
+                      const currentOS = currentSession?.os || liveInfo?.os || 'macOS';
+                      const currentDevType = currentSession?.deviceType || liveInfo?.deviceType || 'desktop';
                       const currentLoc = currentSession?.location || 'Local Workspace (Connected)';
-                      const currentBrowser = currentSession?.browser || 'Web Browser';
-                      const currentOS = currentSession?.os || 'System';
 
                       return (
                         <div className="p-4 rounded-2xl bg-neutral-50/70 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-sans">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 flex items-center justify-center text-neutral-700 dark:text-neutral-200 shadow-sm shrink-0">
-                              {currentSession?.deviceType === 'mobile' ? (
+                              {currentDevType === 'mobile' ? (
                                 <Smartphone className="w-4 h-4" />
-                              ) : currentSession?.deviceType === 'tablet' ? (
+                              ) : currentDevType === 'tablet' ? (
                                 <Tablet className="w-4 h-4" />
                               ) : (
                                 <Laptop className="w-4 h-4" />

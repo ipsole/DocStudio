@@ -35,55 +35,103 @@ export function parseUserAgent(uaString?: string): {
   browser: string;
   os: string;
 } {
-  const ua = uaString || (typeof window !== 'undefined' ? navigator.userAgent : '');
+  let ua = uaString;
+  let navPlatform = '';
+  let navUaDataPlatform = '';
 
-  // Detect OS
+  if (typeof window !== 'undefined') {
+    if (!ua) ua = navigator.userAgent || '';
+    navPlatform = navigator.platform || '';
+    const uaData = (navigator as any).userAgentData;
+    if (uaData && uaData.platform) {
+      navUaDataPlatform = uaData.platform;
+    }
+  }
+
+  const userAgent = ua || '';
+
+  // 1. Detect OS & Hardware Platform
   let os = 'Unknown OS';
   let deviceName = 'Desktop Device';
   let deviceType: 'desktop' | 'mobile' | 'tablet' = 'desktop';
 
-  if (/iPhone/i.test(ua)) {
+  const isIPhone = /iPhone/i.test(userAgent);
+  const isIPad =
+    /iPad/i.test(userAgent) ||
+    (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 2 && /Macintosh/i.test(userAgent));
+  const isMac =
+    (/Macintosh|Mac OS X|MacIntel|MacPPC/i.test(userAgent) ||
+      /Mac/i.test(navPlatform) ||
+      /macOS/i.test(navUaDataPlatform)) &&
+    !isIPhone &&
+    !isIPad;
+  const isAndroid = /Android/i.test(userAgent) || /Android/i.test(navUaDataPlatform);
+  const isWindows =
+    /Windows|Win32|Win64|WOW64/i.test(userAgent) ||
+    /Win/i.test(navPlatform) ||
+    /Windows/i.test(navUaDataPlatform);
+  const isCrOS = /CrOS/i.test(userAgent);
+  const isLinux = (/Linux/i.test(userAgent) || /Linux/i.test(navPlatform)) && !isAndroid && !isCrOS;
+
+  if (isIPhone) {
     os = 'iOS';
     deviceName = 'Apple iPhone';
     deviceType = 'mobile';
-  } else if (/iPad/i.test(ua) || (navigator?.maxTouchPoints > 2 && /Macintosh/i.test(ua))) {
+  } else if (isIPad) {
     os = 'iPadOS';
     deviceName = 'Apple iPad';
     deviceType = 'tablet';
-  } else if (/Macintosh|Mac OS X/i.test(ua)) {
+  } else if (isAndroid) {
+    os = 'Android';
+    const isTablet = !/Mobile/i.test(userAgent);
+    deviceType = isTablet ? 'tablet' : 'mobile';
+    deviceName = isTablet ? 'Android Tablet' : 'Android Smartphone';
+  } else if (isMac) {
     os = 'macOS';
     deviceName = 'Apple Mac';
     deviceType = 'desktop';
-  } else if (/Android/i.test(ua)) {
-    os = 'Android';
-    deviceType = /Mobile/i.test(ua) ? 'mobile' : 'tablet';
-    deviceName = deviceType === 'tablet' ? 'Android Tablet' : 'Android Device';
-  } else if (/Windows/i.test(ua)) {
+  } else if (isWindows) {
     os = 'Windows';
     deviceName = 'Windows PC';
     deviceType = 'desktop';
-  } else if (/Linux/i.test(ua)) {
+  } else if (isCrOS) {
+    os = 'ChromeOS';
+    deviceName = 'Google Chromebook';
+    deviceType = 'desktop';
+  } else if (isLinux) {
     os = 'Linux';
     deviceName = 'Linux Workstation';
     deviceType = 'desktop';
   }
 
-  // Detect Browser
-  let browser = 'Browser';
-  if (/Edg\//i.test(ua)) {
+  // 2. Detect Browser
+  let browser = 'Web Browser';
+  let browserShort = '';
+
+  if (/Edg\//i.test(userAgent)) {
     browser = 'Microsoft Edge';
-  } else if (/Chrome\/([0-9]+)/i.test(ua) && !/Edg/i.test(ua)) {
-    browser = 'Google Chrome';
-  } else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) {
-    browser = 'Safari';
-  } else if (/Firefox\/([0-9]+)/i.test(ua)) {
-    browser = 'Mozilla Firefox';
-  } else if (/OPR\//i.test(ua)) {
+    browserShort = 'Edge';
+  } else if (/OPR\/|Opera/i.test(userAgent)) {
     browser = 'Opera';
+    browserShort = 'Opera';
+  } else if (/Brave/i.test(userAgent) || (typeof navigator !== 'undefined' && (navigator as any).brave)) {
+    browser = 'Brave Browser';
+    browserShort = 'Brave';
+  } else if (/Chrome\/([0-9]+)/i.test(userAgent)) {
+    browser = 'Google Chrome';
+    browserShort = 'Chrome';
+  } else if (/Safari/i.test(userAgent) && !/Chrome/i.test(userAgent)) {
+    browser = 'Apple Safari';
+    browserShort = 'Safari';
+  } else if (/Firefox\/([0-9]+)/i.test(userAgent)) {
+    browser = 'Mozilla Firefox';
+    browserShort = 'Firefox';
   }
 
+  const finalTitle = browserShort ? `${deviceName} (${browserShort})` : `${deviceName} (${os})`;
+
   return {
-    deviceName: `${deviceName} (${browser})`,
+    deviceName: finalTitle,
     deviceType,
     browser,
     os,
