@@ -382,10 +382,6 @@ export default function PricingPage() {
       {/* 2. Additional Credit Top-Up Packs Section */}
       <div id="credits" className="space-y-8 pt-4 scroll-mt-24">
         <div className="text-center max-w-2xl mx-auto space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-sans font-semibold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-            <Zap className="w-3.5 h-3.5" />
-            <span>Never Expire • Instant Top-Up</span>
-          </div>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
             Need Extra Credits? Add On-Demand
           </h2>

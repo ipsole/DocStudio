@@ -679,10 +679,6 @@ export default function HomePage() {
             {/* Additional On-Demand Credit Top-Ups */}
             <div className="pt-6 border-t border-neutral-200 dark:border-neutral-800 space-y-6">
               <div className="text-center max-w-xl mx-auto space-y-1">
-                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-sans font-semibold uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                  <Zap className="w-3 h-3" />
-                  <span>Permanent Top-Up • Never Expire</span>
-                </div>
                 <h3 className="text-xl sm:text-2xl font-bold font-sans text-neutral-950 dark:text-white">
                   Add Extra Credits Anytime
                 </h3>
