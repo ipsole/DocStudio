@@ -43,3 +43,7 @@ vercel.env
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# AI internal project knowledge base (confidential, do not commit)
+AI_KNOWLEDGE_BASE.md
+PROJECT_KNOWLEDGE_BASE.md
