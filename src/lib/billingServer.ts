@@ -1,6 +1,7 @@
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { OrderRecord, SubscriptionPlan, AppSubscription } from '@/types';
 import { DEFAULT_APP_SUBSCRIPTIONS } from '@/lib/firebase/db';
+import { isSuperAdminEmail } from '@/lib/adminConfig';
 import * as admin from 'firebase-admin';
 
 const ORDERS_COLLECTION = 'orders';
@@ -300,7 +301,8 @@ export async function activateEliteMembershipAdmin(
 
 /**
  * Fetches an app subscription using privileged Admin SDK credentials.
- * If dedicated appId subscription doesn't exist, gracefully falls back to the user's primary/active subscription.
+ * Aggregates unified ecosystem credits across all subscriptions (Canvas, Motion, Document Engines),
+ * matching DocStudio's Dashboard and Settings page.
  */
 export async function getAppSubscriptionAdmin(
   userId: string,
@@ -310,56 +312,53 @@ export async function getAppSubscriptionAdmin(
   if (!firestore) return null;
 
   try {
-    // 1. Direct match for specific appId
-    const directDoc = await firestore.collection(SUBSCRIPTIONS_COLLECTION).doc(`${userId}_${appId}`).get();
-    if (directDoc.exists) {
-      const d = directDoc.data()!;
-      return {
-        id: directDoc.id,
-        userId: d.userId,
-        userEmail: d.userEmail || '',
-        appId: d.appId || appId,
-        appName: d.appName || d.appId || 'DocStudio Suite',
-        plan: (d.plan || 'free') as SubscriptionPlan,
-        status: (d.status || 'active') as any,
-        creditsTotal: typeof d.creditsTotal === 'number' ? d.creditsTotal : 100,
-        creditsRemaining: typeof d.creditsRemaining === 'number' ? d.creditsRemaining : 100,
-        creditsUsed: typeof d.creditsUsed === 'number' ? d.creditsUsed : 0,
-        creditsResetPeriod: d.creditsResetPeriod || 'monthly',
-        features: Array.isArray(d.features) ? d.features : [],
-        validUntil: d.validUntil || d.currentPeriodEnd || null,
-        createdAt: d.createdAt ? (d.createdAt.toMillis ? d.createdAt.toMillis() : d.createdAt) : Date.now(),
-        updatedAt: d.updatedAt ? (d.updatedAt.toMillis ? d.updatedAt.toMillis() : d.updatedAt) : Date.now(),
-      };
-    }
-
-    // 2. Resilient Fallback: If outside app uses a new/custom appId, look for ANY active subscription for this user
     const subsSnap = await firestore.collection(SUBSCRIPTIONS_COLLECTION).where('userId', '==', userId).get();
-    if (!subsSnap.empty) {
-      const subs = subsSnap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
-      subs.sort((a: any, b: any) => (b.creditsRemaining || 0) - (a.creditsRemaining || 0));
-      const best: any = subs[0];
-
-      return {
-        id: best.id,
-        userId: best.userId,
-        userEmail: best.userEmail || '',
-        appId: appId,
-        appName: best.appName || 'DocStudio Suite',
-        plan: (best.plan || 'pro') as SubscriptionPlan,
-        status: (best.status || 'active') as any,
-        creditsTotal: typeof best.creditsTotal === 'number' ? best.creditsTotal : 100,
-        creditsRemaining: typeof best.creditsRemaining === 'number' ? best.creditsRemaining : 100,
-        creditsUsed: typeof best.creditsUsed === 'number' ? best.creditsUsed : 0,
-        creditsResetPeriod: best.creditsResetPeriod || 'monthly',
-        features: Array.isArray(best.features) ? best.features : [],
-        validUntil: best.validUntil || best.currentPeriodEnd || null,
-        createdAt: best.createdAt ? (best.createdAt.toMillis ? best.createdAt.toMillis() : best.createdAt) : Date.now(),
-        updatedAt: best.updatedAt ? (best.updatedAt.toMillis ? best.updatedAt.toMillis() : best.updatedAt) : Date.now(),
-      };
+    if (subsSnap.empty) {
+      return null;
     }
 
-    return null;
+    const subs = subsSnap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+    // Dedicated match if exists
+    const direct: any = subs.find((s: any) => s.appId === appId || s.id === `${userId}_${appId}`);
+
+    // Sort by credits remaining descending
+    subs.sort((a: any, b: any) => (b.creditsRemaining || 0) - (a.creditsRemaining || 0));
+    const primary: any = direct || subs[0];
+
+    // Unified ecosystem credits pool (identical to DocStudio Dashboard & Settings)
+    const totalRemaining = subs.reduce((acc: number, s: any) => acc + (s.creditsRemaining || 0), 0);
+    const totalCredits = subs.reduce((acc: number, s: any) => acc + (s.creditsTotal || 0), 0);
+    const totalUsed = subs.reduce((acc: number, s: any) => acc + (s.creditsUsed || 0), 0);
+
+    const userEmail = primary.userEmail || '';
+    const isAdmin = isSuperAdminEmail(userEmail);
+    const hasEnterprise = subs.some((s: any) => s.plan === 'enterprise');
+    const hasPro = subs.some((s: any) => s.plan === 'pro');
+    const effectivePlan: SubscriptionPlan = isAdmin
+      ? 'enterprise'
+      : hasEnterprise
+      ? 'enterprise'
+      : hasPro
+      ? 'pro'
+      : (primary.plan || 'starter');
+
+    return {
+      id: primary.id,
+      userId: primary.userId,
+      userEmail,
+      appId: appId || primary.appId,
+      appName: primary.appName || 'DocStudio Suite',
+      plan: effectivePlan,
+      status: (primary.status || 'active') as any,
+      creditsTotal: totalCredits,
+      creditsRemaining: totalRemaining,
+      creditsUsed: totalUsed,
+      creditsResetPeriod: primary.creditsResetPeriod || 'monthly',
+      features: Array.isArray(primary.features) ? primary.features : [],
+      validUntil: primary.validUntil || primary.currentPeriodEnd || null,
+      createdAt: primary.createdAt ? (primary.createdAt.toMillis ? primary.createdAt.toMillis() : primary.createdAt) : Date.now(),
+      updatedAt: primary.updatedAt ? (primary.updatedAt.toMillis ? primary.updatedAt.toMillis() : primary.updatedAt) : Date.now(),
+    };
   } catch (err) {
     console.error('[DocStudio Billing Admin] Error fetching app subscription:', err);
     return null;
@@ -397,9 +396,6 @@ export async function consumeCreditsAdmin(
       targetDocRef = subs[0].ref;
     }
 
-    let finalRemaining = 0;
-    let finalUsed = 0;
-
     await firestore.runTransaction(async (transaction) => {
       const freshSnap = await transaction.get(targetDocRef);
       if (!freshSnap.exists) {
@@ -411,14 +407,13 @@ export async function consumeCreditsAdmin(
       const currentUsed = typeof data.creditsUsed === 'number' ? data.creditsUsed : 0;
 
       if (currentRemaining < amount) {
-        finalRemaining = currentRemaining;
         const err = new Error('INSUFFICIENT_CREDITS');
         (err as any).creditsRemaining = currentRemaining;
         throw err;
       }
 
-      finalRemaining = currentRemaining - amount;
-      finalUsed = currentUsed + amount;
+      const finalRemaining = currentRemaining - amount;
+      const finalUsed = currentUsed + amount;
 
       transaction.update(targetDocRef, {
         creditsRemaining: finalRemaining,
@@ -428,10 +423,15 @@ export async function consumeCreditsAdmin(
       });
     });
 
+    // Query updated aggregate totals across the unified ecosystem
+    const allSubsSnap = await firestore.collection(SUBSCRIPTIONS_COLLECTION).where('userId', '==', userId).get();
+    const updatedTotalRemaining = allSubsSnap.docs.reduce((acc, d) => acc + (d.data().creditsRemaining || 0), 0);
+    const updatedTotalUsed = allSubsSnap.docs.reduce((acc, d) => acc + (d.data().creditsUsed || 0), 0);
+
     return {
       success: true,
-      creditsRemaining: finalRemaining,
-      creditsUsed: finalUsed,
+      creditsRemaining: updatedTotalRemaining,
+      creditsUsed: updatedTotalUsed,
     };
   } catch (err: any) {
     if (err.message === 'INSUFFICIENT_CREDITS') {
