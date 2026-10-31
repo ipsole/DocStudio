@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAppSubscription } from '@/lib/firebase/db';
+import { getAppSubscriptionAdmin } from '@/lib/billingServer';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const sub = await getAppSubscription(userId, appId);
+    const sub = await getAppSubscriptionAdmin(userId, appId);
     if (!sub) {
       return NextResponse.json(
         {

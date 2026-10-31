@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
-import { consumeCredits } from '@/lib/firebase/db';
+import { consumeCreditsAdmin } from '@/lib/billingServer';
 
 export const dynamic = 'force-dynamic';
 
@@ -66,14 +66,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { appId, amount = 1, action = 'generation', metadata } = body;
-
-    if (!appId) {
-      return NextResponse.json(
-        { success: false, error: 'MISSING_APP_ID', message: 'appId is required' },
-        { status: 400, headers: corsHeaders }
-      );
-    }
+    const { amount = 1, action = 'generation', metadata } = body;
+    const appId = body.appId || 'demo-canvas';
 
     const deductionAmount = Number(amount);
     if (isNaN(deductionAmount) || deductionAmount <= 0) {
@@ -83,8 +77,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Atomically consume credits in Firestore
-    const result = await consumeCredits(
+    // Atomically consume credits in Firestore using Admin SDK
+    const result = await consumeCreditsAdmin(
       verifiedUid,
       appId,
       deductionAmount,

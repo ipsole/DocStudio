@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
-import { getAppSubscription, ensureDefaultUserSubscriptions } from '@/lib/firebase/db';
+import { getAppSubscriptionAdmin, ensureDefaultUserSubscriptionsAdmin } from '@/lib/billingServer';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,21 +72,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const appId = body.appId;
-    if (!appId) {
-      return NextResponse.json(
-        { valid: false, error: 'MISSING_APP_ID', message: 'Target appId is required to check subscription' },
-        { status: 400, headers: corsHeaders }
-      );
-    }
+    const appId = body.appId || 'demo-canvas';
 
     // 2. Ensure user has default subscriptions seeded if new
     if (verifiedEmail) {
-      await ensureDefaultUserSubscriptions(verifiedUid, verifiedEmail);
+      await ensureDefaultUserSubscriptionsAdmin(verifiedUid, verifiedEmail);
     }
 
-    // 3. Fetch app subscription & credit balance
-    const subscription = await getAppSubscription(verifiedUid, appId);
+    // 3. Fetch app subscription & credit balance using Admin SDK
+    const subscription = await getAppSubscriptionAdmin(verifiedUid, appId);
 
     if (!subscription) {
       return NextResponse.json(

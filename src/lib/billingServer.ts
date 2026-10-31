@@ -297,3 +297,193 @@ export async function activateEliteMembershipAdmin(
     return false;
   }
 }
+
+/**
+ * Fetches an app subscription using privileged Admin SDK credentials.
+ * If dedicated appId subscription doesn't exist, gracefully falls back to the user's primary/active subscription.
+ */
+export async function getAppSubscriptionAdmin(
+  userId: string,
+  appId: string
+): Promise<AppSubscription | null> {
+  const { firestore } = getFirebaseAdmin();
+  if (!firestore) return null;
+
+  try {
+    // 1. Direct match for specific appId
+    const directDoc = await firestore.collection(SUBSCRIPTIONS_COLLECTION).doc(`${userId}_${appId}`).get();
+    if (directDoc.exists) {
+      const d = directDoc.data()!;
+      return {
+        id: directDoc.id,
+        userId: d.userId,
+        userEmail: d.userEmail || '',
+        appId: d.appId || appId,
+        appName: d.appName || d.appId || 'DocStudio Suite',
+        plan: (d.plan || 'free') as SubscriptionPlan,
+        status: (d.status || 'active') as any,
+        creditsTotal: typeof d.creditsTotal === 'number' ? d.creditsTotal : 100,
+        creditsRemaining: typeof d.creditsRemaining === 'number' ? d.creditsRemaining : 100,
+        creditsUsed: typeof d.creditsUsed === 'number' ? d.creditsUsed : 0,
+        creditsResetPeriod: d.creditsResetPeriod || 'monthly',
+        features: Array.isArray(d.features) ? d.features : [],
+        validUntil: d.validUntil || d.currentPeriodEnd || null,
+        createdAt: d.createdAt ? (d.createdAt.toMillis ? d.createdAt.toMillis() : d.createdAt) : Date.now(),
+        updatedAt: d.updatedAt ? (d.updatedAt.toMillis ? d.updatedAt.toMillis() : d.updatedAt) : Date.now(),
+      };
+    }
+
+    // 2. Resilient Fallback: If outside app uses a new/custom appId, look for ANY active subscription for this user
+    const subsSnap = await firestore.collection(SUBSCRIPTIONS_COLLECTION).where('userId', '==', userId).get();
+    if (!subsSnap.empty) {
+      const subs = subsSnap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+      subs.sort((a: any, b: any) => (b.creditsRemaining || 0) - (a.creditsRemaining || 0));
+      const best: any = subs[0];
+
+      return {
+        id: best.id,
+        userId: best.userId,
+        userEmail: best.userEmail || '',
+        appId: appId,
+        appName: best.appName || 'DocStudio Suite',
+        plan: (best.plan || 'pro') as SubscriptionPlan,
+        status: (best.status || 'active') as any,
+        creditsTotal: typeof best.creditsTotal === 'number' ? best.creditsTotal : 100,
+        creditsRemaining: typeof best.creditsRemaining === 'number' ? best.creditsRemaining : 100,
+        creditsUsed: typeof best.creditsUsed === 'number' ? best.creditsUsed : 0,
+        creditsResetPeriod: best.creditsResetPeriod || 'monthly',
+        features: Array.isArray(best.features) ? best.features : [],
+        validUntil: best.validUntil || best.currentPeriodEnd || null,
+        createdAt: best.createdAt ? (best.createdAt.toMillis ? best.createdAt.toMillis() : best.createdAt) : Date.now(),
+        updatedAt: best.updatedAt ? (best.updatedAt.toMillis ? best.updatedAt.toMillis() : best.updatedAt) : Date.now(),
+      };
+    }
+
+    return null;
+  } catch (err) {
+    console.error('[DocStudio Billing Admin] Error fetching app subscription:', err);
+    return null;
+  }
+}
+
+/**
+ * Atomically consumes credits using Firebase Admin SDK transactions.
+ */
+export async function consumeCreditsAdmin(
+  userId: string,
+  appId: string,
+  amount: number,
+  action = 'generation',
+  metadata?: any
+): Promise<{ success: boolean; creditsRemaining?: number; creditsUsed?: number; error?: string }> {
+  const { firestore } = getFirebaseAdmin();
+  if (!firestore) {
+    return { success: false, error: 'DATABASE_UNAVAILABLE' };
+  }
+
+  try {
+    // 1. Determine target subscription document
+    let targetDocRef = firestore.collection(SUBSCRIPTIONS_COLLECTION).doc(`${userId}_${appId}`);
+    let docSnap = await targetDocRef.get();
+
+    // If dedicated sub doesn't exist, fallback to the subscription with highest remaining credits
+    if (!docSnap.exists) {
+      const subsSnap = await firestore.collection(SUBSCRIPTIONS_COLLECTION).where('userId', '==', userId).get();
+      if (subsSnap.empty) {
+        return { success: false, error: 'NO_ACTIVE_SUBSCRIPTION' };
+      }
+      const subs = subsSnap.docs.map((d) => ({ ref: d.ref, ...d.data() }));
+      subs.sort((a: any, b: any) => (b.creditsRemaining || 0) - (a.creditsRemaining || 0));
+      targetDocRef = subs[0].ref;
+    }
+
+    let finalRemaining = 0;
+    let finalUsed = 0;
+
+    await firestore.runTransaction(async (transaction) => {
+      const freshSnap = await transaction.get(targetDocRef);
+      if (!freshSnap.exists) {
+        throw new Error('SUBSCRIPTION_NOT_FOUND');
+      }
+
+      const data = freshSnap.data()!;
+      const currentRemaining = typeof data.creditsRemaining === 'number' ? data.creditsRemaining : 0;
+      const currentUsed = typeof data.creditsUsed === 'number' ? data.creditsUsed : 0;
+
+      if (currentRemaining < amount) {
+        finalRemaining = currentRemaining;
+        const err = new Error('INSUFFICIENT_CREDITS');
+        (err as any).creditsRemaining = currentRemaining;
+        throw err;
+      }
+
+      finalRemaining = currentRemaining - amount;
+      finalUsed = currentUsed + amount;
+
+      transaction.update(targetDocRef, {
+        creditsRemaining: finalRemaining,
+        creditsUsed: finalUsed,
+        lastDeductionAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    });
+
+    return {
+      success: true,
+      creditsRemaining: finalRemaining,
+      creditsUsed: finalUsed,
+    };
+  } catch (err: any) {
+    if (err.message === 'INSUFFICIENT_CREDITS') {
+      return {
+        success: false,
+        error: 'INSUFFICIENT_CREDITS',
+        creditsRemaining: err.creditsRemaining || 0,
+      };
+    }
+    console.error('[DocStudio Billing Admin] Credit consumption error:', err);
+    return {
+      success: false,
+      error: err.message || 'CONSUMPTION_FAILED',
+    };
+  }
+}
+
+/**
+ * Ensures default subscriptions are seeded using Admin SDK if user has none.
+ */
+export async function ensureDefaultUserSubscriptionsAdmin(
+  userId: string,
+  userEmail: string
+): Promise<void> {
+  const { firestore } = getFirebaseAdmin();
+  if (!firestore) return;
+
+  try {
+    const subsSnap = await firestore.collection(SUBSCRIPTIONS_COLLECTION).where('userId', '==', userId).get();
+    if (!subsSnap.empty) return; // User already has subscriptions
+
+    const batch = firestore.batch();
+    for (const starter of DEFAULT_APP_SUBSCRIPTIONS) {
+      const subRef = firestore.collection(SUBSCRIPTIONS_COLLECTION).doc(`${userId}_${starter.appId}`);
+      batch.set(subRef, {
+        userId,
+        userEmail,
+        appId: starter.appId,
+        appName: starter.appName,
+        plan: starter.plan,
+        status: 'active',
+        creditsTotal: starter.creditsTotal,
+        creditsRemaining: starter.creditsTotal,
+        creditsUsed: 0,
+        creditsResetPeriod: 'monthly',
+        features: starter.features,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+    await batch.commit();
+  } catch (err) {
+    console.warn('[DocStudio Billing Admin] Error seeding default subscriptions:', err);
+  }
+}
