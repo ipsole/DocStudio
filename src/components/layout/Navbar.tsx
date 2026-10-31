@@ -346,7 +346,7 @@ export function Navbar() {
                           <span>Elite Member</span>
                         </span>
                         <span className="text-[10px] font-mono font-bold text-amber-600 dark:text-amber-400">
-                          10% Off Active
+                          Pass Active
                         </span>
                       </div>
                     ) : (

@@ -198,26 +198,22 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
               title="Manage Profile & Avatar"
               className="relative group shrink-0 rounded-full focus:outline-none"
             >
-              <div
-                className={`relative rounded-full transition-transform group-hover:scale-105 ${
+              <UserAvatar
+                user={user}
+                profile={profile}
+                size="2xl"
+                className={`transition-transform group-hover:scale-105 shadow-md ${
                   isEliteMember
-                    ? 'p-0.5 rounded-full bg-gradient-to-tr from-amber-500 via-amber-300 to-amber-500 ring-2 ring-amber-500/40 shadow-md'
+                    ? 'ring-2 ring-amber-500/30 dark:ring-amber-400/30'
                     : ''
                 }`}
-              >
-                <UserAvatar
-                  user={user}
-                  profile={profile}
-                  size="2xl"
-                  className="shadow-md"
-                />
-              </div>
+              />
               {isEliteMember ? (
                 <span
                   title="Elite Member"
-                  className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 to-amber-400 text-neutral-950 flex items-center justify-center shadow-md ring-2 ring-white dark:ring-neutral-950 z-10 transition-transform group-hover:scale-110"
+                  className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-neutral-950 dark:bg-black border border-amber-500/50 text-amber-400 flex items-center justify-center shadow-md transition-transform group-hover:scale-110 z-10"
                 >
-                  <Crown className="w-3.5 h-3.5 fill-current" />
+                  <Crown className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />
                 </span>
               ) : (
                 <span className="absolute -bottom-1 -right-1 p-1 bg-white dark:bg-neutral-900 rounded-full border border-neutral-200 dark:border-neutral-700 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
@@ -234,14 +230,11 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
                 {isEliteMember && (
                   <Link
                     href="/account"
-                    title="Active Elite Member - 10% Discount Active across DocStudio"
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500/15 via-amber-400/25 to-amber-500/15 border border-amber-500/40 text-amber-700 dark:text-amber-300 font-sans text-xs font-semibold shadow-sm hover:scale-105 active:scale-95 transition-all group backdrop-blur-sm"
+                    title="Elite Member Account"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 font-sans text-xs font-semibold shadow-sm transition-all active:scale-95 group"
                   >
-                    <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500/30 group-hover:rotate-6 transition-transform" />
+                    <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20 group-hover:scale-110 transition-transform" />
                     <span>Elite Member</span>
-                    <span className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-800 dark:text-amber-200 font-bold">
-                      10% OFF
-                    </span>
                   </Link>
                 )}
               </div>
@@ -254,12 +247,6 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
 
           {/* Quick Action Navigation Pills */}
           <div className="flex items-center gap-2.5 flex-wrap shrink-0">
-            {isEliteMember && (
-              <span className="sm:hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-semibold font-sans">
-                <Crown className="w-3 h-3 text-amber-500 fill-amber-500/30" />
-                <span>10% Off Active</span>
-              </span>
-            )}
             <Link
               href="/account"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 hover:bg-neutral-100 dark:hover:bg-neutral-900 text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition-all shadow-sm active:scale-[0.98]"
@@ -291,21 +278,21 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
         {/* 2. Enterprise Plan, Quota & Access Ribbon */}
         <div id="tour-quota-card" className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 animate-fade-in-up animation-delay-100">
           {/* Card 1: Your Current Plan & Upgrade Action */}
-          <div className={`p-5 sm:p-6 rounded-2xl border ${isEliteMember ? 'border-amber-500/35 dark:border-amber-500/35 bg-gradient-to-b from-amber-500/[0.04] via-white dark:via-neutral-950/80 to-white dark:to-neutral-950/80' : 'border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80'} backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-shadow flex flex-col justify-between space-y-4`}>
+          <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-shadow flex flex-col justify-between space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
                   Current Plan
                 </span>
                 {isEliteMember && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[10px] font-bold text-amber-700 dark:text-amber-400 font-sans">
-                    <Crown className="w-2.5 h-2.5 fill-amber-500/30" />
-                    <span>Elite Pass Active</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-[10px] font-bold text-amber-700 dark:text-amber-400 font-sans">
+                    <Crown className="w-2.5 h-2.5 text-amber-500 fill-amber-500/20" />
+                    <span>Elite Member</span>
                   </span>
                 )}
               </div>
-              <div className={`w-8 h-8 rounded-full ${isEliteMember ? 'bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white'} flex items-center justify-center`}>
-                {isEliteMember ? <Crown className="w-4 h-4 fill-amber-500/20" /> : <ShieldCheck className="w-4 h-4" />}
+              <div className="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center text-neutral-900 dark:text-white">
+                <ShieldCheck className="w-4 h-4" />
               </div>
             </div>
 
@@ -322,18 +309,11 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
               <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 truncate font-sans">
                 {user?.email} • {activePlanName === 'Starter' ? 'Free Starter Tier' : 'All tools unlocked'}
               </p>
-              {isEliteMember && (
-                <div className="mt-2.5 p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between text-[11px] font-sans text-amber-800 dark:text-amber-300">
-                  <span className="flex items-center gap-1.5 font-semibold">
-                    <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0 fill-amber-500/20" />
-                    <span>10% Elite Discount Active</span>
-                  </span>
-                  {profile?.eliteExpiresAt && (
-                    <span className="text-[10px] font-mono text-neutral-500 dark:text-neutral-400">
-                      exp {new Date(Number(profile.eliteExpiresAt)).toLocaleDateString('en-IN', { month: 'short', year: '2-digit' })}
-                    </span>
-                  )}
-                </div>
+              {isEliteMember && profile?.eliteExpiresAt && (
+                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-2 font-sans flex items-center gap-1.5">
+                  <Crown className="w-3 h-3 text-amber-500 shrink-0" />
+                  <span>Elite Member • Renews {new Date(Number(profile.eliteExpiresAt)).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}</span>
+                </p>
               )}
             </div>
 
