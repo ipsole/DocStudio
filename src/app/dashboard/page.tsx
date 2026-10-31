@@ -30,6 +30,7 @@ import {
   Shield,
   Layers,
   ExternalLink,
+  Crown,
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -118,6 +119,14 @@ export default function DashboardPage() {
     return 'Starter';
   }, [subscriptions]);
 
+  // Check if current user is an active Elite Member
+  const isEliteMember = useMemo(() => {
+    return Boolean(
+      profile?.isEliteMember &&
+      (profile?.eliteExpiresAt ? Number(profile.eliteExpiresAt) > Date.now() : true)
+    );
+  }, [profile]);
+
   const filteredApps = apps.filter((app) => {
     if (selectedCategory === 'all') return true;
     return app.category.toLowerCase() === selectedCategory.toLowerCase();
@@ -189,21 +198,53 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
               title="Manage Profile & Avatar"
               className="relative group shrink-0 rounded-full focus:outline-none"
             >
-              <UserAvatar
-                user={user}
-                profile={profile}
-                size="2xl"
-                className="group-hover:scale-105 transition-transform shadow-md"
-              />
-              <span className="absolute -bottom-1 -right-1 p-1 bg-white dark:bg-neutral-900 rounded-full border border-neutral-200 dark:border-neutral-700 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                <Settings className="w-3 h-3 text-neutral-600 dark:text-neutral-300" />
-              </span>
+              <div
+                className={`relative rounded-full transition-transform group-hover:scale-105 ${
+                  isEliteMember
+                    ? 'p-0.5 rounded-full bg-gradient-to-tr from-amber-500 via-amber-300 to-amber-500 ring-2 ring-amber-500/40 shadow-md'
+                    : ''
+                }`}
+              >
+                <UserAvatar
+                  user={user}
+                  profile={profile}
+                  size="2xl"
+                  className="shadow-md"
+                />
+              </div>
+              {isEliteMember ? (
+                <span
+                  title="Elite Member"
+                  className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-tr from-amber-500 to-amber-400 text-neutral-950 flex items-center justify-center shadow-md ring-2 ring-white dark:ring-neutral-950 z-10 transition-transform group-hover:scale-110"
+                >
+                  <Crown className="w-3.5 h-3.5 fill-current" />
+                </span>
+              ) : (
+                <span className="absolute -bottom-1 -right-1 p-1 bg-white dark:bg-neutral-900 rounded-full border border-neutral-200 dark:border-neutral-700 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Settings className="w-3 h-3 text-neutral-600 dark:text-neutral-300" />
+                </span>
+              )}
             </Link>
 
             <div className="space-y-1.5">
-              <h1 className="text-3xl sm:text-5xl font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-tight">
-                Welcome, <span className="italic">{userName}</span>
-              </h1>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h1 className="text-3xl sm:text-5xl font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-tight">
+                  Welcome, <span className="italic">{userName}</span>
+                </h1>
+                {isEliteMember && (
+                  <Link
+                    href="/account"
+                    title="Active Elite Member - 10% Discount Active across DocStudio"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-amber-500/15 via-amber-400/25 to-amber-500/15 border border-amber-500/40 text-amber-700 dark:text-amber-300 font-sans text-xs font-semibold shadow-sm hover:scale-105 active:scale-95 transition-all group backdrop-blur-sm"
+                  >
+                    <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500/30 group-hover:rotate-6 transition-transform" />
+                    <span>Elite Member</span>
+                    <span className="hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-800 dark:text-amber-200 font-bold">
+                      10% OFF
+                    </span>
+                  </Link>
+                )}
+              </div>
 
               <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-sans max-w-xl">
                 Your single-sign-on identity is active across the Docdril software suite. Monitor generation credits, launch creative tools, and manage subscription quotas.
@@ -213,6 +254,12 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
 
           {/* Quick Action Navigation Pills */}
           <div className="flex items-center gap-2.5 flex-wrap shrink-0">
+            {isEliteMember && (
+              <span className="sm:hidden inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-xs font-semibold font-sans">
+                <Crown className="w-3 h-3 text-amber-500 fill-amber-500/30" />
+                <span>10% Off Active</span>
+              </span>
+            )}
             <Link
               href="/account"
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950 hover:bg-neutral-100 dark:hover:bg-neutral-900 text-xs font-semibold text-neutral-800 dark:text-neutral-200 transition-all shadow-sm active:scale-[0.98]"
@@ -244,13 +291,21 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
         {/* 2. Enterprise Plan, Quota & Access Ribbon */}
         <div id="tour-quota-card" className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 animate-fade-in-up animation-delay-100">
           {/* Card 1: Your Current Plan & Upgrade Action */}
-          <div className="p-5 sm:p-6 rounded-2xl border border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80 backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-shadow flex flex-col justify-between space-y-4">
+          <div className={`p-5 sm:p-6 rounded-2xl border ${isEliteMember ? 'border-amber-500/35 dark:border-amber-500/35 bg-gradient-to-b from-amber-500/[0.04] via-white dark:via-neutral-950/80 to-white dark:to-neutral-950/80' : 'border-neutral-200/90 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/80'} backdrop-blur-xl shadow-sm hover:shadow-md dark:shadow-none transition-shadow flex flex-col justify-between space-y-4`}>
             <div className="flex items-center justify-between">
-              <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                Current Plan
-              </span>
-              <div className="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center text-neutral-900 dark:text-white">
-                <ShieldCheck className="w-4 h-4" />
+              <div className="flex items-center gap-2">
+                <span className="font-sans text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                  Current Plan
+                </span>
+                {isEliteMember && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[10px] font-bold text-amber-700 dark:text-amber-400 font-sans">
+                    <Crown className="w-2.5 h-2.5 fill-amber-500/30" />
+                    <span>Elite Pass Active</span>
+                  </span>
+                )}
+              </div>
+              <div className={`w-8 h-8 rounded-full ${isEliteMember ? 'bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400' : 'bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white'} flex items-center justify-center`}>
+                {isEliteMember ? <Crown className="w-4 h-4 fill-amber-500/20" /> : <ShieldCheck className="w-4 h-4" />}
               </div>
             </div>
 
@@ -267,6 +322,19 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
               <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 truncate font-sans">
                 {user?.email} • {activePlanName === 'Starter' ? 'Free Starter Tier' : 'All tools unlocked'}
               </p>
+              {isEliteMember && (
+                <div className="mt-2.5 p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between text-[11px] font-sans text-amber-800 dark:text-amber-300">
+                  <span className="flex items-center gap-1.5 font-semibold">
+                    <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0 fill-amber-500/20" />
+                    <span>10% Elite Discount Active</span>
+                  </span>
+                  {profile?.eliteExpiresAt && (
+                    <span className="text-[10px] font-mono text-neutral-500 dark:text-neutral-400">
+                      exp {new Date(Number(profile.eliteExpiresAt)).toLocaleDateString('en-IN', { month: 'short', year: '2-digit' })}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="pt-2 border-t border-neutral-100 dark:border-neutral-900 flex items-center justify-between text-xs">
@@ -373,6 +441,37 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
             </div>
           </div>
         </div>
+
+        {/* Elite Membership Banner for Non-Elite Members */}
+        {!isEliteMember && (
+          <div className="p-4 sm:p-5 rounded-2xl border border-amber-500/25 bg-gradient-to-r from-amber-500/[0.07] via-amber-400/[0.02] to-transparent flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm animate-fade-in-up">
+            <div className="flex items-center gap-3.5">
+              <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 shrink-0 shadow-sm">
+                <Crown className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs sm:text-sm font-bold text-neutral-950 dark:text-white font-sans">
+                    Unlock Elite Members Pass
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-800 dark:text-amber-300 font-bold">
+                    ₹199 / yr
+                  </span>
+                </div>
+                <p className="text-[11px] sm:text-xs text-neutral-600 dark:text-neutral-400 font-sans mt-0.5">
+                  Save 10% on every subscription renewal and credit top-up across DocStudio + get 150 bonus credits immediately.
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/pricing#elite-members"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full bg-amber-500 hover:bg-amber-600 text-neutral-950 font-bold text-xs transition-all shrink-0 shadow-sm active:scale-95"
+            >
+              <span>Get Elite Pass</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        )}
 
         {/* 3. Direct Software Launchpad */}
         <section id="tour-launchpad" className="space-y-6 animate-fade-in-up animation-delay-200">
