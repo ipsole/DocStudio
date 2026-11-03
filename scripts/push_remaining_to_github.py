@@ -91,8 +91,8 @@ def push_app(app_info):
         subprocess.run(['git', 'init'], cwd=cwd, check=True)
         print('  Initialized new git repository.')
 
-    subprocess.run(['git', 'config', 'user.name', 'docdril'], cwd=cwd, check=True)
-    subprocess.run(['git', 'config', 'user.email', 'izackstudio1@gmail.com'], cwd=cwd, check=True)
+    subprocess.run(['git', 'config', 'user.name', 'docdrilofficial'], cwd=cwd, check=True)
+    subprocess.run(['git', 'config', 'user.email', '351932608+docdrilofficial@users.noreply.github.com'], cwd=cwd, check=True)
     subprocess.run(['git', 'branch', '-M', 'main'], cwd=cwd, check=True)
     subprocess.run(['git', 'add', '-A'], cwd=cwd, check=True)
 

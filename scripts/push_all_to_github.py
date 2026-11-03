@@ -136,8 +136,8 @@ def push_app(app_info):
         print('  Initialized new git repository.')
 
     # Set git config locally
-    subprocess.run(['git', 'config', 'user.name', 'docdril'], cwd=cwd, check=True)
-    subprocess.run(['git', 'config', 'user.email', 'izackstudio1@gmail.com'], cwd=cwd, check=True)
+    subprocess.run(['git', 'config', 'user.name', 'docdrilofficial'], cwd=cwd, check=True)
+    subprocess.run(['git', 'config', 'user.email', '351932608+docdrilofficial@users.noreply.github.com'], cwd=cwd, check=True)
     subprocess.run(['git', 'branch', '-M', 'main'], cwd=cwd, check=True)
 
     # Clean staging of any AppleDouble or removed files
