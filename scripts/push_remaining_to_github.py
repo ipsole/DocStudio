@@ -11,7 +11,7 @@ REMAINING_APPS = [
     {
         'folder': 'slide showcaser',
         'repo': 'slideshowcaser',
-        'desc': 'SlideShowcaser — Browser-based 3D motion graphics and perspective showcase editor in Three.js (slides.docdril.com)'
+        'desc': 'Slix (SlideShowcaser) — Browser-based 3D motion graphics and perspective showcase editor in Three.js (slix.docdril.com)'
     },
     {
         'folder': 'Doctool',
