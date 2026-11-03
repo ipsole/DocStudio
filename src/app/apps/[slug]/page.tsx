@@ -18,6 +18,19 @@ import {
   Lock,
   Layers,
   Info,
+  FileText,
+  Box,
+  Type,
+  Images,
+  Scissors,
+  Maximize2,
+  Eraser,
+  Mic,
+  Presentation,
+  Sliders,
+  Music,
+  BookOpen,
+  Globe,
 } from 'lucide-react';
 
 export default function AppDetailPage() {
@@ -44,10 +57,36 @@ export default function AppDetailPage() {
   const renderIcon = (iconName?: string) => {
     const iconClass = 'w-8 h-8 text-white';
     switch (iconName) {
-      case 'Palette':
-        return <Palette className={iconClass} />;
+      case 'FileText':
+        return <FileText className={iconClass} />;
+      case 'Box':
+        return <Box className={iconClass} />;
       case 'Clapperboard':
         return <Clapperboard className={iconClass} />;
+      case 'Type':
+        return <Type className={iconClass} />;
+      case 'Images':
+        return <Images className={iconClass} />;
+      case 'Scissors':
+        return <Scissors className={iconClass} />;
+      case 'Maximize2':
+        return <Maximize2 className={iconClass} />;
+      case 'Eraser':
+        return <Eraser className={iconClass} />;
+      case 'Mic':
+        return <Mic className={iconClass} />;
+      case 'Presentation':
+        return <Presentation className={iconClass} />;
+      case 'Sliders':
+        return <Sliders className={iconClass} />;
+      case 'Music':
+        return <Music className={iconClass} />;
+      case 'BookOpen':
+        return <BookOpen className={iconClass} />;
+      case 'Globe':
+        return <Globe className={iconClass} />;
+      case 'Palette':
+        return <Palette className={iconClass} />;
       case 'Layers':
         return <Layers className={iconClass} />;
       case 'Wrench':
