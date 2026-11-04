@@ -388,8 +388,9 @@ export async function consumeCreditsAdmin(
     let targetDocRef = firestore.collection(SUBSCRIPTIONS_COLLECTION).doc(`${userId}_${appId}`);
     let docSnap = await targetDocRef.get();
 
-    // If dedicated sub doesn't exist, fallback to the subscription with highest remaining credits
-    if (!docSnap.exists) {
+    // Check if dedicated sub exists and has enough credits; otherwise fallback to highest balance sub in the unified shared pool
+    const targetHasEnough = docSnap.exists && (Number(docSnap.data()?.creditsRemaining) || 0) >= amount;
+    if (!targetHasEnough) {
       const subsSnap = await firestore.collection(SUBSCRIPTIONS_COLLECTION).where('userId', '==', userId).get();
       if (subsSnap.empty) {
         return { success: false, error: 'NO_ACTIVE_SUBSCRIPTION' };

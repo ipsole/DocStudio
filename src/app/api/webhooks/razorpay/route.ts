@@ -104,8 +104,11 @@ export async function POST(request: NextRequest) {
       // Provision entitlements
       if (userId) {
         if (itemType === 'subscription') {
-          const targetPlan: SubscriptionPlan = (itemId === 'enterprise' ? 'enterprise' : 'pro') as SubscriptionPlan;
-          await upgradeUserPlanAdmin(userId, userEmail, targetPlan);
+          const isUltra = itemId === 'enterprise' || itemId === 'ultra' || itemId === 'ultra-yearly';
+          const targetPlan: SubscriptionPlan = (isUltra ? 'enterprise' : 'pro') as SubscriptionPlan;
+          const isYearly = itemId?.includes('yearly');
+          const periodDurationDays = isYearly ? 365 : 30;
+          await upgradeUserPlanAdmin(userId, userEmail, targetPlan, creditsAdded, periodDurationDays);
         } else if (itemType === 'credit_pack' && creditsAdded > 0) {
           await addSharedCreditsAdmin(userId, userEmail, creditsAdded);
         } else if (itemType === 'membership') {
