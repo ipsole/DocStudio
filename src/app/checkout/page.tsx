@@ -428,6 +428,57 @@ function CheckoutContent() {
   // 5. Main Checkout Form & Summary Dedicated Page
   return (
     <div className="max-w-[1240px] mx-auto px-4 sm:px-6 md:px-8 pt-8 sm:pt-12 pb-16 animate-fadeIn">
+      {/* High-Visibility Fullscreen Payment Verification Modal Overlay */}
+      {status === 'verifying' && (
+        <div className="fixed inset-0 z-50 bg-black/80 dark:bg-black/90 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-fadeIn">
+          <div className="max-w-md w-full p-8 sm:p-9 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl text-center space-y-6">
+            {/* Spinning Security Pulse Ring */}
+            <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full border-2 border-emerald-500/30 dark:border-emerald-400/30 animate-ping" />
+              <div className="absolute inset-0 rounded-full border-2 border-t-emerald-500 dark:border-t-emerald-400 border-neutral-200 dark:border-neutral-800 animate-spin" />
+              <div className="w-14 h-14 rounded-full bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-inner">
+                <ShieldCheck className="w-7 h-7" />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300">
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                <span>Cryptographic Verification In Progress</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold font-sans text-neutral-950 dark:text-white">
+                Verifying Payment Signature...
+              </h2>
+              <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 font-sans leading-relaxed max-w-sm mx-auto">
+                Securing authorization with Razorpay and provisioning your <strong className="text-neutral-900 dark:text-white">{planDisplayName}</strong> subscription & cross-app credits.
+              </p>
+            </div>
+
+            {/* Verification Steps Indicator */}
+            <div className="rounded-2xl border border-neutral-200/80 dark:border-neutral-800/80 bg-neutral-50 dark:bg-neutral-950/60 p-4 text-left space-y-3 text-xs font-sans">
+              <div className="flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400 font-medium">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>Bank authorization confirmed</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-neutral-800 dark:text-neutral-200 font-medium">
+                <Loader2 className="w-4 h-4 shrink-0 animate-spin text-amber-500" />
+                <span>Validating HMAC payment signature...</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-neutral-500 dark:text-neutral-400">
+                <div className="w-4 h-4 rounded-full border border-neutral-300 dark:border-neutral-700 shrink-0" />
+                <span>Syncing +{totalCredits.toLocaleString()} generation credits & suite access</span>
+              </div>
+            </div>
+
+            {/* Warning Callout */}
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs font-sans font-medium flex items-center justify-center gap-2">
+              <span>⚠️</span>
+              <span>Please do not close, refresh, or leave this tab.</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Grid: Left Order Summary, Right Billing Details Form */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
         {/* LEFT COLUMN: Order Summary & Item Breakdown (col-span-5) */}

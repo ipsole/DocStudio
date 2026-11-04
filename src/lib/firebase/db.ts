@@ -1180,12 +1180,12 @@ export async function upgradeUserPlan(
   const nextMonth = now + 30 * 24 * 60 * 60 * 1000;
   const planCredits = plan === 'pro' ? 500 : plan === 'enterprise' ? 2500 : 50;
 
-  const updatedSubs = currentSubs.map((sub) => ({
+  const updatedSubs = currentSubs.map((sub, index) => ({
     ...sub,
     plan,
     status: 'active' as SubscriptionStatus,
-    creditsTotal: (sub.creditsTotal || 0) + planCredits,
-    creditsRemaining: (sub.creditsRemaining || 0) + planCredits,
+    creditsTotal: (sub.creditsTotal || 0) + (index === 0 ? planCredits : 0),
+    creditsRemaining: (sub.creditsRemaining || 0) + (index === 0 ? planCredits : 0),
     currentPeriodEnd: nextMonth,
     updatedAt: now,
   }));

@@ -81,29 +81,32 @@ export async function upgradeUserPlanAdmin(
 
     if (!snap.empty) {
       const batch = firestore.batch();
-      snap.docs.forEach((docSnap) => {
+      snap.docs.forEach((docSnap, index) => {
         const currentData = docSnap.data();
         const currentTotal = typeof currentData.creditsTotal === 'number' ? currentData.creditsTotal : 100;
         const currentRemaining = typeof currentData.creditsRemaining === 'number' ? currentData.creditsRemaining : 100;
+        // Shared cross-app quota: credits added once to primary subscription pool
+        const creditsToAdd = index === 0 ? planCredits : 0;
 
         batch.update(docSnap.ref, {
           plan,
           status: 'active',
-          creditsTotal: currentTotal + planCredits,
-          creditsRemaining: currentRemaining + planCredits,
+          creditsTotal: currentTotal + creditsToAdd,
+          creditsRemaining: currentRemaining + creditsToAdd,
           currentPeriodEnd: nextPeriodEnd,
           validUntil: nextPeriodEnd,
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
       });
       await batch.commit();
-      console.log(`[DocStudio Billing Admin] Upgraded existing subscriptions to "${plan}" for user ${userId}`);
+      console.log(`[DocStudio Billing Admin] Upgraded existing subscriptions to "${plan}" for user ${userId} (+${planCredits} shared credits)`);
     } else {
       // Seed initial subscriptions directly if none exist
       const batch = firestore.batch();
-      DEFAULT_APP_SUBSCRIPTIONS.forEach((starter) => {
+      DEFAULT_APP_SUBSCRIPTIONS.forEach((starter, index) => {
         const subId = `${userId}_${starter.appId}`;
         const ref = subsRef.doc(subId);
+        const creditsToAdd = index === 0 ? planCredits : 0;
         batch.set(
           ref,
           {
@@ -113,8 +116,8 @@ export async function upgradeUserPlanAdmin(
             appName: starter.appName,
             plan,
             status: 'active',
-            creditsTotal: starter.creditsTotal + planCredits,
-            creditsRemaining: starter.creditsTotal + planCredits,
+            creditsTotal: starter.creditsTotal + creditsToAdd,
+            creditsRemaining: starter.creditsTotal + creditsToAdd,
             creditsUsed: 0,
             creditsResetPeriod: 'monthly',
             features: starter.features,
@@ -126,7 +129,7 @@ export async function upgradeUserPlanAdmin(
         );
       });
       await batch.commit();
-      console.log(`[DocStudio Billing Admin] Seeded new upgraded subscriptions for user ${userId}`);
+      console.log(`[DocStudio Billing Admin] Seeded new upgraded subscriptions for user ${userId} (+${planCredits} shared credits)`);
     }
 
     // Set entitlement record
