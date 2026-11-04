@@ -346,26 +346,15 @@ export default function HomePage() {
       )}
 
       <div className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center bg-white text-neutral-900 dark:bg-black dark:text-white px-4 sm:px-6 md:px-8 pt-0 sm:pt-2 pb-16 sm:pb-24 overflow-hidden transition-colors duration-200">
-        {/* Luxury Serif Typography - Natural Wide Proportions, Uncompressed */}
-        <div className="relative z-10 text-center select-none pt-2 sm:pt-4 pb-1">
-          <h1 className="text-6xl sm:text-8xl md:text-9xl lg:text-[7.5rem] xl:text-[8.5rem] font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-[1.05] select-none">
+        {/* Precision Neo-Grotesque Typography - High-Tech Linear/Vercel Aesthetic */}
+        <div className="relative z-10 text-center select-none pt-2 sm:pt-4">
+          <h1 className="text-6xl sm:text-8xl md:text-9xl lg:text-[7.5rem] xl:text-[8.5rem] font-sans font-black tracking-[-0.04em] text-neutral-950 dark:text-white leading-[0.98] select-none">
             DocStudio
           </h1>
-          <p className="mt-2 sm:mt-2.5 text-xs sm:text-sm font-sans font-medium tracking-[0.2em] uppercase text-neutral-400 dark:text-neutral-500">
-            by{' '}
-            <a
-              href="https://docdril.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white transition-colors underline-offset-4 hover:underline cursor-pointer"
-            >
-              Docdril™
-            </a>
-          </p>
         </div>
 
       {/* Tabs Selector Directly Below DocStudio Heading */}
-      <div id="ecosystem" className="relative z-10 w-full max-w-[1400px] mx-auto pt-4 sm:pt-6 space-y-3 sm:space-y-4">
+      <div id="ecosystem" className="relative z-10 w-full max-w-[1400px] mx-auto pt-3 sm:pt-5 space-y-3 sm:space-y-4">
         {/* Master View Switcher (Softwares, Pricings, Tutorials) */}
         <div className="flex items-center justify-center pb-1">
           <div className="relative inline-flex p-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900/80 backdrop-blur-md">
@@ -487,7 +476,7 @@ export default function HomePage() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
                 {filteredApps.map((app) => (
-                  <AppCard key={app.id} app={app} showLaunchDirect={true} />
+                  <AppCard key={app.id} app={app} allApps={filteredApps} showLaunchDirect={true} />
                 ))}
               </div>
             )}

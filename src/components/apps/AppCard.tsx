@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { DocApp } from '@/types';
+import { useAppPreview } from '@/context/AppPreviewContext';
 import {
   ExternalLink,
   ArrowRight,
@@ -36,6 +37,8 @@ import {
 interface AppCardProps {
   app: DocApp;
   showLaunchDirect?: boolean;
+  allApps?: DocApp[];
+  onCardClick?: () => void;
 }
 
 export function AppVisualMockup({ app }: { app: DocApp }) {
@@ -597,8 +600,9 @@ export function AppVisualMockup({ app }: { app: DocApp }) {
     }
 }
 
-export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
+export function AppCard({ app, showLaunchDirect = true, allApps, onCardClick }: AppCardProps) {
   const router = useRouter();
+  const preview = useAppPreview();
 
   const targetUrl = useMemo(() => {
     return app.applicationUrl || (app.subdomain ? `https://${app.subdomain}.docdril.com` : null);
@@ -615,7 +619,7 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
   }, [app.name]);
 
   const renderSmallIcon = () => {
-    const iconClass = 'w-4.5 h-4.5 text-neutral-800 dark:text-neutral-200';
+    const iconClass = 'w-5 h-5 text-neutral-900 dark:text-white';
     switch (app.icon) {
       case 'FileText':
         return <FileText className={iconClass} />;
@@ -658,11 +662,20 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
 
   const handleCardClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    // If the click is inside an anchor (<a>) or button, don't trigger the card container's push
-    if (target.closest('a') || target.closest('button')) {
+    // If the click is inside the launch button or a direct external anchor, let it launch
+    if (target.closest('[data-launch-btn="true"]')) {
       return;
     }
-    router.push(`/apps/${app.slug}`);
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (onCardClick) {
+      onCardClick();
+    } else if (preview) {
+      preview.openPreview(app, allApps);
+    } else {
+      router.push(`/apps/${app.slug}`);
+    }
   };
 
   return (
@@ -671,57 +684,61 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
       className="group relative flex flex-col rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800/80 bg-white dark:bg-neutral-950/80 hover:border-neutral-400 dark:hover:border-neutral-600 transition-all duration-300 shadow-sm hover:shadow-md dark:shadow-none backdrop-blur-xl cursor-pointer"
     >
       {/* 1. Visual Thumbnail Preview Container (Flush edge-to-edge on top, left, and right) */}
-      <Link
-        href={`/apps/${app.slug}`}
-        className="relative block w-full aspect-[16/10] overflow-hidden border-b border-neutral-200 dark:border-neutral-800/80 bg-neutral-950"
-      >
+      <div className="relative block w-full aspect-[16/10] overflow-hidden border-b border-neutral-200 dark:border-neutral-800/80 bg-neutral-950 select-none">
         <AppVisualMockup app={app} />
-      </Link>
+      </div>
 
-      {/* 2. Metadata & Text Content Container */}
-      <div className="p-3.5 flex flex-col justify-between flex-1 space-y-1.5">
-        <div className="flex items-center justify-between gap-3">
-          {/* Left: Bare Icon + Name */}
-          <Link
-            href={`/apps/${app.slug}`}
-            className="flex items-center gap-2 min-w-0 group/title"
-          >
-            <span className="shrink-0 text-neutral-800 dark:text-neutral-200 group-hover/title:text-black dark:group-hover/title:text-white transition-colors">
+      {/* 2. Metadata & Action Container (Clean Launcher Style - No Truncation) */}
+      <div className="p-3.5 sm:p-4 flex flex-col justify-between flex-1 gap-2.5 bg-white dark:bg-neutral-950/80">
+        {/* Top: Clean Bare Icon + Bigger Title on Left, Small Category Tag on Right */}
+        <div className="flex items-start justify-between gap-2.5 min-w-0 group/title flex-1 select-none">
+          <div className="flex items-start gap-2.5 min-w-0 flex-1">
+            <span className="shrink-0 text-neutral-900 dark:text-white group-hover/title:text-neutral-600 dark:group-hover/title:text-neutral-300 transition-colors mt-0.5">
               {renderSmallIcon()}
             </span>
-            <span className="font-bold text-sm text-neutral-950 dark:text-white truncate tracking-tight group-hover/title:text-neutral-600 dark:group-hover/title:text-neutral-300 transition-colors">
+            <h3 className="font-bold text-[15px] sm:text-base text-neutral-950 dark:text-white tracking-tight leading-snug group-hover/title:text-neutral-600 dark:group-hover/title:text-neutral-300 transition-colors">
               {cleanName}
-            </span>
-          </Link>
+            </h3>
+          </div>
+          <span className="shrink-0 text-[10px] font-mono uppercase tracking-wider text-neutral-400 dark:text-neutral-500 font-semibold pt-0.5">
+            {app.category}
+          </span>
+        </div>
 
-          {/* Right: Explore Button (Launches external app in separate link/tab directly from card) */}
+        {/* Bottom: Wide High-Contrast Dedicated Action Button with Tactile Feedback */}
+        <div className="pt-2 border-t border-neutral-100 dark:border-neutral-900">
           {isLaunchable && targetUrl ? (
             <a
               href={targetUrl}
               target="_blank"
               rel="noopener noreferrer"
+              data-launch-btn="true"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-[13px] font-bold bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 border border-neutral-300/80 dark:border-neutral-700 text-neutral-950 dark:text-white shadow-sm hover:shadow transition-all shrink-0 cursor-pointer"
-              title={`Open ${cleanName} in new tab`}
+              className="group/btn relative w-full inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-[13px] font-bold bg-neutral-950 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 shadow-sm hover:shadow-[0_6px_20px_rgba(0,0,0,0.18)] dark:shadow-[0_0_12px_rgba(255,255,255,0.06)] dark:hover:shadow-[0_0_22px_rgba(255,255,255,0.2)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] transition-all duration-200 ease-out cursor-pointer select-none"
+              title={`Launch ${cleanName} in new tab`}
             >
-              <span>Explore</span>
-              <ExternalLink className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-300" />
+              <span>Launch</span>
+              <ExternalLink className="w-3.5 h-3.5 transition-transform duration-200 ease-out group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
             </a>
           ) : (
-            <Link
-              href={`/apps/${app.slug}`}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-[13px] font-bold bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 border border-neutral-300/80 dark:border-neutral-700 text-neutral-950 dark:text-white shadow-sm hover:shadow transition-all shrink-0 cursor-pointer"
+            <button
+              type="button"
+              data-launch-btn="true"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (preview) {
+                  preview.openPreview(app, allApps);
+                } else {
+                  router.push(`/apps/${app.slug}`);
+                }
+              }}
+              className="group/btn relative w-full inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs sm:text-[13px] font-bold bg-neutral-950 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 dark:hover:bg-neutral-100 shadow-sm hover:shadow-[0_6px_20px_rgba(0,0,0,0.18)] dark:shadow-[0_0_12px_rgba(255,255,255,0.06)] dark:hover:shadow-[0_0_22px_rgba(255,255,255,0.2)] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] transition-all duration-200 ease-out cursor-pointer select-none"
             >
-              <span>Explore</span>
-              <ArrowRight className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-300" />
-            </Link>
+              <span>Launch</span>
+              <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 ease-out group-hover/btn:translate-x-1" />
+            </button>
           )}
         </div>
-
-        {/* 3. Short description in muted silver */}
-        <p className="text-xs text-neutral-600 dark:text-neutral-400 line-clamp-1 font-sans">
-          {app.shortDescription}
-        </p>
       </div>
     </div>
   );

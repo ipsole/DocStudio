@@ -232,7 +232,7 @@ export default function SignInPage() {
             <DocdrilLogo size={132} className="text-neutral-950 dark:text-white transition-transform group-hover:scale-105 drop-shadow-sm" />
           </Link>
           <div className="space-y-2">
-            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-[1.05]">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-sans font-black tracking-[-0.04em] text-neutral-950 dark:text-white leading-[1]">
               DocStudio
             </h1>
             <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-md mx-auto font-sans leading-relaxed">

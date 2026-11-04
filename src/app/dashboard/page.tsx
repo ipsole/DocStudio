@@ -224,8 +224,8 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
 
             <div className="space-y-1.5">
               <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-3xl sm:text-5xl font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-tight">
-                  Welcome, <span className="italic">{userName}</span>
+                <h1 className="text-3xl sm:text-5xl font-sans font-bold tracking-tight text-neutral-950 dark:text-white leading-tight">
+                  Welcome, <span>{userName}</span>
                 </h1>
                 {isEliteMember && (
                   <Link
@@ -491,7 +491,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
             {filteredApps.map((app) => (
-              <AppCard key={app.id} app={app} showLaunchDirect={true} />
+              <AppCard key={app.id} app={app} allApps={filteredApps} showLaunchDirect={true} />
             ))}
           </div>
         </section>

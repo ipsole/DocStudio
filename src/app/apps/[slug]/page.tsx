@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { getAppBySlug } from '@/lib/firebase/db';
+import { getAppBySlug, getPublicApps } from '@/lib/firebase/db';
 import { DocApp } from '@/types';
 import { StatusBadge, Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { AppVisualMockup } from '@/components/apps/AppCard';
+import { AppVisualMockup, AppCard } from '@/components/apps/AppCard';
 import {
   ExternalLink,
   ArrowLeft,
@@ -38,14 +38,19 @@ export default function AppDetailPage() {
   const params = useParams();
   const slug = params?.slug as string;
   const [app, setApp] = useState<DocApp | null>(null);
+  const [allApps, setAllApps] = useState<DocApp[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadApp() {
       if (!slug) return;
       try {
-        const found = await getAppBySlug(slug);
+        const [found, publicApps] = await Promise.all([
+          getAppBySlug(slug),
+          getPublicApps(),
+        ]);
         setApp(found);
+        setAllApps(publicApps);
       } catch (err) {
         console.error('Error loading app detail:', err);
       } finally {
@@ -54,6 +59,14 @@ export default function AppDetailPage() {
     }
     loadApp();
   }, [slug]);
+
+  const relatedApps = React.useMemo(() => {
+    if (!app || allApps.length === 0) return [];
+    const others = allApps.filter((a) => a.slug !== app.slug);
+    const sameCat = others.filter((a) => a.category === app.category);
+    const diffCat = others.filter((a) => a.category !== app.category);
+    return [...sameCat, ...diffCat].slice(0, 3);
+  }, [app, allApps]);
 
   const renderIcon = (iconName?: string) => {
     const iconClass = 'w-8 h-8 text-white';
@@ -355,6 +368,35 @@ export default function AppDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* 4. Explore More Software / Ecosystem Suggestions Grid */}
+      {relatedApps.length > 0 && (
+        <div className="pt-10 border-t border-neutral-200 dark:border-neutral-800 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+                Explore More Applications
+              </h3>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 font-sans">
+                Connected tools and specialized suites in the Docdril ecosystem
+              </p>
+            </div>
+            <Link
+              href="/apps"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-700 hover:text-black dark:text-neutral-300 dark:hover:text-white transition-colors"
+            >
+              <span>View All 14 Suites</span>
+              <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {relatedApps.map((relApp) => (
+              <AppCard key={relApp.id} app={relApp} allApps={relatedApps} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,9 +2,11 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { AppPreviewProvider } from '@/context/AppPreviewContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { GoogleOneTap } from '@/components/auth/GoogleOneTap';
+import { AppPreviewModal } from '@/components/apps/AppPreviewModal';
 
 export const metadata: Metadata = {
   title: 'DocStudio | The Software Ecosystem of Docdril',
@@ -63,10 +65,13 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col bg-white text-neutral-900 dark:bg-black dark:text-white selection:bg-neutral-900 selection:text-white dark:selection:bg-white dark:selection:text-black antialiased transition-colors duration-200">
         <ThemeProvider>
           <AuthProvider>
-            <GoogleOneTap context="signin" onSuccessRedirect="/" />
-            <Navbar />
-            <main className="flex-1 flex flex-col">{children}</main>
-            <Footer />
+            <AppPreviewProvider>
+              <GoogleOneTap context="signin" onSuccessRedirect="/" />
+              <Navbar />
+              <main className="flex-1 flex flex-col">{children}</main>
+              <Footer />
+              <AppPreviewModal />
+            </AppPreviewProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

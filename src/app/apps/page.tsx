@@ -180,7 +180,7 @@ export default function AppsCatalogPage() {
       ) : filteredApps.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {filteredApps.map((app) => (
-            <AppCard key={app.id} app={app} />
+            <AppCard key={app.id} app={app} allApps={filteredApps} />
           ))}
         </div>
       ) : (

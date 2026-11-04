@@ -8,7 +8,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div className="md:col-span-2 space-y-4">
             <div>
-              <span className="font-serif font-normal text-2xl sm:text-3xl tracking-[0.01em] text-neutral-950 dark:text-white select-none">
+              <span className="font-sans font-black text-2xl sm:text-3xl tracking-[-0.03em] text-neutral-950 dark:text-white select-none">
                 DocStudio
               </span>
             </div>
