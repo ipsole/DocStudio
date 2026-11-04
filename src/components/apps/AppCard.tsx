@@ -383,6 +383,110 @@ export function AppVisualMockup({ app }: { app: DocApp }) {
       );
     }
 
+    // 11. Private Browser
+    if (slug.includes('browser')) {
+      return (
+        <div className="relative w-full h-full bg-gradient-to-br from-neutral-950 via-neutral-900 to-black p-5 flex flex-col justify-between overflow-hidden text-white select-none group-hover:scale-[1.03] transition-transform duration-700">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative z-10 flex items-center justify-between border-b border-neutral-800 pb-2">
+            <div className="flex items-center gap-2">
+              <Globe className="w-3.5 h-3.5 text-sky-400" />
+              <span className="font-mono text-[9px] text-neutral-300 uppercase tracking-widest">
+                PRIVATE BROWSER
+              </span>
+            </div>
+            <span className="font-mono text-[9px] text-sky-400 font-bold bg-sky-950/60 border border-sky-900/60 px-1.5 py-0.5 rounded flex items-center gap-1">
+              <ShieldCheck className="w-2.5 h-2.5" />
+              SANDBOX
+            </span>
+          </div>
+
+          <div className="relative z-10 my-auto text-center space-y-1.5">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neutral-900/90 border border-neutral-800 text-neutral-300 shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-mono text-xs font-semibold text-white">browser://vault</span>
+            </div>
+            <p className="font-mono text-[9px] text-sky-300 uppercase tracking-widest font-medium">
+              ZERO TELEMETRY • ISOLATED SESSIONS
+            </p>
+          </div>
+
+          <div className="relative z-10 flex items-center justify-between font-mono text-[9px] text-neutral-400 border-t border-neutral-900 pt-2">
+            <span>ELECTRON ENGINE</span>
+            <span className="text-sky-400 font-semibold uppercase tracking-wider">TRACKING BLOCKED</span>
+          </div>
+        </div>
+      );
+    }
+
+    // 12. Docdril Notes
+    if (slug.includes('note')) {
+      return (
+        <div className="relative w-full h-full bg-gradient-to-br from-neutral-950 via-neutral-900 to-black p-5 flex flex-col justify-between overflow-hidden text-white select-none group-hover:scale-[1.03] transition-transform duration-700">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative z-10 flex items-center justify-between border-b border-neutral-800 pb-2">
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="font-mono text-[9px] text-neutral-300 uppercase tracking-widest">
+                DOCDRIL NOTES
+              </span>
+            </div>
+            <span className="font-mono text-[9px] text-emerald-400 font-bold bg-emerald-950/60 border border-emerald-900/60 px-1.5 py-0.5 rounded">
+              MARKDOWN
+            </span>
+          </div>
+
+          <div className="relative z-10 my-auto text-center space-y-1.5">
+            <div className="text-lg font-black tracking-wider uppercase text-white font-sans drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+              LOCAL-FIRST VAULT
+            </div>
+            <p className="font-mono text-[9px] text-emerald-300 uppercase tracking-widest font-medium">
+              GDRIVE SYNC • OFFLINE FIRST
+            </p>
+          </div>
+
+          <div className="relative z-10 flex items-center justify-between font-mono text-[9px] text-neutral-400 border-t border-neutral-900 pt-2">
+            <span>APPDATAFOLDER</span>
+            <span className="text-emerald-400 font-semibold uppercase tracking-wider">ALWAYS PERSISTENT</span>
+          </div>
+        </div>
+      );
+    }
+
+    // 13. Docdril Tools
+    if (slug.includes('tool')) {
+      return (
+        <div className="relative w-full h-full bg-gradient-to-br from-neutral-950 via-neutral-900 to-black p-5 flex flex-col justify-between overflow-hidden text-white select-none group-hover:scale-[1.03] transition-transform duration-700">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative z-10 flex items-center justify-between border-b border-neutral-800 pb-2">
+            <div className="flex items-center gap-2">
+              <Sliders className="w-3.5 h-3.5 text-amber-400" />
+              <span className="font-mono text-[9px] text-neutral-300 uppercase tracking-widest">
+                DOCDRIL TOOLS
+              </span>
+            </div>
+            <span className="font-mono text-[9px] text-amber-400 font-bold bg-amber-950/60 border border-amber-900/60 px-1.5 py-0.5 rounded">
+              LOCAL UTILITIES
+            </span>
+          </div>
+
+          <div className="relative z-10 my-auto text-center space-y-1.5">
+            <div className="text-lg font-black tracking-wider uppercase text-white font-sans drop-shadow-[0_0_15px_rgba(245,158,11,0.3)]">
+              BATCH WORKSTATION
+            </div>
+            <p className="font-mono text-[9px] text-amber-300 uppercase tracking-widest font-medium">
+              COMPRESS • CONVERT • ZERO LATENCY
+            </p>
+          </div>
+
+          <div className="relative z-10 flex items-center justify-between font-mono text-[9px] text-neutral-400 border-t border-neutral-900 pt-2">
+            <span>OFFLINE DESKTOP</span>
+            <span className="text-amber-400 font-semibold uppercase tracking-wider">INSTANT PIPELINE</span>
+          </div>
+        </div>
+      );
+    }
+
     // Default Fallback by Category
     switch (app.category.toLowerCase()) {
       case 'creative':
@@ -597,19 +701,19 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white transition-colors shrink-0 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-[13px] font-bold bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 border border-neutral-300/80 dark:border-neutral-700 text-neutral-950 dark:text-white shadow-sm hover:shadow transition-all shrink-0 cursor-pointer"
               title={`Open ${cleanName} in new tab`}
             >
               <span>Explore</span>
-              <ExternalLink className="w-3 h-3 text-neutral-500 dark:text-neutral-400" />
+              <ExternalLink className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-300" />
             </a>
           ) : (
             <Link
               href={`/apps/${app.slug}`}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white transition-colors shrink-0 cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-[13px] font-bold bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 border border-neutral-300/80 dark:border-neutral-700 text-neutral-950 dark:text-white shadow-sm hover:shadow transition-all shrink-0 cursor-pointer"
             >
               <span>Explore</span>
-              <ArrowRight className="w-3 h-3 text-neutral-500 dark:text-neutral-400" />
+              <ArrowRight className="w-3.5 h-3.5 text-neutral-600 dark:text-neutral-300" />
             </Link>
           )}
         </div>
