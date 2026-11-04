@@ -110,7 +110,7 @@ export function IntroSplash({ onComplete, forcePlay = false }: IntroSplashProps)
 
         {/* Wordmark in Precision Neo-Grotesque */}
         <div className="animate-intro-wordmark">
-          <h1 className="text-6xl sm:text-8xl md:text-9xl font-sans font-black tracking-[-0.04em] text-neutral-950 leading-none">
+          <h1 className="text-6xl sm:text-7xl md:text-8xl font-sans font-semibold tracking-[-0.025em] text-neutral-950 leading-none">
             DocStudio
           </h1>
         </div>

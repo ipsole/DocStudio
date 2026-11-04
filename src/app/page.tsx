@@ -346,9 +346,9 @@ export default function HomePage() {
       )}
 
       <div className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center bg-white text-neutral-900 dark:bg-black dark:text-white px-4 sm:px-6 md:px-8 pt-0 sm:pt-2 pb-16 sm:pb-24 overflow-hidden transition-colors duration-200">
-        {/* Precision Neo-Grotesque Typography - High-Tech Linear/Vercel Aesthetic */}
-        <div className="relative z-10 text-center select-none pt-2 sm:pt-4">
-          <h1 className="text-6xl sm:text-8xl md:text-9xl lg:text-[7.5rem] xl:text-[8.5rem] font-sans font-black tracking-[-0.04em] text-neutral-950 dark:text-white leading-[0.98] select-none">
+        {/* Precision Neo-Grotesque Typography - Refined Iconic Brandmark */}
+        <div className="relative z-10 text-center select-none pt-3 sm:pt-6">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.25rem] font-sans font-semibold tracking-[-0.025em] text-neutral-950 dark:text-white leading-[1.05] select-none">
             DocStudio
           </h1>
         </div>
