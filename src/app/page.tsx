@@ -368,11 +368,11 @@ export default function HomePage() {
       <div id="ecosystem" className="relative z-10 w-full max-w-[1400px] mx-auto pt-4 sm:pt-6 space-y-3 sm:space-y-4">
         {/* Master View Switcher (Softwares, Pricings, Tutorials) */}
         <div className="flex items-center justify-center pb-1">
-          <div className="relative inline-flex p-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900/80 backdrop-blur-md">
+          <div className="relative inline-flex p-0.5 sm:p-1 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900/80 backdrop-blur-md">
             {/* Sliding Pill Indicator */}
             {ecosystemIndicator.ready && (
               <div
-                className="absolute top-1 bottom-1 rounded-full bg-white dark:bg-neutral-950 shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
+                className="absolute top-0.5 bottom-0.5 sm:top-1 sm:bottom-1 rounded-full bg-white dark:bg-neutral-950 shadow-sm transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] pointer-events-none"
                 style={{
                   left: `${ecosystemIndicator.left}px`,
                   width: `${ecosystemIndicator.width}px`,
@@ -384,7 +384,7 @@ export default function HomePage() {
               ref={(el) => { ecosystemTabRefs.current['softwares'] = el; }}
               type="button"
               onClick={() => handleTabChange('softwares')}
-              className={`relative z-10 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors duration-200 cursor-pointer ${
+              className={`relative z-10 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs md:text-sm font-medium transition-colors duration-200 cursor-pointer ${
                 activeTab === 'softwares'
                   ? 'text-neutral-950 dark:text-white font-semibold'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
@@ -396,7 +396,7 @@ export default function HomePage() {
               ref={(el) => { ecosystemTabRefs.current['pricings'] = el; }}
               type="button"
               onClick={() => handleTabChange('pricings')}
-              className={`relative z-10 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors duration-200 cursor-pointer ${
+              className={`relative z-10 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs md:text-sm font-medium transition-colors duration-200 cursor-pointer ${
                 activeTab === 'pricings'
                   ? 'text-neutral-950 dark:text-white font-semibold'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
@@ -408,7 +408,7 @@ export default function HomePage() {
               ref={(el) => { ecosystemTabRefs.current['tutorials'] = el; }}
               type="button"
               onClick={() => handleTabChange('tutorials')}
-              className={`relative z-10 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-medium transition-colors duration-200 cursor-pointer ${
+              className={`relative z-10 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs md:text-sm font-medium transition-colors duration-200 cursor-pointer ${
                 activeTab === 'tutorials'
                   ? 'text-neutral-950 dark:text-white font-semibold'
                   : 'text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white'
