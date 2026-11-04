@@ -24,6 +24,7 @@ import {
   RectangleHorizontal,
   Grid2x2,
   LayoutList,
+  LayoutGrid,
 } from 'lucide-react';
 
 const TUTORIAL_GUIDES = [
@@ -495,53 +496,89 @@ export default function HomePage() {
                 })}
               </div>
 
-              {/* 3 View Mode Switcher: 1 in row, 2 in row, List view */}
+              {/* View Mode Switcher: 2 views on Desktop (Icon View & List View), 3 views on Phone (1 in Row, 2 in Row, List) */}
               <div className="flex items-center self-end sm:self-center shrink-0">
                 <div className="relative inline-flex items-center p-0.5 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900/80 backdrop-blur-md">
-                  <button
-                    type="button"
-                    onClick={() => handleViewModeChange('single')}
-                    aria-label="1 in row (Showcase)"
-                    title="1 in row (Showcase view)"
-                    className={`relative z-10 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
-                      viewMode === 'single'
-                        ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
-                        : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
-                    }`}
-                  >
-                    <RectangleHorizontal className="w-3.5 h-3.5" />
-                    <span className="hidden md:inline text-[11px]">1 in Row</span>
-                  </button>
+                  {/* Desktop Switcher (sm: and above) */}
+                  <div className="hidden sm:inline-flex items-center gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => handleViewModeChange('single')}
+                      aria-label="Icon view"
+                      title="Icon view"
+                      className={`relative z-10 px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
+                        viewMode !== 'list'
+                          ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                          : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
+                      }`}
+                    >
+                      <LayoutGrid className="w-3.5 h-3.5" />
+                      <span className="text-[11px]">Icon View</span>
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => handleViewModeChange('grid')}
-                    aria-label="2 in row (Grid)"
-                    title="2 in row (Grid view)"
-                    className={`relative z-10 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
-                      viewMode === 'grid'
-                        ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
-                        : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
-                    }`}
-                  >
-                    <Grid2x2 className="w-3.5 h-3.5" />
-                    <span className="hidden md:inline text-[11px]">2 in Row</span>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => handleViewModeChange('list')}
+                      aria-label="List view"
+                      title="List view"
+                      className={`relative z-10 px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
+                        viewMode === 'list'
+                          ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                          : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
+                      }`}
+                    >
+                      <LayoutList className="w-3.5 h-3.5" />
+                      <span className="text-[11px]">List View</span>
+                    </button>
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleViewModeChange('list')}
-                    aria-label="List view"
-                    title="List view"
-                    className={`relative z-10 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
-                      viewMode === 'list'
-                        ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
-                        : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
-                    }`}
-                  >
-                    <LayoutList className="w-3.5 h-3.5" />
-                    <span className="hidden md:inline text-[11px]">List</span>
-                  </button>
+                  {/* Phone Switcher (< sm) */}
+                  <div className="inline-flex sm:hidden items-center gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => handleViewModeChange('single')}
+                      aria-label="1 in row"
+                      title="1 in row (Single column)"
+                      className={`relative z-10 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
+                        viewMode === 'single'
+                          ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                          : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
+                      }`}
+                    >
+                      <RectangleHorizontal className="w-3.5 h-3.5" />
+                      <span className="text-[11px]">1 in Row</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleViewModeChange('grid')}
+                      aria-label="2 in row"
+                      title="2 in row (Two columns)"
+                      className={`relative z-10 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
+                        viewMode === 'grid'
+                          ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                          : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
+                      }`}
+                    >
+                      <Grid2x2 className="w-3.5 h-3.5" />
+                      <span className="text-[11px]">2 in Row</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleViewModeChange('list')}
+                      aria-label="List view"
+                      title="List view"
+                      className={`relative z-10 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
+                        viewMode === 'list'
+                          ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                          : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
+                      }`}
+                    >
+                      <LayoutList className="w-3.5 h-3.5" />
+                      <span className="text-[11px]">List</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -561,13 +598,13 @@ export default function HomePage() {
                 ))}
               </div>
             ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-7">
                 {filteredApps.map((app) => (
                   <AppCard key={app.id} app={app} allApps={filteredApps} showLaunchDirect={true} />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
                 {filteredApps.map((app) => (
                   <AppCard key={app.id} app={app} allApps={filteredApps} showLaunchDirect={true} />
                 ))}
