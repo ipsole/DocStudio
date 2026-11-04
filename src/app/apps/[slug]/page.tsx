@@ -7,6 +7,7 @@ import { getAppBySlug } from '@/lib/firebase/db';
 import { DocApp } from '@/types';
 import { StatusBadge, Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { AppVisualMockup } from '@/components/apps/AppCard';
 import {
   ExternalLink,
   ArrowLeft,
@@ -136,7 +137,8 @@ export default function AppDetailPage() {
     );
   }
 
-  const isLaunchable = app.status === 'active' && Boolean(app.applicationUrl);
+  const targetUrl = app.applicationUrl || (app.subdomain ? `https://${app.subdomain}.docdril.com` : null);
+  const isLaunchable = app.status === 'active' && Boolean(targetUrl);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8 text-neutral-900 dark:text-white transition-colors duration-200">
@@ -183,19 +185,30 @@ export default function AppDetailPage() {
           </div>
 
           {/* Action button */}
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            {isLaunchable ? (
-              <a
-                href={app.applicationUrl!}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto"
-              >
-                <Button variant="primary" size="lg" className="w-full sm:w-auto gap-2">
-                  Launch Software
-                  <ExternalLink className="w-4 h-4" />
-                </Button>
-              </a>
+          <div className="flex flex-col items-stretch sm:items-end gap-2 w-full sm:w-auto">
+            {isLaunchable && targetUrl ? (
+              <>
+                <a
+                  href={targetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto"
+                >
+                  <Button variant="primary" size="lg" className="w-full sm:w-auto gap-2 px-6 py-2.5 font-semibold shadow-md hover:shadow-lg transition-all">
+                    Launch Software
+                    <ExternalLink className="w-4 h-4" />
+                  </Button>
+                </a>
+                <a
+                  href={targetUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center sm:justify-end gap-1.5 text-xs font-mono text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors"
+                >
+                  <span>{targetUrl.replace(/^https?:\/\//, '')}</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </>
             ) : app.status === 'coming_soon' ? (
               <Button variant="secondary" size="lg" disabled className="w-full sm:w-auto gap-2 opacity-50">
                 <Lock className="w-4 h-4 text-neutral-400" />
@@ -214,6 +227,11 @@ export default function AppDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main overview */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Visual Interactive Preview */}
+          <div className="rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800 bg-neutral-950 aspect-[16/9] shadow-sm relative">
+            <AppVisualMockup app={app} />
+          </div>
+
           <div className="p-8 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-950/80 rounded-xl space-y-4 text-neutral-900 dark:text-white shadow-sm">
             <h2 className="font-mono text-xs uppercase tracking-wider font-bold text-neutral-950 dark:text-white">
               About this Application
@@ -240,6 +258,34 @@ export default function AppDetailPage() {
               </div>
             )}
           </div>
+
+          {/* Dedicated Direct Navigation Banner */}
+          {isLaunchable && targetUrl && (
+            <div className="p-6 border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/60 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="font-semibold text-sm text-neutral-950 dark:text-white flex items-center gap-2">
+                  <span>Open {app.name}</span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    LIVE
+                  </span>
+                </div>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400 font-sans">
+                  Navigate directly to <span className="font-mono font-medium text-neutral-900 dark:text-neutral-200">{targetUrl.replace(/^https?:\/\//, '')}</span> with seamless DocStudio SSO authentication.
+                </p>
+              </div>
+              <a
+                href={targetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto shrink-0"
+              >
+                <Button variant="primary" size="md" className="w-full sm:w-auto gap-2 font-medium">
+                  Go to Website
+                  <ExternalLink className="w-4 h-4" />
+                </Button>
+              </a>
+            </div>
+          )}
 
           <div className="p-6 border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 rounded-xl space-y-2 text-neutral-900 dark:text-white">
             <div className="font-mono text-xs uppercase tracking-wider font-bold text-neutral-950 dark:text-white">
@@ -271,9 +317,24 @@ export default function AppDetailPage() {
               <div className="flex items-center justify-between py-2 border-b border-neutral-200 dark:border-neutral-800">
                 <span className="text-neutral-500 dark:text-neutral-400">HOSTING</span>
                 <span className="font-bold text-neutral-950 dark:text-white">
-                  {app.applicationUrl ? 'CLOUD' : 'PENDING'}
+                  {targetUrl ? 'CLOUD' : 'PENDING'}
                 </span>
               </div>
+              {targetUrl && (
+                <div className="flex items-center justify-between py-2 border-b border-neutral-200 dark:border-neutral-800">
+                  <span className="text-neutral-500 dark:text-neutral-400">WEBSITE</span>
+                  <a
+                    href={targetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-xs font-semibold text-neutral-900 dark:text-neutral-100 hover:underline flex items-center gap-1 truncate max-w-[170px]"
+                    title={targetUrl}
+                  >
+                    <span className="truncate">{targetUrl.replace(/^https?:\/\//, '')}</span>
+                    <ExternalLink className="w-3 h-3 shrink-0" />
+                  </a>
+                </div>
+              )}
               <div className="flex items-center justify-between py-2">
                 <span className="text-neutral-500 dark:text-neutral-400">TIER</span>
                 <span className="font-bold text-neutral-950 dark:text-white">STANDALONE</span>

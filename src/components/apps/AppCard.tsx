@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { DocApp } from '@/types';
 import {
   ExternalLink,
@@ -37,11 +38,8 @@ interface AppCardProps {
   showLaunchDirect?: boolean;
 }
 
-export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
-  const isLaunchable = app.status === 'active' && Boolean(app.applicationUrl);
-
-  const renderVisualMockup = () => {
-    const slug = (app.slug || '').toLowerCase();
+export function AppVisualMockup({ app }: { app: DocApp }) {
+  const slug = (app.slug || '').toLowerCase();
 
     // 1. Founder Proposal Studio
     if (slug.includes('proposal')) {
@@ -493,7 +491,16 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
           </div>
         );
     }
-  };
+}
+
+export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
+  const router = useRouter();
+
+  const targetUrl = useMemo(() => {
+    return app.applicationUrl || (app.subdomain ? `https://${app.subdomain}.docdril.com` : null);
+  }, [app.applicationUrl, app.subdomain]);
+
+  const isLaunchable = app.status === 'active' && Boolean(targetUrl);
 
   const cleanName = React.useMemo(() => {
     let raw = (app.name || '')
@@ -545,35 +552,26 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    // If the click is inside an anchor (<a>) or button, don't trigger the card container's push
+    if (target.closest('a') || target.closest('button')) {
+      return;
+    }
+    router.push(`/apps/${app.slug}`);
+  };
+
   return (
-    <div className="group relative flex flex-col rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800/80 bg-white dark:bg-neutral-950/80 hover:border-neutral-400 dark:hover:border-neutral-600 transition-all duration-300 shadow-sm hover:shadow-md dark:shadow-none backdrop-blur-xl">
+    <div
+      onClick={handleCardClick}
+      className="group relative flex flex-col rounded-xl overflow-hidden border border-neutral-200 dark:border-neutral-800/80 bg-white dark:bg-neutral-950/80 hover:border-neutral-400 dark:hover:border-neutral-600 transition-all duration-300 shadow-sm hover:shadow-md dark:shadow-none backdrop-blur-xl cursor-pointer"
+    >
       {/* 1. Visual Thumbnail Preview Container (Flush edge-to-edge on top, left, and right) */}
       <Link
         href={`/apps/${app.slug}`}
         className="relative block w-full aspect-[16/10] overflow-hidden border-b border-neutral-200 dark:border-neutral-800/80 bg-neutral-950"
       >
-        {renderVisualMockup()}
-
-        {/* Hover overlay with action */}
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3 p-4">
-          <span className="px-3.5 py-1.5 border border-neutral-600 bg-neutral-900/90 text-white font-sans text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 rounded hover:border-white transition-colors">
-            Details
-            <ArrowRight className="w-3.5 h-3.5" />
-          </span>
-
-          {isLaunchable && (
-            <a
-              href={app.applicationUrl!}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="px-3.5 py-1.5 bg-neutral-950 text-white dark:bg-white dark:text-black font-sans text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 rounded hover:bg-neutral-800 dark:hover:bg-neutral-200 transition-colors shadow-sm"
-            >
-              Launch
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          )}
-        </div>
+        <AppVisualMockup app={app} />
       </Link>
 
       {/* 2. Metadata & Text Content Container */}
@@ -592,14 +590,28 @@ export function AppCard({ app, showLaunchDirect = true }: AppCardProps) {
             </span>
           </Link>
 
-          {/* Right: Explore Button */}
-          <Link
-            href={`/apps/${app.slug}`}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white transition-colors shrink-0 cursor-pointer"
-          >
-            <span>Explore</span>
-            <ArrowRight className="w-3 h-3" />
-          </Link>
+          {/* Right: Explore Button (Launches external app in separate link/tab directly from card) */}
+          {isLaunchable && targetUrl ? (
+            <a
+              href={targetUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white transition-colors shrink-0 cursor-pointer"
+              title={`Open ${cleanName} in new tab`}
+            >
+              <span>Explore</span>
+              <ExternalLink className="w-3 h-3 text-neutral-500 dark:text-neutral-400" />
+            </a>
+          ) : (
+            <Link
+              href={`/apps/${app.slug}`}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white transition-colors shrink-0 cursor-pointer"
+            >
+              <span>Explore</span>
+              <ArrowRight className="w-3 h-3 text-neutral-500 dark:text-neutral-400" />
+            </Link>
+          )}
         </div>
 
         {/* 3. Short description in muted silver */}
