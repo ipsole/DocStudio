@@ -217,21 +217,20 @@ export default function AppsCatalogPage() {
               </button>
             </div>
 
-            {/* Phone Switcher (< sm) */}
+            {/* Phone Switcher (< sm) - Icons Only */}
             <div className="inline-flex sm:hidden items-center gap-0.5">
               <button
                 type="button"
                 onClick={() => handleViewModeChange('single')}
                 aria-label="1 in row"
                 title="1 in row (Single column)"
-                className={`relative z-10 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
+                className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center transition-colors cursor-pointer select-none ${
                   viewMode === 'single'
                     ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
                     : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
                 }`}
               >
                 <RectangleHorizontal className="w-3.5 h-3.5" />
-                <span className="text-[11px]">1 in Row</span>
               </button>
 
               <button
@@ -239,14 +238,13 @@ export default function AppsCatalogPage() {
                 onClick={() => handleViewModeChange('grid')}
                 aria-label="2 in row"
                 title="2 in row (Two columns)"
-                className={`relative z-10 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
+                className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center transition-colors cursor-pointer select-none ${
                   viewMode === 'grid'
                     ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
                     : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
                 }`}
               >
                 <Grid2x2 className="w-3.5 h-3.5" />
-                <span className="text-[11px]">2 in Row</span>
               </button>
 
               <button
@@ -254,14 +252,13 @@ export default function AppsCatalogPage() {
                 onClick={() => handleViewModeChange('list')}
                 aria-label="List view"
                 title="List view"
-                className={`relative z-10 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
+                className={`relative z-10 w-7 h-7 rounded-full flex items-center justify-center transition-colors cursor-pointer select-none ${
                   viewMode === 'list'
                     ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
                     : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
                 }`}
               >
                 <LayoutList className="w-3.5 h-3.5" />
-                <span className="text-[11px]">List</span>
               </button>
             </div>
           </div>
