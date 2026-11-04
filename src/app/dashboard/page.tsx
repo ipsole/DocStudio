@@ -127,6 +127,25 @@ export default function DashboardPage() {
     );
   }, [profile]);
 
+  const primarySub = subscriptions.find((s) => s.appId === 'demo-canvas') || subscriptions[0];
+  const validUntilNum = primarySub?.validUntil ? Number(primarySub.validUntil) : null;
+  const renewalDateMs = (validUntilNum && !isNaN(validUntilNum)) ? validUntilNum : (Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const renewalDateFormatted = new Date(renewalDateMs).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+  const daysRemaining = Math.max(0, Math.ceil((renewalDateMs - Date.now()) / (24 * 60 * 60 * 1000)));
+
+  const planRecurringQuota =
+    activePlanName === 'Ultra'
+      ? 1500
+      : activePlanName === 'Pro'
+      ? 500
+      : 50;
+
+  const permanentVaultCredits = Math.max(0, totalCreditsRemaining - planRecurringQuota);
+
   const filteredApps = apps.filter((app) => {
     if (selectedCategory === 'all') return true;
     return app.category.toLowerCase() === selectedCategory.toLowerCase();
@@ -309,6 +328,14 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
               <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 truncate font-sans">
                 {user?.email} • {activePlanName === 'Starter' ? 'Free Starter Tier' : 'All tools unlocked'}
               </p>
+              {activePlanName !== 'Starter' && (
+                <div className="mt-2 text-[11px] font-sans text-neutral-500 dark:text-neutral-400 flex items-center gap-1.5 flex-wrap">
+                  <span>Renews <strong className="text-neutral-900 dark:text-white font-semibold">{renewalDateFormatted}</strong></span>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                    {daysRemaining}d left
+                  </span>
+                </div>
+              )}
               {isEliteMember && profile?.eliteExpiresAt && (
                 <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-2 font-sans flex items-center gap-1.5">
                   <Crown className="w-3 h-3 text-amber-500 shrink-0" />
@@ -320,7 +347,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
             <div className="pt-2 border-t border-neutral-100 dark:border-neutral-900 flex items-center justify-between text-xs">
               <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5 font-sans text-[11px]">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-dot" />
-                {activePlanName === 'Starter' ? 'Active Starter Tier' : 'Active Subscription'}
+                {activePlanName === 'Starter' ? 'Active Starter Tier' : `Active • Renews ${renewalDateFormatted}`}
               </span>
               <Link
                 href="/pricing"
@@ -371,6 +398,13 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
               <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1">
                 Shared across Canvas, Motion, and Document Pipelines.
               </p>
+
+              {activePlanName !== 'Starter' && (
+                <div className="mt-2 pt-2 border-t border-neutral-100 dark:border-neutral-900 text-[10px] font-sans text-neutral-500 dark:text-neutral-400 flex items-center justify-between">
+                  <span>{planRecurringQuota.toLocaleString()} Plan Quota (Resets {renewalDateFormatted})</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">+{permanentVaultCredits.toLocaleString()} Rollover (Permanent)</span>
+                </div>
+              )}
             </div>
 
             <div className="pt-2 border-t border-neutral-100 dark:border-neutral-900 flex items-center justify-between text-xs">

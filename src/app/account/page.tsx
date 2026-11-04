@@ -775,12 +775,32 @@ export default function AccountPage() {
   const cycleDurationDays = isYearlyPlan ? 365 : 30;
   const cycleStartMs = latestSubOrder ? latestSubOrder.paidAt || latestSubOrder.createdAt : Date.now();
   const nextRenewalDateMs = cycleStartMs + cycleDurationDays * 24 * 60 * 60 * 1000;
-  const nextRenewalDateFormatted = new Date(nextRenewalDateMs).toLocaleDateString('en-IN', {
+  const primarySub = subscriptions.find((s) => s.appId === 'demo-canvas') || subscriptions[0];
+  const validUntilNum = primarySub?.validUntil ? Number(primarySub.validUntil) : null;
+  const subPeriodEndMs = (validUntilNum && !isNaN(validUntilNum)) ? validUntilNum : nextRenewalDateMs;
+
+  const cycleStartDateFormatted = new Date(cycleStartMs).toLocaleDateString('en-IN', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   });
-  const daysUntilRenewal = Math.max(0, Math.ceil((nextRenewalDateMs - Date.now()) / (24 * 60 * 60 * 1000)));
+  const renewalDateFormatted = new Date(subPeriodEndMs).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+  const nextRenewalDateFormatted = renewalDateFormatted;
+  const daysRemaining = Math.max(0, Math.ceil((subPeriodEndMs - Date.now()) / (24 * 60 * 60 * 1000)));
+  const daysUntilRenewal = daysRemaining;
+
+  const planRecurringQuota =
+    activePlanTier === 'enterprise'
+      ? (isYearlyPlan ? 18000 : 1500)
+      : activePlanTier === 'pro'
+      ? (isYearlyPlan ? 6000 : 500)
+      : 50;
+
+  const permanentVaultCredits = Math.max(0, totalCreditsRemaining - planRecurringQuota);
 
   // Sidebar navigation items
   const navItems: { key: TabKey; label: string; icon: React.ElementType; badge?: string }[] = [
@@ -1452,12 +1472,31 @@ export default function AccountPage() {
                           ? 'Standard creation quotas with core access across all Docdril creative pipelines.'
                           : 'Full priority access unlocked across Canvas, Motion, and Document Engines.'}
                       </p>
+
+                      {/* Active Billing Cycle & Renewal Schedule */}
+                      {activePlanTier !== 'starter' && (
+                        <div className="mt-3 p-3 rounded-xl bg-neutral-100/90 dark:bg-neutral-900/90 border border-neutral-200/80 dark:border-neutral-800 text-xs font-sans space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-neutral-500 dark:text-neutral-400">Started On</span>
+                            <span className="font-semibold text-neutral-900 dark:text-white">{cycleStartDateFormatted}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-neutral-500 dark:text-neutral-400">Next Renewal / Expiry</span>
+                            <span className="font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
+                              <span>{renewalDateFormatted}</span>
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                {daysRemaining}d left
+                              </span>
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="pt-3 border-t border-neutral-200/80 dark:border-neutral-800/80 flex items-center justify-between text-xs">
                       <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5 text-[11px] font-sans">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-dot" />
-                        {activePlanTier === 'starter' ? 'Active Starter Tier' : 'Active Subscription'}
+                        {activePlanTier === 'starter' ? 'Active Starter Tier' : `Active • Renews ${renewalDateFormatted}`}
                       </span>
                       <Link
                         href="/pricing"
@@ -1501,6 +1540,25 @@ export default function AccountPage() {
                           style={{ width: `${totalCreditsPercentage}%` }}
                         />
                       </div>
+
+                      {/* Expiration & Quota Breakdown */}
+                      {activePlanTier !== 'starter' && (
+                        <div className="mt-3 p-3 rounded-xl bg-neutral-100/90 dark:bg-neutral-900/90 border border-neutral-200/80 dark:border-neutral-800 text-xs font-sans space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-neutral-500 dark:text-neutral-400">Plan Recurring Quota</span>
+                            <span className="font-semibold text-neutral-900 dark:text-white">
+                              {planRecurringQuota.toLocaleString()} cr • Resets {renewalDateFormatted}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-neutral-500 dark:text-neutral-400">Vault Top-Ups & Rollover</span>
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                              <span>{permanentVaultCredits.toLocaleString()} cr</span>
+                              <span className="text-[10px] text-neutral-400 dark:text-neutral-500 font-normal">(Never Expire)</span>
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="pt-3 border-t border-neutral-200/80 dark:border-neutral-800/80 flex items-center justify-between text-xs">
