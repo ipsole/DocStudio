@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
         code: couponCode,
         userId,
         userEmail,
-        username: userName,
+        username: (body.username as string) || userName,
         amountInr: amountInInr,
       });
 

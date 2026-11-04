@@ -28,6 +28,7 @@ interface CheckoutOptions {
   userId: string;
   userEmail: string;
   userName?: string;
+  username?: string;
   userPhone?: string;
   quantity?: number;
   gstin?: string;
@@ -46,6 +47,7 @@ export async function openRazorpayCheckout({
   userId,
   userEmail,
   userName,
+  username,
   userPhone,
   quantity = 1,
   gstin,
@@ -68,6 +70,7 @@ export async function openRazorpayCheckout({
         userId,
         userEmail,
         userName,
+        username,
         userPhone,
         quantity,
         gstin,

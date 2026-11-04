@@ -287,6 +287,7 @@ function CheckoutContent() {
       userId: user.uid,
       userEmail: billingEmail.trim() || user.email || '',
       userName: billingName.trim() || user.displayName || '',
+      username: profile?.username || undefined,
       userPhone: billingPhone.trim() || undefined,
       quantity: effectiveQty,
       businessName: businessName.trim() || undefined,

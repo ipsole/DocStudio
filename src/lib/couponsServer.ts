@@ -376,15 +376,40 @@ export async function validateCouponServer({
       };
     }
 
-    const cleanTarget = coupon.targetValue.toLowerCase();
-    const cleanUsername = username ? username.replace(/^@/, '').toLowerCase() : '';
-    const cleanEmail = userEmail ? userEmail.toLowerCase() : '';
-    const cleanUid = userId ? userId.toLowerCase() : '';
+    const cleanTarget = coupon.targetValue.toLowerCase().replace(/^@/, '').trim();
+    const cleanTargetPrefix = cleanTarget.includes('@') ? cleanTarget.split('@')[0].trim() : cleanTarget;
 
-    const matches =
-      (cleanUsername && cleanUsername === cleanTarget) ||
-      (cleanEmail && cleanEmail === cleanTarget) ||
+    const cleanUsername = username ? username.replace(/^@/, '').toLowerCase().trim() : '';
+    const cleanEmail = userEmail ? userEmail.toLowerCase().trim() : '';
+    const cleanEmailPrefix = cleanEmail.includes('@') ? cleanEmail.split('@')[0].trim() : cleanEmail;
+    const cleanUid = userId ? userId.toLowerCase().trim() : '';
+
+    let matches =
+      (cleanUsername && (cleanUsername === cleanTarget || cleanUsername === cleanTargetPrefix)) ||
+      (cleanEmail && (cleanEmail === cleanTarget || cleanEmailPrefix === cleanTarget || cleanEmailPrefix === cleanTargetPrefix || cleanEmail === cleanTargetPrefix)) ||
       (cleanUid && cleanUid === cleanTarget);
+
+    // If no direct match and userId is present, look up the Firestore user profile
+    if (!matches && userId && firestore) {
+      try {
+        const userDoc = await firestore.collection('users').doc(userId).get();
+        if (userDoc.exists) {
+          const udata = userDoc.data();
+          const dbUsername = udata?.username ? String(udata.username).toLowerCase().replace(/^@/, '').trim() : '';
+          const dbEmail = udata?.email ? String(udata.email).toLowerCase().trim() : '';
+          const dbEmailPrefix = dbEmail.includes('@') ? dbEmail.split('@')[0].trim() : dbEmail;
+
+          if (
+            (dbUsername && (dbUsername === cleanTarget || dbUsername === cleanTargetPrefix)) ||
+            (dbEmail && (dbEmail === cleanTarget || dbEmailPrefix === cleanTarget || dbEmailPrefix === cleanTargetPrefix))
+          ) {
+            matches = true;
+          }
+        }
+      } catch (err) {
+        console.warn('[CouponsServer] Error looking up user profile for target check:', err);
+      }
+    }
 
     if (!matches) {
       return {
