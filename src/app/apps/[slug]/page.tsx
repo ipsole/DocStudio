@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { getAppBySlug, getPublicApps } from '@/lib/firebase/db';
+import { REAL_APPS } from '@/lib/seedData';
 import { DocApp } from '@/types';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -37,9 +38,22 @@ import {
 export default function AppDetailPage() {
   const params = useParams();
   const slug = params?.slug as string;
-  const [app, setApp] = useState<DocApp | null>(null);
-  const [allApps, setAllApps] = useState<DocApp[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  const initialApp = React.useMemo(() => {
+    if (!slug) return null;
+    return REAL_APPS.find((a) => a.slug === slug || a.id === slug) || null;
+  }, [slug]);
+
+  const [app, setApp] = useState<DocApp | null>(initialApp);
+  const [allApps, setAllApps] = useState<DocApp[]>(REAL_APPS);
+  const [loading, setLoading] = useState(!initialApp);
+
+  useEffect(() => {
+    if (initialApp && (!app || app.slug !== initialApp.slug)) {
+      setApp(initialApp);
+      setLoading(false);
+    }
+  }, [initialApp, app]);
 
   useEffect(() => {
     async function loadApp() {
@@ -49,8 +63,8 @@ export default function AppDetailPage() {
           getAppBySlug(slug),
           getPublicApps(),
         ]);
-        setApp(found);
-        setAllApps(publicApps);
+        if (found) setApp(found);
+        if (publicApps && publicApps.length > 0) setAllApps(publicApps);
       } catch (err) {
         console.error('Error loading app detail:', err);
       } finally {

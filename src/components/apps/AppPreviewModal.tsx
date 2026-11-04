@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppPreview } from '@/context/AppPreviewContext';
 import { AppVisualMockup } from '@/components/apps/AppCard';
@@ -97,6 +98,13 @@ export function AppPreviewModal() {
     closePreview();
     router.push(`/apps/${currentApp.slug}`);
   };
+
+  // Prefetch the dedicated app page in the background while user browses the modal
+  useEffect(() => {
+    if (currentApp?.slug) {
+      router.prefetch(`/apps/${currentApp.slug}`);
+    }
+  }, [currentApp?.slug, router]);
 
   return (
     <div
@@ -310,14 +318,15 @@ export function AppPreviewModal() {
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 ) : null}
-                <button
-                  type="button"
-                  onClick={handleKnowMore}
-                  className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all"
+                <Link
+                  href={`/apps/${currentApp.slug}`}
+                  onClick={closePreview}
+                  prefetch={true}
+                  className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-semibold border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-all active:scale-[0.98]"
                 >
                   <span>Know More</span>
                   <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                </Link>
               </div>
             </div>
           </div>
