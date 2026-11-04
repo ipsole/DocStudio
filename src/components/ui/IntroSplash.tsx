@@ -108,20 +108,20 @@ export function IntroSplash({ onComplete, forcePlay = false }: IntroSplashProps)
           <DocdrilLogo size={72} className="text-neutral-950 drop-shadow-sm" />
         </div>
 
-        {/* Wordmark in Precision Neo-Grotesque */}
+        {/* Wordmark in Luxury Serif */}
         <div className="animate-intro-wordmark">
-          <h1 className="text-6xl sm:text-7xl md:text-8xl font-sans font-semibold tracking-[-0.025em] text-neutral-950 leading-none">
+          <h1 className="text-6xl sm:text-8xl md:text-9xl font-serif font-normal tracking-[0.01em] text-neutral-950 leading-none">
             DocStudio
           </h1>
         </div>
 
-        {/* Follow-up subtitle: when finished revealing, auto-triggers dismiss after 250ms hold */}
+        {/* Follow-up luxury typography: when finished revealing, auto-triggers dismiss after 250ms hold */}
         <div
           onAnimationEnd={() => triggerDismiss(250, 600)}
           className="animate-intro-tagline pt-2"
         >
-          <p className="font-sans text-sm sm:text-lg md:text-xl text-neutral-500 tracking-[0.15em] uppercase font-medium">
-            Software Ecosystem
+          <p className="font-serif italic text-lg sm:text-2xl md:text-3xl text-neutral-600 tracking-wide font-normal">
+            Designed with purpose.
           </p>
         </div>
       </div>
