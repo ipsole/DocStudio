@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { getPublicApps } from '@/lib/firebase/db';
 import { DocApp } from '@/types';
-import { AppCard } from '@/components/apps/AppCard';
-import { Search, Inbox } from 'lucide-react';
+import { AppCard, AppListItem } from '@/components/apps/AppCard';
+import { Search, Inbox, RectangleHorizontal, Grid2x2, LayoutList } from 'lucide-react';
 import { CATEGORIES } from '@/lib/seedData';
 
 export default function AppsCatalogPage() {
@@ -12,6 +12,23 @@ export default function AppsCatalogPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'single' | 'grid' | 'list'>('single');
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('docstudio_view_mode') as 'single' | 'grid' | 'list' | null;
+      if (saved && (saved === 'single' || saved === 'grid' || saved === 'list')) {
+        setViewMode(saved);
+      }
+    } catch (e) {}
+  }, []);
+
+  const handleViewModeChange = (mode: 'single' | 'grid' | 'list') => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('docstudio_view_mode', mode);
+    } catch (e) {}
+  };
 
   const categoryItems = React.useMemo(() => {
     const items = [
@@ -151,20 +168,71 @@ export default function AppsCatalogPage() {
           })}
         </div>
 
-        {/* Search Right-Aligned */}
-        <div className="relative w-full sm:w-64 md:w-72 shrink-0">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search software..."
-            className="w-full pl-9 pr-3 py-2 sm:py-1.5 border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 rounded-full focus:outline-none focus:border-neutral-950 dark:focus:border-white transition-colors"
-          />
+        {/* Search & View Switcher */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto shrink-0 justify-between sm:justify-end">
+          {/* Search */}
+          <div className="relative flex-1 sm:w-60 md:w-64">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search software..."
+              className="w-full pl-9 pr-3 py-2 sm:py-1.5 border border-neutral-300 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-xs text-neutral-900 dark:text-white placeholder:text-neutral-400 dark:placeholder:text-neutral-500 rounded-full focus:outline-none focus:border-neutral-950 dark:focus:border-white transition-colors"
+            />
+          </div>
+
+          {/* 3 View Mode Switcher */}
+          <div className="relative inline-flex items-center p-0.5 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900/80 backdrop-blur-md self-end sm:self-auto shrink-0">
+            <button
+              type="button"
+              onClick={() => handleViewModeChange('single')}
+              aria-label="1 in row (Showcase)"
+              title="1 in row (Showcase view)"
+              className={`relative z-10 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
+                viewMode === 'single'
+                  ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                  : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              <RectangleHorizontal className="w-3.5 h-3.5" />
+              <span className="hidden md:inline text-[11px]">1 in Row</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleViewModeChange('grid')}
+              aria-label="2 in row (Grid)"
+              title="2 in row (Grid view)"
+              className={`relative z-10 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
+                viewMode === 'grid'
+                  ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                  : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              <Grid2x2 className="w-3.5 h-3.5" />
+              <span className="hidden md:inline text-[11px]">2 in Row</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleViewModeChange('list')}
+              aria-label="List view"
+              title="List view"
+              className={`relative z-10 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
+                viewMode === 'list'
+                  ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                  : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
+              }`}
+            >
+              <LayoutList className="w-3.5 h-3.5" />
+              <span className="hidden md:inline text-[11px]">List</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Grid */}
+      {/* Grid or List Display */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
           {[1, 2, 3, 4].map((i) => (
@@ -178,11 +246,25 @@ export default function AppsCatalogPage() {
           ))}
         </div>
       ) : filteredApps.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {filteredApps.map((app) => (
-            <AppCard key={app.id} app={app} allApps={filteredApps} />
-          ))}
-        </div>
+        viewMode === 'list' ? (
+          <div className="flex flex-col gap-2.5 sm:gap-3">
+            {filteredApps.map((app) => (
+              <AppListItem key={app.id} app={app} allApps={filteredApps} />
+            ))}
+          </div>
+        ) : viewMode === 'grid' ? (
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+            {filteredApps.map((app) => (
+              <AppCard key={app.id} app={app} allApps={filteredApps} />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {filteredApps.map((app) => (
+              <AppCard key={app.id} app={app} allApps={filteredApps} />
+            ))}
+          </div>
+        )
       ) : (
         <div className="text-center py-20 px-4 border border-dashed border-neutral-300 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/80 rounded-xl">
           <div className="w-10 h-10 border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 rounded-full mx-auto flex items-center justify-center mb-3">

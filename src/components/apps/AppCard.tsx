@@ -743,3 +743,143 @@ export function AppCard({ app, showLaunchDirect = true, allApps, onCardClick }: 
     </div>
   );
 }
+
+export function AppListItem({ app, allApps, onCardClick }: AppCardProps) {
+  const router = useRouter();
+  const preview = useAppPreview();
+
+  const targetUrl = useMemo(() => {
+    return app.applicationUrl || (app.subdomain ? `https://${app.subdomain}.docdril.com` : null);
+  }, [app.applicationUrl, app.subdomain]);
+
+  const isLaunchable = app.status === 'active' && Boolean(targetUrl);
+
+  const cleanName = useMemo(() => {
+    let raw = (app.name || '')
+      .replace(/\(demo\)|\(beta\)|\(alpha\)/gi, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    return raw || app.name;
+  }, [app.name]);
+
+  const renderSmallIcon = () => {
+    const iconClass = 'w-5 h-5 text-neutral-900 dark:text-white';
+    switch (app.icon) {
+      case 'FileText':
+        return <FileText className={iconClass} />;
+      case 'Box':
+        return <Box className={iconClass} />;
+      case 'Clapperboard':
+        return <Clapperboard className={iconClass} />;
+      case 'Type':
+        return <Type className={iconClass} />;
+      case 'Images':
+        return <Images className={iconClass} />;
+      case 'Scissors':
+        return <Scissors className={iconClass} />;
+      case 'Maximize2':
+        return <Maximize2 className={iconClass} />;
+      case 'Eraser':
+        return <Eraser className={iconClass} />;
+      case 'Mic':
+        return <Mic className={iconClass} />;
+      case 'Presentation':
+        return <Presentation className={iconClass} />;
+      case 'Sliders':
+        return <Sliders className={iconClass} />;
+      case 'Music':
+        return <Music className={iconClass} />;
+      case 'BookOpen':
+        return <BookOpen className={iconClass} />;
+      case 'Globe':
+        return <Globe className={iconClass} />;
+      case 'Palette':
+        return <Palette className={iconClass} />;
+      case 'Layers':
+        return <Layers className={iconClass} />;
+      case 'Wrench':
+        return <Wrench className={iconClass} />;
+      default:
+        return <Boxes className={iconClass} />;
+    }
+  };
+
+  const handleRowClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('[data-launch-btn="true"]')) {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (onCardClick) {
+      onCardClick();
+    } else if (preview) {
+      preview.openPreview(app, allApps);
+    } else {
+      router.push(`/apps/${app.slug}`);
+    }
+  };
+
+  return (
+    <div
+      onClick={handleRowClick}
+      className="group relative flex items-center justify-between p-3 sm:p-4 rounded-xl border border-neutral-200 dark:border-neutral-800/80 bg-white dark:bg-neutral-950/80 hover:border-neutral-400 dark:hover:border-neutral-600 hover:bg-neutral-50 dark:hover:bg-neutral-900/60 transition-all duration-200 shadow-sm cursor-pointer gap-3 sm:gap-4 select-none"
+    >
+      {/* Left: Icon + Title + Category + Subtitle snippet */}
+      <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+        <div className="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+          {renderSmallIcon()}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="font-bold text-sm sm:text-base text-neutral-950 dark:text-white tracking-tight leading-snug group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors">
+              {cleanName}
+            </h3>
+            <span className="shrink-0 text-[10px] font-mono uppercase tracking-wider text-neutral-400 dark:text-neutral-500 font-semibold px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+              {app.category}
+            </span>
+          </div>
+          <p className="hidden md:block text-xs text-neutral-500 dark:text-neutral-400 truncate mt-0.5 font-sans">
+            {app.shortDescription || app.description}
+          </p>
+        </div>
+      </div>
+
+      {/* Right: Direct Launch Button */}
+      <div className="shrink-0 flex items-center gap-2">
+        {isLaunchable && targetUrl ? (
+          <a
+            href={targetUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-launch-btn="true"
+            onClick={(e) => e.stopPropagation()}
+            className="group/btn relative inline-flex items-center justify-center gap-1.5 py-1.5 sm:py-2 px-3 sm:px-4 rounded-lg sm:rounded-xl text-xs sm:text-[13px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/90 hover:bg-neutral-950 hover:text-white hover:border-neutral-950 dark:bg-neutral-900 dark:text-neutral-300 dark:border-neutral-800 dark:hover:bg-white dark:hover:text-neutral-950 dark:hover:border-white shadow-sm hover:shadow transition-all duration-200 cursor-pointer select-none"
+            title={`Launch ${cleanName}`}
+          >
+            <span>Launch</span>
+            <ExternalLink className="w-3.5 h-3.5 transition-transform duration-200 ease-out group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+          </a>
+        ) : (
+          <button
+            type="button"
+            data-launch-btn="true"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (preview) {
+                preview.openPreview(app, allApps);
+              } else {
+                router.push(`/apps/${app.slug}`);
+              }
+            }}
+            className="group/btn relative inline-flex items-center justify-center gap-1.5 py-1.5 sm:py-2 px-3 sm:px-4 rounded-lg sm:rounded-xl text-xs sm:text-[13px] font-bold bg-neutral-100 text-neutral-800 border border-neutral-200/90 hover:bg-neutral-950 hover:text-white hover:border-neutral-950 dark:bg-neutral-900 dark:text-neutral-300 dark:border-neutral-800 dark:hover:bg-white dark:hover:text-neutral-950 dark:hover:border-white shadow-sm hover:shadow transition-all duration-200 cursor-pointer select-none"
+          >
+            <span>Launch</span>
+            <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 ease-out group-hover/btn:translate-x-1" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}

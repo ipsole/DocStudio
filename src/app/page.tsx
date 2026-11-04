@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { getPublicApps } from '@/lib/firebase/db';
 import { DocApp, AppSubscription, SubscriptionPlan, OrderRecord } from '@/types';
-import { AppCard } from '@/components/apps/AppCard';
+import { AppCard, AppListItem } from '@/components/apps/AppCard';
 import { IntroSplash } from '@/components/ui/IntroSplash';
 import { PRICING_PLANS, YEARLY_PRICING_PLANS, CREDIT_PACKS, CreditPack, PricingPlan } from '@/lib/pricingData';
 import { CreditTopUpModal } from '@/components/pricing/CreditTopUpModal';
@@ -21,6 +21,9 @@ import {
   LayoutDashboard,
   Zap,
   Plus,
+  RectangleHorizontal,
+  Grid2x2,
+  LayoutList,
 } from 'lucide-react';
 
 const TUTORIAL_GUIDES = [
@@ -65,6 +68,23 @@ export default function HomePage() {
 
   const [activeTab, setActiveTab] = useState<HomeTab>('softwares');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'single' | 'grid' | 'list'>('single');
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('docstudio_view_mode') as 'single' | 'grid' | 'list' | null;
+      if (saved && (saved === 'single' || saved === 'grid' || saved === 'list')) {
+        setViewMode(saved);
+      }
+    } catch (e) {}
+  }, []);
+
+  const handleViewModeChange = (mode: 'single' | 'grid' | 'list') => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('docstudio_view_mode', mode);
+    } catch (e) {}
+  };
   const [replayIntro, setReplayIntro] = useState(false);
   const [selectedPack, setSelectedPack] = useState<CreditPack | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -422,9 +442,9 @@ export default function HomePage() {
         {/* Tab 1: Softwares Catalog */}
         {activeTab === 'softwares' && (
           <div id="softwares" className="space-y-6 animate-fadeIn">
-            {/* Catalog Toolbar Header: Left-aligned Category Chips with Sliding Pill */}
-            <div className="flex items-center pb-1">
-              <div className="relative flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+            {/* Catalog Toolbar Header: Category Chips on Left, 3-View Switcher on Right */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
+              <div className="relative flex items-center gap-1 sm:gap-1.5 overflow-x-auto no-scrollbar py-0.5 flex-1 min-w-0">
                 {/* Sliding Category Pill Indicator */}
                 {categoryIndicator.ready && (
                   <div
@@ -452,7 +472,7 @@ export default function HomePage() {
                       ref={(el) => { categoryTabRefs.current[cat.id] = el; }}
                       type="button"
                       onClick={() => setSelectedCategory(cat.id)}
-                      className={`relative z-10 px-3.5 py-1.5 rounded-full text-xs transition-colors duration-200 cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
+                      className={`relative z-10 px-3.5 py-1.5 rounded-full text-xs transition-colors duration-200 cursor-pointer whitespace-nowrap flex items-center gap-1.5 shrink-0 ${
                         isSelected
                           ? 'text-neutral-950 dark:text-white font-semibold'
                           : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white font-medium'
@@ -474,6 +494,56 @@ export default function HomePage() {
                   );
                 })}
               </div>
+
+              {/* 3 View Mode Switcher: 1 in row, 2 in row, List view */}
+              <div className="flex items-center self-end sm:self-center shrink-0">
+                <div className="relative inline-flex items-center p-0.5 rounded-full border border-neutral-200 dark:border-neutral-800 bg-neutral-100/80 dark:bg-neutral-900/80 backdrop-blur-md">
+                  <button
+                    type="button"
+                    onClick={() => handleViewModeChange('single')}
+                    aria-label="1 in row (Showcase)"
+                    title="1 in row (Showcase view)"
+                    className={`relative z-10 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
+                      viewMode === 'single'
+                        ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                        : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
+                    }`}
+                  >
+                    <RectangleHorizontal className="w-3.5 h-3.5" />
+                    <span className="hidden md:inline text-[11px]">1 in Row</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleViewModeChange('grid')}
+                    aria-label="2 in row (Grid)"
+                    title="2 in row (Grid view)"
+                    className={`relative z-10 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
+                      viewMode === 'grid'
+                        ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                        : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
+                    }`}
+                  >
+                    <Grid2x2 className="w-3.5 h-3.5" />
+                    <span className="hidden md:inline text-[11px]">2 in Row</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleViewModeChange('list')}
+                    aria-label="List view"
+                    title="List view"
+                    className={`relative z-10 px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer select-none ${
+                      viewMode === 'list'
+                        ? 'bg-white dark:bg-neutral-950 text-neutral-950 dark:text-white shadow-sm font-semibold'
+                        : 'text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white'
+                    }`}
+                  >
+                    <LayoutList className="w-3.5 h-3.5" />
+                    <span className="hidden md:inline text-[11px]">List</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
             {loading ? (
@@ -483,6 +553,18 @@ export default function HomePage() {
             ) : filteredApps.length === 0 ? (
               <div className="py-16 text-center text-neutral-500 font-mono text-xs">
                 No software found in this category.
+              </div>
+            ) : viewMode === 'list' ? (
+              <div className="flex flex-col gap-2.5 sm:gap-3">
+                {filteredApps.map((app) => (
+                  <AppListItem key={app.id} app={app} allApps={filteredApps} />
+                ))}
+              </div>
+            ) : viewMode === 'grid' ? (
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+                {filteredApps.map((app) => (
+                  <AppCard key={app.id} app={app} allApps={filteredApps} showLaunchDirect={true} />
+                ))}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
