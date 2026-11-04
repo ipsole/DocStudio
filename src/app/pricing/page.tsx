@@ -182,7 +182,7 @@ export default function PricingPage() {
       <div className="space-y-6 sm:space-y-8">
         <div className="max-w-3xl mx-auto text-center space-y-5">
           <div className="space-y-2.5">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-[1.1]">
               Transparent Pricing
             </h1>
             <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-sans max-w-2xl mx-auto leading-relaxed">

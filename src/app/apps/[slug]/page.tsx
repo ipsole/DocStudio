@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { getAppBySlug, getPublicApps } from '@/lib/firebase/db';
 import { DocApp } from '@/types';
-import { StatusBadge, Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { AppVisualMockup, AppCard } from '@/components/apps/AppCard';
 import {
@@ -69,7 +69,7 @@ export default function AppDetailPage() {
   }, [app, allApps]);
 
   const renderIcon = (iconName?: string) => {
-    const iconClass = 'w-8 h-8 text-white';
+    const iconClass = 'w-9 h-9 sm:w-10 sm:h-10 text-neutral-950 dark:text-white shrink-0';
     switch (iconName) {
       case 'FileText':
         return <FileText className={iconClass} />;
@@ -169,16 +169,15 @@ export default function AppDetailPage() {
       {/* Hero Header */}
       <div className="p-8 border border-neutral-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-950/80 backdrop-blur-xl rounded-xl text-neutral-900 dark:text-white shadow-sm dark:shadow-xl">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
-            <div className="w-16 h-16 bg-neutral-100 dark:bg-neutral-900 border border-neutral-300 dark:border-neutral-800 rounded-xl flex items-center justify-center shrink-0 text-neutral-900 dark:text-white">
+          <div className="flex items-center gap-4">
+            <span className="shrink-0 text-neutral-950 dark:text-white">
               {renderIcon(app.icon)}
-            </div>
+            </span>
             <div>
               <div className="flex items-center gap-3">
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-[-0.02em] uppercase text-neutral-950 dark:text-white font-sans">
                   {app.name}
                 </h1>
-                <StatusBadge status={app.status} />
                 {app.isDemo && (
                   <Badge variant="neutral" size="sm">
                     DEMO RECORD
@@ -200,28 +199,17 @@ export default function AppDetailPage() {
           {/* Action button */}
           <div className="flex flex-col items-stretch sm:items-end gap-2 w-full sm:w-auto">
             {isLaunchable && targetUrl ? (
-              <>
-                <a
-                  href={targetUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto"
-                >
-                  <Button variant="primary" size="lg" className="w-full sm:w-auto gap-2 px-6 py-2.5 font-semibold shadow-md hover:shadow-lg transition-all">
-                    Launch Software
-                    <ExternalLink className="w-4 h-4" />
-                  </Button>
-                </a>
-                <a
-                  href={targetUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center sm:justify-end gap-1.5 text-xs font-mono text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition-colors"
-                >
-                  <span>{targetUrl.replace(/^https?:\/\//, '')}</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </>
+              <a
+                href={targetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto"
+              >
+                <Button variant="primary" size="lg" className="w-full sm:w-auto gap-2 px-6 py-2.5 font-semibold shadow-md hover:shadow-lg transition-all">
+                  Launch
+                  <ExternalLink className="w-4 h-4" />
+                </Button>
+              </a>
             ) : app.status === 'coming_soon' ? (
               <Button variant="secondary" size="lg" disabled className="w-full sm:w-auto gap-2 opacity-50">
                 <Lock className="w-4 h-4 text-neutral-400" />

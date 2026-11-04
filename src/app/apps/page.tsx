@@ -98,7 +98,7 @@ export default function AppsCatalogPage() {
     <div className="w-full max-w-[1440px] mx-auto px-4 sm:px-6 md:px-8 pt-6 sm:pt-14 pb-12 sm:pb-16 space-y-6 sm:space-y-8">
       {/* Centered Clean Header */}
       <div className="max-w-4xl lg:max-w-5xl mx-auto text-center space-y-2 sm:space-y-2.5 px-1">
-        <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans break-words">
+        <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-[1.1] break-words">
           Software, Tools & Plugins
         </h1>
         <p className="text-xs sm:text-sm md:text-base text-neutral-600 dark:text-neutral-400 font-sans max-w-2xl md:max-w-4xl lg:max-w-none mx-auto leading-relaxed md:whitespace-nowrap">
@@ -166,7 +166,7 @@ export default function AppsCatalogPage() {
 
       {/* Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="animate-pulse space-y-3">
               <div className="aspect-[16/10] bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl" />
@@ -178,7 +178,7 @@ export default function AppsCatalogPage() {
           ))}
         </div>
       ) : filteredApps.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
           {filteredApps.map((app) => (
             <AppCard key={app.id} app={app} allApps={filteredApps} />
           ))}

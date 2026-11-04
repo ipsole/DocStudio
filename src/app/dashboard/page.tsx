@@ -224,7 +224,7 @@ if (!result.success && result.error === 'INSUFFICIENT_CREDITS') {
 
             <div className="space-y-1.5">
               <div className="flex items-center gap-3 flex-wrap">
-                <h1 className="text-3xl sm:text-5xl font-sans font-bold tracking-tight text-neutral-950 dark:text-white leading-tight">
+                <h1 className="text-3xl sm:text-5xl font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-[1.1]">
                   Welcome, <span>{userName}</span>
                 </h1>
                 {isEliteMember && (

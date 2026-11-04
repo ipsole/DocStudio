@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { DocApp } from '@/types';
 import { REAL_APPS } from '@/lib/seedData';
 
@@ -22,9 +22,16 @@ export function AppPreviewProvider({ children }: { children: React.ReactNode }) 
   const [isOpen, setIsOpen] = useState(false);
   const [appsList, setAppsList] = useState<DocApp[]>(REAL_APPS);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const appsListRef = useRef<DocApp[]>(REAL_APPS);
+
+  // Keep ref synchronized with state
+  useEffect(() => {
+    appsListRef.current = appsList;
+  }, [appsList]);
 
   const openPreview = useCallback((app: DocApp, customList?: DocApp[]) => {
     const list = customList && customList.length > 0 ? customList : REAL_APPS;
+    appsListRef.current = list;
     setAppsList(list);
     const foundIndex = list.findIndex((a) => a.id === app.id || a.slug === app.slug);
     setCurrentIndex(foundIndex >= 0 ? foundIndex : 0);
@@ -36,19 +43,15 @@ export function AppPreviewProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const nextApp = useCallback(() => {
-    setAppsList((list) => {
-      if (list.length === 0) return list;
-      setCurrentIndex((prev) => (prev + 1) % list.length);
-      return list;
-    });
+    const list = appsListRef.current;
+    if (!list || list.length === 0) return;
+    setCurrentIndex((prev) => (prev + 1) % list.length);
   }, []);
 
   const prevApp = useCallback(() => {
-    setAppsList((list) => {
-      if (list.length === 0) return list;
-      setCurrentIndex((prev) => (prev - 1 + list.length) % list.length);
-      return list;
-    });
+    const list = appsListRef.current;
+    if (!list || list.length === 0) return;
+    setCurrentIndex((prev) => (prev - 1 + list.length) % list.length);
   }, []);
 
   const setIndex = useCallback((index: number) => {
@@ -61,10 +64,13 @@ export function AppPreviewProvider({ children }: { children: React.ReactNode }) 
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        e.preventDefault();
         closePreview();
       } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
         nextApp();
       } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
         prevApp();
       }
     };

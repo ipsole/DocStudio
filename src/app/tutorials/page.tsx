@@ -39,7 +39,7 @@ export default function TutorialsPage() {
   return (
     <div className="max-w-[1280px] mx-auto px-4 sm:px-6 md:px-8 pt-10 sm:pt-14 pb-12 sm:pb-16 space-y-12">
       <div className="max-w-4xl lg:max-w-5xl mx-auto text-center space-y-2.5">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-neutral-950 dark:text-white font-sans">
+        <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-[1.1]">
           Tutorials & Documentation
         </h1>
         <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 font-sans max-w-2xl md:max-w-4xl lg:max-w-none mx-auto leading-relaxed md:whitespace-nowrap">
