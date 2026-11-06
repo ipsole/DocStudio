@@ -24,9 +24,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setThemeState(stored);
         applyTheme(stored);
       } else {
-        // Default to dark or check system preference
-        const isDark = document.documentElement.classList.contains('dark');
-        setThemeState(isDark ? 'dark' : 'light');
+        // Default strictly to dark mode across DocStudio ecosystem
+        setThemeState('dark');
+        applyTheme('dark');
       }
     } catch {
       // ignore localStorage errors

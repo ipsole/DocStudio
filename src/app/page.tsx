@@ -367,9 +367,40 @@ export default function HomePage() {
       )}
 
       <div className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center bg-white text-neutral-900 dark:bg-black dark:text-white px-4 sm:px-6 md:px-8 pt-0 sm:pt-2 pb-16 sm:pb-24 overflow-hidden transition-colors duration-200">
+        {/* Ambient Hero Motion Background (Seamless Loop Video strictly behind Brandmark & Tabs) */}
+        <div
+          aria-hidden="true"
+          className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1920px] h-[360px] sm:h-[440px] md:h-[490px] pointer-events-none select-none overflow-hidden z-0"
+        >
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            className="w-full h-full object-cover object-center opacity-30 dark:opacity-70 invert dark:invert-0 transition-opacity duration-700 pointer-events-none select-none"
+          >
+            <source src="/herobg.mp4" type="video/mp4" />
+          </video>
+
+          {/* Multi-Directional Gradient Feathering (Flawlessly dissolves into background) */}
+          {/* Top blend to seamlessly merge into navbar */}
+          <div className="absolute inset-x-0 top-0 h-16 sm:h-24 bg-gradient-to-b from-white via-white/80 to-transparent dark:from-black dark:via-black/80 dark:to-transparent pointer-events-none" />
+
+          {/* Bottom blend to melt video into background before software catalog */}
+          <div className="absolute inset-x-0 bottom-0 h-28 sm:h-40 bg-gradient-to-t from-white via-white/85 to-transparent dark:from-black dark:via-black/85 dark:to-transparent pointer-events-none" />
+
+          {/* Left & Right edge softening */}
+          <div className="absolute inset-y-0 left-0 w-20 sm:w-44 bg-gradient-to-r from-white to-transparent dark:from-black to-transparent pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-20 sm:w-44 bg-gradient-to-l from-white to-transparent dark:from-black to-transparent pointer-events-none" />
+
+          {/* Soft Radial Vignette to maintain ultra-crisp typography contrast */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_25%,rgba(255,255,255,0.45)_70%,#ffffff_100%)] dark:bg-[radial-gradient(ellipse_at_center,transparent_25%,rgba(0,0,0,0.4)_70%,#000000_100%)] pointer-events-none" />
+        </div>
+
         {/* Luxury Editorial Serif Brandmark - Majestic, Iconic, High-Fashion Atelier */}
         <div className="relative z-10 text-center select-none pt-2 sm:pt-4 pb-1">
-          <h1 className="text-6xl sm:text-8xl md:text-9xl lg:text-[7.5rem] xl:text-[8.5rem] font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white leading-[1.05] select-none">
+          <h1 className="text-6xl sm:text-8xl md:text-9xl lg:text-[7.5rem] xl:text-[8.5rem] font-serif font-normal tracking-[0.01em] text-neutral-950 dark:text-white dark:drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)] leading-[1.05] select-none">
             DocStudio
           </h1>
           <p className="mt-2 sm:mt-2.5 text-xs sm:text-sm font-sans font-medium tracking-[0.2em] uppercase text-neutral-400 dark:text-neutral-500">
