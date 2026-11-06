@@ -115,7 +115,8 @@ export default function HomePage() {
   });
 
   // Mobile-hardened autoplay & gesture listener for ambient hero background video
-  const heroVideoRef = useRef<HTMLVideoElement>(null);
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [isHeroVideoPlaying, setIsHeroVideoPlaying] = useState(false);
 
   useEffect(() => {
     const video = heroVideoRef.current;
@@ -129,26 +130,39 @@ export default function HomePage() {
     video.setAttribute('playsinline', '');
     video.setAttribute('webkit-playsinline', '');
 
+    const onPlaying = () => {
+      setIsHeroVideoPlaying(true);
+    };
+
+    video.addEventListener('playing', onPlaying);
+    video.addEventListener('play', onPlaying);
+
     const startPlayback = () => {
+      video.muted = true;
+      video.defaultMuted = true;
       const playPromise = video.play();
       if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // If iOS Low Power Mode or browser policy temporarily blocked initial autoplay,
-          // instantly play upon first user touch or scroll anywhere on the screen
-          const playOnGesture = () => {
-            if (video) {
-              video.muted = true;
-              video.play().catch(() => {});
-            }
-            ['touchstart', 'touchend', 'scroll', 'click', 'pointerdown'].forEach((evt) => {
-              window.removeEventListener(evt, playOnGesture);
-            });
-          };
+        playPromise
+          .then(() => {
+            setIsHeroVideoPlaying(true);
+          })
+          .catch(() => {
+            // If iOS Low Power Mode or browser policy temporarily blocked initial autoplay,
+            // instantly play upon first user touch or scroll anywhere on the screen
+            const playOnGesture = () => {
+              if (video) {
+                video.muted = true;
+                video.play().then(() => setIsHeroVideoPlaying(true)).catch(() => {});
+              }
+              ['touchstart', 'touchend', 'scroll', 'click', 'pointerdown'].forEach((evt) => {
+                window.removeEventListener(evt, playOnGesture);
+              });
+            };
 
-          ['touchstart', 'touchend', 'scroll', 'click', 'pointerdown'].forEach((evt) => {
-            window.addEventListener(evt, playOnGesture, { once: true, passive: true });
+            ['touchstart', 'touchend', 'scroll', 'click', 'pointerdown'].forEach((evt) => {
+              window.addEventListener(evt, playOnGesture, { once: true, passive: true });
+            });
           });
-        });
       }
     };
 
@@ -158,6 +172,11 @@ export default function HomePage() {
       video.addEventListener('loadeddata', startPlayback, { once: true });
       video.addEventListener('canplay', startPlayback, { once: true });
     }
+
+    return () => {
+      video.removeEventListener('playing', onPlaying);
+      video.removeEventListener('play', onPlaying);
+    };
   }, []);
 
   useEffect(() => {
@@ -419,7 +438,15 @@ export default function HomePage() {
           className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1920px] h-[360px] sm:h-[440px] md:h-[490px] pointer-events-none select-none overflow-hidden z-0"
         >
           <video
-            ref={heroVideoRef}
+            ref={(el) => {
+              if (el) {
+                el.defaultMuted = true;
+                el.muted = true;
+                el.playsInline = true;
+                heroVideoRef.current = el;
+              }
+            }}
+            src="/herobg.mp4?v=2"
             autoPlay
             loop
             muted
@@ -430,10 +457,24 @@ export default function HomePage() {
             preload="auto"
             aria-hidden="true"
             tabIndex={-1}
-            className="w-full h-full object-cover object-center opacity-30 dark:opacity-70 invert dark:invert-0 transition-opacity duration-700 pointer-events-none select-none"
-          >
-            <source src="/herobg.mp4?v=2" type="video/mp4" />
-          </video>
+            onPlay={() => setIsHeroVideoPlaying(true)}
+            onPlaying={() => setIsHeroVideoPlaying(true)}
+            onLoadedMetadata={(e) => {
+              e.currentTarget.muted = true;
+              e.currentTarget.defaultMuted = true;
+            }}
+            onCanPlay={(e) => {
+              e.currentTarget.muted = true;
+              e.currentTarget.defaultMuted = true;
+              const p = e.currentTarget.play();
+              if (p !== undefined) {
+                p.then(() => setIsHeroVideoPlaying(true)).catch(() => {});
+              }
+            }}
+            className={`w-full h-full object-cover object-center invert dark:invert-0 transition-opacity duration-1000 pointer-events-none select-none ${
+              isHeroVideoPlaying ? 'opacity-30 dark:opacity-70' : 'opacity-0'
+            }`}
+          />
 
           {/* Multi-Directional Gradient Feathering (Flawlessly dissolves into background) */}
           {/* Top blend to seamlessly merge into navbar */}
