@@ -330,3 +330,17 @@ body {
 .animation-delay-400 {
   animation-delay: 400ms;
 }
+
+/* Suppress mobile/WebKit native video play buttons and controls for ambient background video */
+video::-webkit-media-controls-start-playback-button,
+video::-webkit-media-controls-play-button,
+video::-webkit-media-controls-overlay-play-button,
+video::-webkit-media-controls,
+video::-webkit-media-controls-enclosure,
+video::-webkit-media-controls-panel {
+  display: none !important;
+  -webkit-appearance: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}

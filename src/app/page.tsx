@@ -114,6 +114,52 @@ export default function HomePage() {
     ready: false,
   });
 
+  // Mobile-hardened autoplay & gesture listener for ambient hero background video
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+
+    // Enforce WebKit DOM properties strictly before playback attempt
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+
+    const startPlayback = () => {
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // If iOS Low Power Mode or browser policy temporarily blocked initial autoplay,
+          // instantly play upon first user touch or scroll anywhere on the screen
+          const playOnGesture = () => {
+            if (video) {
+              video.muted = true;
+              video.play().catch(() => {});
+            }
+            ['touchstart', 'touchend', 'scroll', 'click', 'pointerdown'].forEach((evt) => {
+              window.removeEventListener(evt, playOnGesture);
+            });
+          };
+
+          ['touchstart', 'touchend', 'scroll', 'click', 'pointerdown'].forEach((evt) => {
+            window.addEventListener(evt, playOnGesture, { once: true, passive: true });
+          });
+        });
+      }
+    };
+
+    if (video.readyState >= 2) {
+      startPlayback();
+    } else {
+      video.addEventListener('loadeddata', startPlayback, { once: true });
+      video.addEventListener('canplay', startPlayback, { once: true });
+    }
+  }, []);
+
   useEffect(() => {
     const updateEcosystem = () => {
       const activeEl = ecosystemTabRefs.current[activeTab];
@@ -373,11 +419,17 @@ export default function HomePage() {
           className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1920px] h-[360px] sm:h-[440px] md:h-[490px] pointer-events-none select-none overflow-hidden z-0"
         >
           <video
+            ref={heroVideoRef}
             autoPlay
             loop
             muted
             playsInline
+            controls={false}
+            disablePictureInPicture
+            disableRemotePlayback
             preload="auto"
+            aria-hidden="true"
+            tabIndex={-1}
             className="w-full h-full object-cover object-center opacity-30 dark:opacity-70 invert dark:invert-0 transition-opacity duration-700 pointer-events-none select-none"
           >
             <source src="/herobg.mp4" type="video/mp4" />
