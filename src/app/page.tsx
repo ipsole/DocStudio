@@ -432,7 +432,7 @@ export default function HomePage() {
             tabIndex={-1}
             className="w-full h-full object-cover object-center opacity-30 dark:opacity-70 invert dark:invert-0 transition-opacity duration-700 pointer-events-none select-none"
           >
-            <source src="/herobg.mp4" type="video/mp4" />
+            <source src="/herobg.mp4?v=2" type="video/mp4" />
           </video>
 
           {/* Multi-Directional Gradient Feathering (Flawlessly dissolves into background) */}
